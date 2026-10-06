@@ -722,6 +722,13 @@
   .sw-custom { width: 34px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: transparent; padding: 1px; cursor: pointer; }
   .sp-input { width: 100%; font-family: inherit; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
   .sp-input:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 1px; }
+  .drawer-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .dtab { flex: 1; appearance: none; font-family: inherit; font-size: 13.5px; font-weight: 700; padding: 9px 10px; border-radius: 9px; border: none; background: transparent; color: var(--muted); cursor: pointer; }
+  .dtab.is-on { background: var(--accent, var(--focus)); color: var(--on-accent, #fff9f5); }
+  .dtab-n { font-family: "IBM Plex Mono", monospace; font-weight: 600; opacity: .85; margin-left: 2px; }
+  .task-later { appearance: none; font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .task-later:hover { color: var(--ink); border-color: var(--muted); }
+  .task.is-done .task-later { display: none; }
   .sync-status.is-ok { color: var(--break); }
   .sync-status.is-bad { color: #ff7a7a; }
 </style>
@@ -804,6 +811,10 @@
     <button class="drawer-close" id="drawerClose" type="button" aria-label="Close task list">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
+  </div>
+  <div class="drawer-tabs" role="tablist" aria-label="Task list">
+    <button type="button" class="dtab is-on" role="tab" id="tabToday" aria-selected="true">Today <span class="dtab-n" id="tabTodayN"></span></button>
+    <button type="button" class="dtab" role="tab" id="tabLater" aria-selected="false">Later <span class="dtab-n" id="tabLaterN"></span></button>
   </div>
   <form class="task-add" id="taskForm" autocomplete="off">
     <label class="sr-only" for="taskInput">New task</label>
@@ -1569,8 +1580,13 @@
 
   function focusedTask() { return findTask(tasksState.focusId); }
 
+  var drawerTab = 'today';
+  function isLater(t) { return t.later === true; }
+  function todayTasks() { return tasksState.tasks.filter(function (t) { return !isLater(t); }); }
+  function laterTasks() { return tasksState.tasks.filter(isLater); }
+
   function openCount() {
-    return tasksState.tasks.filter(function (t) { return !t.done; }).length;
+    return tasksState.tasks.filter(function (t) { return !t.done && !isLater(t); }).length;
   }
 
   function saveTasksLocal() {
@@ -1617,6 +1633,7 @@
   }
 
   function openDrawer() {
+    drawerTab = 'today'; renderList();
     els.drawerDate.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
     document.body.classList.add('drawer-open');
     els.drawerHandle.setAttribute('aria-expanded', 'true');
@@ -1632,7 +1649,7 @@
   }
 
   function addTask(title) {
-    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now() });
+    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: drawerTab === 'later' });
     saveTasks();
     renderTasks();
   }
@@ -1653,6 +1670,21 @@
     tasksState.deleted = (tasksState.deleted || []).concat([{ id: id, updated: Date.now() }]);
     if (tasksState.focusId === id) tasksState.focusId = null;
     saveTasks();
+    renderTasks();
+  }
+
+  function moveTask(id, later) {
+    var t = findTask(id);
+    if (!t) return;
+    t.later = later;
+    t.updated = Date.now();
+    if (later && tasksState.focusId === id) tasksState.focusId = null;
+    saveTasks();
+    renderTasks();
+  }
+
+  function setTab(tab) {
+    drawerTab = tab;
     renderTasks();
   }
 
@@ -1879,10 +1911,18 @@
     main.appendChild(el('span', 'task-title', t.title));
     if (t.sessions) main.appendChild(el('span', 'task-meta', t.sessions + (t.sessions === 1 ? ' session' : ' sessions')));
 
-    var focusBtn = el('button', 'task-focus', 'Focus');
+    var focusBtn = el('button', 'task-focus', isLater(t) ? 'Today' : 'Focus');
     focusBtn.type = 'button';
-    focusBtn.setAttribute('aria-label', 'Focus on: ' + t.title);
-    focusBtn.addEventListener('click', function () { focusOn(t.id); });
+    focusBtn.setAttribute('aria-label', (isLater(t) ? 'Move to today: ' : 'Focus on: ') + t.title);
+    focusBtn.addEventListener('click', function () { if (isLater(t)) moveTask(t.id, false); else focusOn(t.id); });
+
+    var laterBtn = null;
+    if (!isLater(t)) {
+      laterBtn = el('button', 'task-later', 'Later');
+      laterBtn.type = 'button';
+      laterBtn.setAttribute('aria-label', 'Move to later: ' + t.title);
+      laterBtn.addEventListener('click', function () { moveTask(t.id, true); });
+    }
 
     var del = el('button', 'task-del');
     del.type = 'button';
@@ -1893,16 +1933,29 @@
     li.appendChild(check);
     li.appendChild(main);
     li.appendChild(focusBtn);
+    if (laterBtn) li.appendChild(laterBtn);
     li.appendChild(del);
     return li;
   }
 
   function renderList() {
     els.taskList.innerHTML = '';
-    var open = tasksState.tasks.filter(function (t) { return !t.done; });
-    var done = tasksState.tasks.filter(function (t) { return t.done; });
+    var pool = drawerTab === 'later' ? laterTasks() : todayTasks();
+    var open = pool.filter(function (t) { return !t.done; });
+    var done = pool.filter(function (t) { return t.done; });
     open.concat(done).forEach(function (t) { els.taskList.appendChild(buildTaskRow(t)); });
-    els.taskEmpty.hidden = tasksState.tasks.length > 0;
+    els.taskEmpty.hidden = pool.length > 0;
+    els.taskEmpty.textContent = drawerTab === 'later'
+      ? 'Nothing parked for later. Drop in anything you don\u2019t want to think about today.'
+      : 'Nothing on today\u2019s list yet. Add the few things that would make today a good one.';
+    els.taskInput.placeholder = drawerTab === 'later' ? 'Park something for later' : 'What needs doing today?';
+    document.getElementById('tabToday').className = 'dtab' + (drawerTab === 'today' ? ' is-on' : '');
+    document.getElementById('tabLater').className = 'dtab' + (drawerTab === 'later' ? ' is-on' : '');
+    document.getElementById('tabToday').setAttribute('aria-selected', drawerTab === 'today' ? 'true' : 'false');
+    document.getElementById('tabLater').setAttribute('aria-selected', drawerTab === 'later' ? 'true' : 'false');
+    var tn = openCount(), ln = laterTasks().filter(function (t) { return !t.done; }).length;
+    document.getElementById('tabTodayN').textContent = tn ? tn : '';
+    document.getElementById('tabLaterN').textContent = ln ? ln : '';
   }
 
   function renderNow() {
@@ -1924,7 +1977,7 @@
       return;
     }
     var n = openCount();
-    var label = tasksState.tasks.length === 0 ? 'Add today’s tasks'
+    var label = todayTasks().length === 0 ? 'Add today’s tasks'
       : n === 0 ? 'All done today · add more'
       : 'Pick a task · ' + n + ' open';
     var pick = el('button', 'now-pick', label);
@@ -1951,6 +2004,8 @@
     els.taskInput.value = '';
     els.taskInput.focus();
   });
+  document.getElementById('tabToday').addEventListener('click', function () { setTab('today'); });
+  document.getElementById('tabLater').addEventListener('click', function () { setTab('later'); });
   els.drawerHandle.addEventListener('click', openDrawer);
   els.drawerClose.addEventListener('click', closeDrawer);
   els.drawerBackdrop.addEventListener('click', closeDrawer);

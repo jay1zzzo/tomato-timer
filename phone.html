@@ -19,6 +19,12 @@
   header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
   h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
   .date { color: var(--muted); font-size: 14px; }
+  .tabs { display: flex; gap: 6px; padding: 4px; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .tab { flex: 1; border: none; background: transparent; color: var(--muted); font-weight: 800; font-size: 16px; padding: 11px 8px; border-radius: 11px; }
+  .tab.on { background: var(--accent); color: #1c1510; }
+  .tab .n { font-family: ui-monospace, Menlo, monospace; margin-left: 4px; opacity: .85; }
+  .mv { flex: none; border: 1px solid var(--line); background: transparent; color: var(--accent); font-weight: 700; font-size: 13px; border-radius: 10px; padding: 7px 10px; }
+  li.done .mv { display: none; }
   form { display: flex; gap: 8px; margin-bottom: 16px; }
   input[type=text], input[type=password] { flex: 1; min-width: 0; font: inherit; font-size: 17px; color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 14px 14px; }
   input:focus { outline: none; border-color: var(--accent); }
@@ -53,6 +59,7 @@
   <button class="add" id="connect" type="button">Connect</button>
 </section>
 
+<div class="tabs" role="tablist"><button class="tab on" id="tabToday" type="button" role="tab">Today<span class="n" id="nToday"></span></button><button class="tab" id="tabLater" type="button" role="tab">Later<span class="n" id="nLater"></span></button></div>
 <form id="form" autocomplete="off">
   <input type="text" id="input" maxlength="120" placeholder="Add a task for today" aria-label="New task" enterkeyhint="done">
   <button class="add" type="submit">Add</button>
@@ -67,6 +74,7 @@
   var TASKS_KEY = 'tomato-phone-tasks', SYNC_KEY = 'tomato-phone-sync';
   var state = { tasks: [], deleted: [] };
   var sync = { repo: '', token: '', lastOk: 0 };
+  var tab = 'today';
   var busy = false, again = false, timer = null;
   function $(id) { return document.getElementById(id); }
 
@@ -164,7 +172,8 @@
 
   function changed() { saveLocal(); render(); schedule(); }
 
-  function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now() }); changed(); }
+  function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: tab === 'later' }); changed(); }
+  function move(t, later) { t.later = later; t.updated = Date.now(); changed(); }
   function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.updated = Date.now(); changed(); }
   function remove(t) {
     state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
@@ -175,7 +184,13 @@
   function render() {
     var list = $('list'); list.innerHTML = '';
     var today = dayKey();
-    var items = state.tasks.filter(function (t) { return !(t.done && t.doneDay && t.doneDay < today); });
+    var all = state.tasks.filter(function (t) { return !(t.done && t.doneDay && t.doneDay < today); });
+    var nT = all.filter(function (t) { return !t.later && !t.done; }).length, nL = all.filter(function (t) { return t.later && !t.done; }).length;
+    $('nToday').textContent = nT ? ' ' + nT : ''; $('nLater').textContent = nL ? ' ' + nL : '';
+    $('tabToday').className = 'tab' + (tab === 'today' ? ' on' : ''); $('tabLater').className = 'tab' + (tab === 'later' ? ' on' : '');
+    $('input').placeholder = tab === 'later' ? 'Park something for later' : 'Add a task for today';
+    $('empty').textContent = tab === 'later' ? 'Nothing parked for later. Type anything you don\u2019t want to think about today.' : 'Nothing on today\u2019s list. When someone gives you a task, type it above.';
+    var items = all.filter(function (t) { return tab === 'later' ? !!t.later : !t.later; });
     items.sort(function (a, b) { return (a.done - b.done) || ((a.updated || 0) - (b.updated || 0)); });
     items.forEach(function (t) {
       var li = document.createElement('li'); li.className = t.done ? 'done' : '';
@@ -183,9 +198,11 @@
       c.setAttribute('aria-label', (t.done ? 'Mark not done: ' : 'Mark done: ') + t.title);
       c.addEventListener('click', function () { toggle(t); });
       var s = document.createElement('span'); s.className = 't'; s.textContent = t.title;
+      var m = document.createElement('button'); m.type = 'button'; m.className = 'mv'; m.textContent = t.later ? '\u2192 Today' : '\u2192 Later';
+      m.addEventListener('click', function () { move(t, !t.later); });
       var d = document.createElement('button'); d.type = 'button'; d.className = 'del'; d.textContent = '✕'; d.setAttribute('aria-label', 'Delete: ' + t.title);
       d.addEventListener('click', function () { remove(t); });
-      li.appendChild(c); li.appendChild(s); li.appendChild(d); list.appendChild(li);
+      li.appendChild(c); li.appendChild(s); li.appendChild(m); li.appendChild(d); list.appendChild(li);
     });
     $('empty').hidden = items.length > 0;
     $('setup').hidden = syncOn();
@@ -205,6 +222,8 @@
     if (!/^[\w.-]+\/[\w.-]+$/.test(r) || !t) { status('Enter the repo and your token.', 'bad'); return; }
     sync.repo = r; sync.token = t; saveSync(); $('token').value = ''; render(); doSync();
   });
+  $('tabToday').addEventListener('click', function () { tab = 'today'; render(); });
+  $('tabLater').addEventListener('click', function () { tab = 'later'; render(); });
   $('refresh').addEventListener('click', function () { if (syncOn()) doSync(); });
   $('disc').addEventListener('click', function () { sync.repo = ''; sync.token = ''; sync.lastOk = 0; saveSync(); render(); idleStatus(); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(300); });
