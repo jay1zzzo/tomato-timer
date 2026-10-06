@@ -720,6 +720,10 @@
   .sw.is-on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent, var(--focus)); }
   .sw.def { width: auto; border-radius: 14px; padding: 0 11px; font-family: inherit; font-size: 12px; font-weight: 600; background: var(--surface); color: var(--ink); height: 28px; }
   .sw-custom { width: 34px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: transparent; padding: 1px; cursor: pointer; }
+  .sp-input { width: 100%; font-family: inherit; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  .sp-input:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 1px; }
+  .sync-status.is-ok { color: var(--break); }
+  .sync-status.is-bad { color: #ff7a7a; }
 </style>
 
 <div class="bg-photos" id="bgPhotos" aria-hidden="true"></div>
@@ -838,6 +842,19 @@
     <div class="sw-row" id="swFocus"></div>
     <div class="sp-row"><span>Break colour</span></div>
     <div class="sw-row" id="swBreak"></div>
+
+    <div class="sp-sec">Sync tasks</div>
+    <p class="sp-hint">Keep your task list the same on every computer using a private GitHub repo. Make the repo <b>Private</b>, then paste a GitHub token that can read and write only that repo.</p>
+    <div class="sp-row"><label for="syncRepo">Repo</label></div>
+    <input class="sp-input" type="text" id="syncRepo" spellcheck="false" autocomplete="off" placeholder="jay1zzzo/tomato-data">
+    <div class="sp-row"><label for="syncToken">GitHub token</label></div>
+    <input class="sp-input" type="password" id="syncToken" autocomplete="off" placeholder="Paste your GitHub token">
+    <div class="sp-actions">
+      <button class="sp-btn" id="syncConnect" type="button">Connect &amp; sync</button>
+      <button class="sp-btn ghost" id="syncNow" type="button">Sync now</button>
+      <button class="sp-btn ghost" id="syncOff" type="button">Disconnect</button>
+    </div>
+    <p class="sp-hint sync-status" id="syncStatus" role="status"></p>
 
     <div class="sp-sec">Reset</div>
     <div class="sp-actions"><button class="sp-btn ghost" id="spReset" type="button">Reset everything to default</button></div>
@@ -1531,7 +1548,7 @@
 
   // --- Today list: pick one task and everything else leaves the screen ---
   var TASKS_KEY = 'tomato-timer-lab-tasks';
-  var tasksState = { tasks: [], focusId: null };
+  var tasksState = { tasks: [], focusId: null, deleted: [] };
 
   function dayKey() {
     var d = new Date();
@@ -1556,8 +1573,12 @@
     return tasksState.tasks.filter(function (t) { return !t.done; }).length;
   }
 
-  function saveTasks() {
+  function saveTasksLocal() {
     try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasksState)); } catch (e) {}
+  }
+  function saveTasks() {
+    saveTasksLocal();
+    scheduleSync();
   }
 
   // Unfinished tasks carry over to the next day; finished ones clear out.
@@ -1571,6 +1592,8 @@
             !(t.done && t.doneDay && t.doneDay < today);
         });
         tasksState.focusId = raw.focusId || null;
+        tasksState.deleted = Array.isArray(raw.deleted) ? raw.deleted : [];
+        tasksState.tasks.forEach(function (t) { if (!t.updated) t.updated = Date.now(); });
       }
     } catch (e) {}
     var f = focusedTask();
@@ -1581,6 +1604,7 @@
     var t = focusedTask();
     if (!t) return;
     t.sessions = (t.sessions || 0) + 1;
+    t.updated = Date.now();
     saveTasks();
     renderTasks();
   }
@@ -1608,7 +1632,7 @@
   }
 
   function addTask(title) {
-    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0 });
+    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now() });
     saveTasks();
     renderTasks();
   }
@@ -1618,6 +1642,7 @@
     if (!t) return;
     t.done = done;
     t.doneDay = done ? dayKey() : null;
+    t.updated = Date.now();
     if (done && tasksState.focusId === id) tasksState.focusId = null;
     saveTasks();
     renderTasks();
@@ -1625,6 +1650,7 @@
 
   function deleteTask(id) {
     tasksState.tasks = tasksState.tasks.filter(function (t) { return t.id !== id; });
+    tasksState.deleted = (tasksState.deleted || []).concat([{ id: id, updated: Date.now() }]);
     if (tasksState.focusId === id) tasksState.focusId = null;
     saveTasks();
     renderTasks();
@@ -1649,6 +1675,190 @@
     if (!t) return;
     setDone(t.id, true);
     if (openCount() > 0) openDrawer();
+  }
+
+  // --- Sync tasks between computers through a private GitHub repo ---
+  var SYNC_KEY = 'tomato-timer-lab-sync';
+  var sync = { repo: '', token: '', lastOk: 0 };
+  var syncBusy = false, syncAgain = false, syncTimer = null;
+
+  function loadSync() {
+    try {
+      var r = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null');
+      if (r) { sync.repo = r.repo || ''; sync.token = r.token || ''; sync.lastOk = r.lastOk || 0; }
+    } catch (e) {}
+  }
+  function saveSync() {
+    try { localStorage.setItem(SYNC_KEY, JSON.stringify(sync)); } catch (e) {}
+  }
+  function syncOn() { return !!(sync.repo && sync.token); }
+
+  function setSyncStatus(msg, kind) {
+    var n = document.getElementById('syncStatus');
+    if (!n) return;
+    n.textContent = msg;
+    n.className = 'sp-hint sync-status' + (kind ? ' is-' + kind : '');
+  }
+  function syncIdleStatus() {
+    if (!syncOn()) { setSyncStatus('Not connected. Tasks stay on this computer only.'); return; }
+    var t = sync.lastOk ? new Date(sync.lastOk).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    setSyncStatus(t ? 'Connected to ' + sync.repo + ' · last synced ' + t : 'Connected to ' + sync.repo, 'ok');
+  }
+
+  function b64enc(str) {
+    var bytes = new TextEncoder().encode(str), bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64dec(b64) {
+    var bin = atob(b64.replace(/\s/g, '')), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function ghFetch(method, body) {
+    var opts = {
+      method: method,
+      cache: 'no-store',
+      headers: {
+        'Authorization': 'Bearer ' + sync.token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    };
+    if (body) { opts.body = body; opts.headers['Content-Type'] = 'application/json'; }
+    return fetch('https://api.github.com/repos/' + sync.repo + '/contents/tasks.json', opts);
+  }
+
+  function fail(code) { var e = new Error(code); e.code = code; return e; }
+
+  function syncPayload() {
+    var tasks = tasksState.tasks.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    var del = (tasksState.deleted || []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    return { v: 1, tasks: tasks, deleted: del };
+  }
+  function norm(p) {
+    try {
+      var tasks = (p && Array.isArray(p.tasks) ? p.tasks : []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+      var del = (p && Array.isArray(p.deleted) ? p.deleted : []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+      return JSON.stringify({ t: tasks, d: del });
+    } catch (e) { return ''; }
+  }
+
+  // Newest edit to each task wins; deletions are remembered so a deleted task doesn't come back.
+  function mergeRemote(remote) {
+    var rt = remote && Array.isArray(remote.tasks) ? remote.tasks : [];
+    var rd = remote && Array.isArray(remote.deleted) ? remote.deleted : [];
+    var tombs = {}, map = {}, today = dayKey(), cutoff = Date.now() - 60 * 86400000;
+    (tasksState.deleted || []).concat(rd).forEach(function (d) {
+      if (d && typeof d.id === 'string') tombs[d.id] = Math.max(tombs[d.id] || 0, d.updated || 0);
+    });
+    tasksState.tasks.concat(rt).forEach(function (t) {
+      if (!t || typeof t.id !== 'string' || typeof t.title !== 'string') return;
+      if (!map[t.id] || (t.updated || 0) > (map[t.id].updated || 0)) map[t.id] = t;
+    });
+    var out = [];
+    Object.keys(map).forEach(function (id) {
+      var t = map[id];
+      if (tombs[id] !== undefined && tombs[id] >= (t.updated || 0)) return;
+      if (t.done && t.doneDay && t.doneDay < today) return;
+      out.push(t);
+    });
+    tasksState.tasks = out;
+    tasksState.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff; })
+      .map(function (id) { return { id: id, updated: tombs[id] }; });
+    var f = focusedTask();
+    if (!f || f.done) tasksState.focusId = null;
+    saveTasksLocal();
+    renderTasks();
+  }
+
+  function syncOnce(attempt) {
+    return ghFetch('GET').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (res.status === 401) throw fail('auth');
+      if (res.status === 403) throw fail('forbidden');
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) {
+        var data = null;
+        try { data = JSON.parse(b64dec(j.content)); } catch (e) {}
+        return { sha: j.sha, data: data };
+      });
+    }).then(function (remote) {
+      var before = norm(remote.data);
+      mergeRemote(remote.data);
+      if (remote.sha && norm(syncPayload()) === before) return;
+      var body = { message: 'Sync tasks', content: b64enc(JSON.stringify(syncPayload(), null, 1)) };
+      if (remote.sha) body.sha = remote.sha;
+      return ghFetch('PUT', JSON.stringify(body)).then(function (res) {
+        if (res.status === 409 || res.status === 422) {
+          if (attempt < 3) return syncOnce(attempt + 1);
+          throw fail('conflict');
+        }
+        if (res.status === 404) throw fail('norepo');
+        if (res.status === 401) throw fail('auth');
+        if (res.status === 403) throw fail('forbidden');
+        if (!res.ok) throw fail('http');
+      });
+    });
+  }
+
+  function doSync() {
+    if (!syncOn()) return Promise.resolve();
+    if (syncBusy) { syncAgain = true; return Promise.resolve(); }
+    syncBusy = true;
+    setSyncStatus('Syncing…');
+    return syncOnce(1).then(function () {
+      sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
+    }).catch(function (e) {
+      var c = e && e.code;
+      if (c === 'auth') setSyncStatus('GitHub rejected the token. Make a new one and paste it again.', 'bad');
+      else if (c === 'forbidden') setSyncStatus('GitHub refused access. Check the token can read and write this repo’s contents.', 'bad');
+      else if (c === 'norepo') setSyncStatus('Couldn’t find that repo. Check the name, and that the token has access to it.', 'bad');
+      else if (c === 'conflict') setSyncStatus('Two changes collided. It will retry shortly.', 'bad');
+      else setSyncStatus('Offline or GitHub unreachable. It will retry.', 'bad');
+    }).then(function () {
+      syncBusy = false;
+      if (syncAgain) { syncAgain = false; scheduleSync(800); }
+    });
+  }
+
+  function scheduleSync(delay) {
+    if (!syncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(doSync, delay == null ? 1500 : delay);
+  }
+
+  function cleanRepo(v) {
+    return v.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, '');
+  }
+
+  function initSync() {
+    loadSync();
+    var repoIn = document.getElementById('syncRepo'), tokIn = document.getElementById('syncToken');
+    repoIn.value = sync.repo || 'jay1zzzo/tomato-data';
+    if (sync.token) tokIn.placeholder = 'Token saved on this computer';
+    syncIdleStatus();
+    document.getElementById('syncConnect').addEventListener('click', function () {
+      var r = cleanRepo(repoIn.value), t = tokIn.value.trim() || sync.token;
+      if (!/^[\w.-]+\/[\w.-]+$/.test(r)) { setSyncStatus('Type the repo as name/repo, for example jay1zzzo/tomato-data.', 'bad'); return; }
+      if (!t) { setSyncStatus('Paste your GitHub token first.', 'bad'); return; }
+      sync.repo = r; sync.token = t; saveSync();
+      tokIn.value = ''; tokIn.placeholder = 'Token saved on this computer';
+      doSync();
+    });
+    document.getElementById('syncNow').addEventListener('click', function () {
+      if (!syncOn()) { setSyncStatus('Connect first.', 'bad'); return; }
+      doSync();
+    });
+    document.getElementById('syncOff').addEventListener('click', function () {
+      sync.repo = ''; sync.token = ''; sync.lastOk = 0; saveSync();
+      tokIn.value = ''; tokIn.placeholder = 'Paste your GitHub token'; syncIdleStatus();
+    });
+    window.addEventListener('focus', function () { scheduleSync(300); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) scheduleSync(300); });
+    setInterval(function () { if (!document.hidden) doSync(); }, 60000);
+    if (syncOn()) doSync();
   }
 
   var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -1807,5 +2017,6 @@
   loadTasks();
   renderTasks();
   render();
+  initSync();
 })();
 </script>
