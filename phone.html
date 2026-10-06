@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Today">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16130f">
+<link rel="apple-touch-icon" href="phone-icon.png">
+<link rel="icon" href="phone-icon.png">
+<style>
+  :root { --bg:#16130f; --surface:#241f18; --ink:#f6f2e8; --muted:#a39c8c; --line:#3a3329; --accent:#ff6b4a; --ok:#7fc08c; --bad:#ff7a7a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { min-height: 100vh; min-height: 100dvh; padding: calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px); max-width: 560px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+  .date { color: var(--muted); font-size: 14px; }
+  form { display: flex; gap: 8px; margin-bottom: 16px; }
+  input[type=text], input[type=password] { flex: 1; min-width: 0; font: inherit; font-size: 17px; color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 14px 14px; }
+  input:focus { outline: none; border-color: var(--accent); }
+  button { font: inherit; cursor: pointer; }
+  .add { border: none; background: var(--accent); color: #1c1510; font-weight: 800; font-size: 17px; border-radius: 14px; padding: 0 20px; }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  li { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 12px; }
+  li.done .t { text-decoration: line-through; color: var(--muted); }
+  .chk { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; color: #1c1510; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; padding: 0; }
+  li.done .chk { background: var(--ok); border-color: var(--ok); }
+  .t { flex: 1; font-size: 17px; line-height: 1.3; word-break: break-word; }
+  .del { flex: none; border: none; background: transparent; color: var(--muted); font-size: 20px; width: 34px; height: 34px; }
+  .empty { color: var(--muted); text-align: center; padding: 26px 10px; font-size: 15px; line-height: 1.5; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .bar.ok #st { color: var(--ok); } .bar.bad #st { color: var(--bad); }
+  .link { border: none; background: transparent; color: var(--accent); font-weight: 700; font-size: 14px; padding: 6px 4px; }
+  .setup { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
+  .setup h2 { margin: 0 0 6px; font-size: 17px; } .setup p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+  .setup input { display: block; width: 100%; margin-bottom: 10px; }
+  .setup .add { width: 100%; padding: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header><h1>Today</h1><div class="date" id="date"></div></header>
+
+<section class="setup" id="setup" hidden>
+  <h2>Connect to Tomato Timer</h2>
+  <p>Paste the same GitHub token you use in Tomato Timer, so tasks you add here show up there.</p>
+  <input type="text" id="repo" spellcheck="false" autocomplete="off" autocapitalize="off" value="jay1zzzo/tomato-data" aria-label="Repo">
+  <input type="password" id="token" autocomplete="off" placeholder="GitHub token" aria-label="GitHub token">
+  <button class="add" id="connect" type="button">Connect</button>
+</section>
+
+<form id="form" autocomplete="off">
+  <input type="text" id="input" maxlength="120" placeholder="Add a task for today" aria-label="New task" enterkeyhint="done">
+  <button class="add" type="submit">Add</button>
+</form>
+<ul id="list"></ul>
+<p class="empty" id="empty">Nothing on today&rsquo;s list. When someone gives you a task, type it above.</p>
+
+<div class="bar" id="bar"><span id="st">Not connected</span><span><button class="link" id="refresh" type="button">Refresh</button><button class="link" id="disc" type="button" hidden>Disconnect</button></span></div>
+
+<script>
+(function () {
+  var TASKS_KEY = 'tomato-phone-tasks', SYNC_KEY = 'tomato-phone-sync';
+  var state = { tasks: [], deleted: [] };
+  var sync = { repo: '', token: '', lastOk: 0 };
+  var busy = false, again = false, timer = null;
+  function $(id) { return document.getElementById(id); }
+
+  function dayKey() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function saveLocal() { try { localStorage.setItem(TASKS_KEY, JSON.stringify(state)); } catch (e) {} }
+  function loadLocal() {
+    try {
+      var r = JSON.parse(localStorage.getItem(TASKS_KEY) || 'null');
+      if (r && Array.isArray(r.tasks)) { state.tasks = r.tasks; state.deleted = Array.isArray(r.deleted) ? r.deleted : []; }
+    } catch (e) {}
+    try {
+      var s = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null');
+      if (s) { sync.repo = s.repo || ''; sync.token = s.token || ''; sync.lastOk = s.lastOk || 0; }
+    } catch (e) {}
+  }
+  function saveSync() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(sync)); } catch (e) {} }
+  function syncOn() { return !!(sync.repo && sync.token); }
+
+  function status(msg, kind) { $('st').textContent = msg; $('bar').className = 'bar' + (kind ? ' ' + kind : ''); }
+  function idleStatus() {
+    if (!syncOn()) { status('Not connected · tasks stay on this phone'); return; }
+    var t = sync.lastOk ? new Date(sync.lastOk).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    status(t ? 'Synced ' + t : 'Connected', 'ok');
+  }
+
+  function b64enc(str) { var b = new TextEncoder().encode(str), s = ''; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
+  function b64dec(b64) { var s = atob(b64.replace(/\s/g, '')), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return new TextDecoder().decode(b); }
+  function gh(method, body) {
+    var o = { method: method, cache: 'no-store', headers: { 'Authorization': 'Bearer ' + sync.token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } };
+    if (body) { o.body = body; o.headers['Content-Type'] = 'application/json'; }
+    return fetch('https://api.github.com/repos/' + sync.repo + '/contents/tasks.json', o);
+  }
+  function fail(c) { var e = new Error(c); e.code = c; return e; }
+  function byId(a, b) { return a.id < b.id ? -1 : 1; }
+  function payload() { return { v: 1, tasks: state.tasks.slice().sort(byId), deleted: state.deleted.slice().sort(byId) }; }
+  function norm(p) {
+    try { return JSON.stringify({ t: (p && Array.isArray(p.tasks) ? p.tasks : []).slice().sort(byId), d: (p && Array.isArray(p.deleted) ? p.deleted : []).slice().sort(byId) }); } catch (e) { return ''; }
+  }
+
+  function merge(remote) {
+    var rt = remote && Array.isArray(remote.tasks) ? remote.tasks : [];
+    var rd = remote && Array.isArray(remote.deleted) ? remote.deleted : [];
+    var tombs = {}, map = {}, today = dayKey(), cutoff = Date.now() - 60 * 86400000;
+    state.deleted.concat(rd).forEach(function (d) { if (d && typeof d.id === 'string') tombs[d.id] = Math.max(tombs[d.id] || 0, d.updated || 0); });
+    state.tasks.concat(rt).forEach(function (t) {
+      if (!t || typeof t.id !== 'string' || typeof t.title !== 'string') return;
+      if (!map[t.id] || (t.updated || 0) > (map[t.id].updated || 0)) map[t.id] = t;
+    });
+    var out = [];
+    Object.keys(map).forEach(function (id) {
+      var t = map[id];
+      if (tombs[id] !== undefined && tombs[id] >= (t.updated || 0)) return;
+      if (t.done && t.doneDay && t.doneDay < today) return;
+      out.push(t);
+    });
+    state.tasks = out;
+    state.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff; }).map(function (id) { return { id: id, updated: tombs[id] }; });
+    saveLocal(); render();
+  }
+
+  function once(n) {
+    return gh('GET').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (res.status === 401) throw fail('auth');
+      if (res.status === 403) throw fail('forbidden');
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) { var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {} return { sha: j.sha, data: d }; });
+    }).then(function (remote) {
+      var before = norm(remote.data);
+      merge(remote.data);
+      if (remote.sha && norm(payload()) === before) return;
+      var body = { message: 'Sync tasks', content: b64enc(JSON.stringify(payload(), null, 1)) };
+      if (remote.sha) body.sha = remote.sha;
+      return gh('PUT', JSON.stringify(body)).then(function (res) {
+        if (res.status === 409 || res.status === 422) { if (n < 3) return once(n + 1); throw fail('conflict'); }
+        if (res.status === 404) throw fail('norepo');
+        if (res.status === 401) throw fail('auth');
+        if (res.status === 403) throw fail('forbidden');
+        if (!res.ok) throw fail('http');
+      });
+    });
+  }
+  function doSync() {
+    if (!syncOn()) return Promise.resolve();
+    if (busy) { again = true; return Promise.resolve(); }
+    busy = true; status('Syncing…');
+    return once(1).then(function () { sync.lastOk = Date.now(); saveSync(); idleStatus(); }).catch(function (e) {
+      var c = e && e.code;
+      status(c === 'auth' ? 'Token rejected. Disconnect and paste a new one.' : c === 'forbidden' ? 'GitHub refused access. The token needs Contents: Read and write.' : c === 'norepo' ? 'Repo not found. Check the name.' : c === 'conflict' ? 'Collision, retrying…' : 'Offline. Will retry.', 'bad');
+    }).then(function () { busy = false; if (again) { again = false; schedule(800); } });
+  }
+  function schedule(d) { if (!syncOn()) return; clearTimeout(timer); timer = setTimeout(doSync, d == null ? 1000 : d); }
+
+  function changed() { saveLocal(); render(); schedule(); }
+
+  function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now() }); changed(); }
+  function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.updated = Date.now(); changed(); }
+  function remove(t) {
+    state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
+    state.deleted.push({ id: t.id, updated: Date.now() });
+    changed();
+  }
+
+  function render() {
+    var list = $('list'); list.innerHTML = '';
+    var today = dayKey();
+    var items = state.tasks.filter(function (t) { return !(t.done && t.doneDay && t.doneDay < today); });
+    items.sort(function (a, b) { return (a.done - b.done) || ((a.updated || 0) - (b.updated || 0)); });
+    items.forEach(function (t) {
+      var li = document.createElement('li'); li.className = t.done ? 'done' : '';
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'chk'; c.textContent = t.done ? '✓' : '';
+      c.setAttribute('aria-label', (t.done ? 'Mark not done: ' : 'Mark done: ') + t.title);
+      c.addEventListener('click', function () { toggle(t); });
+      var s = document.createElement('span'); s.className = 't'; s.textContent = t.title;
+      var d = document.createElement('button'); d.type = 'button'; d.className = 'del'; d.textContent = '✕'; d.setAttribute('aria-label', 'Delete: ' + t.title);
+      d.addEventListener('click', function () { remove(t); });
+      li.appendChild(c); li.appendChild(s); li.appendChild(d); list.appendChild(li);
+    });
+    $('empty').hidden = items.length > 0;
+    $('setup').hidden = syncOn();
+    $('disc').hidden = !syncOn();
+  }
+
+  loadLocal();
+  $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  render(); idleStatus();
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('input').value.trim(); if (!v) return;
+    add(v); $('input').value = ''; $('input').focus();
+  });
+  $('connect').addEventListener('click', function () {
+    var r = $('repo').value.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, ''), t = $('token').value.trim();
+    if (!/^[\w.-]+\/[\w.-]+$/.test(r) || !t) { status('Enter the repo and your token.', 'bad'); return; }
+    sync.repo = r; sync.token = t; saveSync(); $('token').value = ''; render(); doSync();
+  });
+  $('refresh').addEventListener('click', function () { if (syncOn()) doSync(); });
+  $('disc').addEventListener('click', function () { sync.repo = ''; sync.token = ''; sync.lastOk = 0; saveSync(); render(); idleStatus(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(300); });
+  window.addEventListener('focus', function () { schedule(300); });
+  setInterval(function () { if (!document.hidden) doSync(); }, 30000);
+  if (syncOn()) doSync();
+})();
+</script>
+</body>
+</html>
