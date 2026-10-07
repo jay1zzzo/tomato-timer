@@ -889,7 +889,11 @@
   try {
     var saved = JSON.parse(localStorage.getItem('tomato-timer-lab-settings') || 'null');
     if (saved && typeof saved === 'object') {
-      state.durations = Object.assign({}, DEFAULTS, saved);
+      // Only trust the four number fields (an older build once saved look settings under this key too).
+      Object.keys(DEFAULTS).forEach(function (k) {
+        var n = Number(saved[k]);
+        if (typeof saved[k] === 'number' && isFinite(n) && n > 0) state.durations[k] = n;
+      });
     }
   } catch (e) {}
 
@@ -947,7 +951,8 @@
     'img/vb-1.jpg', 'img/vb-2.jpg', 'img/vb-3.jpg', 'img/vb-4.jpg',
     'img/vb-5.jpg', 'img/vb-6.jpg', 'img/vb-7.jpg'
   ];
-  var SETTINGS_KEY = 'tomato-timer-lab-settings';
+  var SETTINGS_KEY = 'tomato-timer-lab-look';
+  var LEGACY_SETTINGS_KEY = 'tomato-timer-lab-settings';
   var PALETTE = ['#ff6b4a', '#ff4d6d', '#ff9f1c', '#ffd23f', '#a3e635', '#34d399', '#22d3ee', '#5b9bff', '#a78bfa', '#ff6fb5'];
   var DEF_FOCUS_HEX = '#ff6b4a', DEF_BREAK_HEX = '#7fc08c';
 
@@ -964,6 +969,10 @@
   function loadCfg() {
     try {
       var raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+      if (!raw) {
+        var old = JSON.parse(localStorage.getItem(LEGACY_SETTINGS_KEY) || 'null');
+        if (old && Array.isArray(old.images)) raw = old;
+      }
       if (raw && typeof raw === 'object') {
         ['interval', 'fade', 'dark'].forEach(function (k) { if (typeof raw[k] === 'number') cfg[k] = raw[k]; });
         if (typeof raw.focus === 'string') cfg.focus = raw.focus;
