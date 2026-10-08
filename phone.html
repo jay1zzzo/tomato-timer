@@ -45,6 +45,31 @@
   .setup h2 { margin: 0 0 6px; font-size: 17px; } .setup p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.45; }
   .setup input { display: block; width: 100%; margin-bottom: 10px; }
   .setup .add { width: 100%; padding: 14px; }
+
+  .histlink { text-align: center; margin-top: 14px; }
+  .histlink .link { color: var(--muted); font-weight: 600; font-size: 13px; }
+  .hist { position: fixed; inset: 0; z-index: 10; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 28px); display: none; }
+  .hist.on { display: block; }
+  .hist-in { max-width: 560px; margin: 0 auto; }
+  .hist-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .hist h2 { margin: 4px 0 2px; font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+  .hist .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 12px; }
+  .seg { display: flex; gap: 4px; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 4px; }
+  .seg button { flex: 1; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; padding: 8px 4px; border-radius: 9px; }
+  .seg button.on { background: var(--accent); color: #1c1510; }
+  .day { display: flex; justify-content: space-between; margin: 16px 0 4px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; line-height: 1.3; }
+  .row .tick { color: var(--ok); font-weight: 900; }
+  .row .tt { word-break: break-word; }
+  .row .tm { color: var(--muted); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .row.edit { grid-template-columns: 1fr auto; align-items: center; }
+  .row.edit input[type=text] { font-size: 15.5px; padding: 8px 10px; border-radius: 10px; width: 100%; }
+  .row.edit input[type=date] { font: inherit; font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; margin-top: 4px; color-scheme: dark; }
+  .hacts { display: flex; gap: 8px; margin-top: 18px; }
+  .hacts button { flex: 1; font-weight: 800; font-size: 15px; padding: 13px 8px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+  .hacts button.pri { background: var(--accent); border-color: transparent; color: #1c1510; }
+  .hnote { color: var(--accent); font-size: 13px; min-height: 18px; margin: 10px 0 0; text-align: center; }
+  .hempty { color: var(--muted); text-align: center; padding: 30px 8px; line-height: 1.5; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -66,6 +91,21 @@
 </form>
 <ul id="list"></ul>
 <p class="empty" id="empty">Nothing on today&rsquo;s list. When someone gives you a task, type it above.</p>
+
+
+<div class="histlink"><button class="link" id="histOpen" type="button">Past tasks <span id="histN"></span></button></div>
+
+<section class="hist" id="hist" aria-label="Past tasks">
+  <div class="hist-in">
+    <div class="hist-top"><button class="link" id="histBack" type="button">&larr; Back</button><button class="link" id="histEdit" type="button">Edit</button></div>
+    <h2>Work log</h2>
+    <div class="sub" id="histSub"></div>
+    <div class="seg" id="histSeg"><button type="button" data-r="today">Today</button><button type="button" data-r="7" class="on">7 days</button><button type="button" data-r="30">30 days</button><button type="button" data-r="all">All</button></div>
+    <div id="histList"></div>
+    <div class="hacts"><button class="pri" id="histShare" type="button">Export</button><button id="histCopy" type="button">Copy</button></div>
+    <p class="hnote" id="histNote" role="status"></p>
+  </div>
+</section>
 
 <div class="bar" id="bar"><span id="st">Not connected</span><span><button class="link" id="refresh" type="button">Refresh</button><button class="link" id="disc" type="button" hidden>Disconnect</button></span></div>
 
@@ -204,9 +244,101 @@
       li.appendChild(c); li.appendChild(s); li.appendChild(m); li.appendChild(d); list.appendChild(li);
     });
     $('empty').hidden = items.length > 0;
+    var dn = state.tasks.filter(function (t) { return t.done; }).length; $('histN').textContent = dn ? '\u00b7 ' + dn : '';
     $('setup').hidden = syncOn();
     $('disc').hidden = !syncOn();
   }
+
+
+  // --- Past tasks log ---
+  var histRange = '7', histEdit = false;
+  function doneDayOf(t) { return t.doneDay || t.day || dayKey(); }
+  function addDays(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function histTasks() {
+    var cutoff = histRange === 'all' ? null : histRange === 'today' ? dayKey() : addDays(-(parseInt(histRange, 10) - 1));
+    return state.tasks.filter(function (t) { return t.done && (!cutoff || doneDayOf(t) >= cutoff); }).sort(function (a, b) {
+      var da = doneDayOf(a), db = doneDayOf(b);
+      if (da !== db) return da < db ? 1 : -1;
+      return (b.completedAt || b.updated || 0) - (a.completedAt || a.updated || 0);
+    });
+  }
+  function niceDay(k) {
+    var p = k.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return isNaN(d.getTime()) ? k : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function timeOf(t) { return t.completedAt ? new Date(t.completedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''; }
+  function hnote(m) { $('histNote').textContent = m; }
+
+  function renderHist() {
+    var items = histTasks(), box = $('histList');
+    box.innerHTML = '';
+    var sess = items.reduce(function (n, t) { return n + (t.sessions || 0); }, 0);
+    var label = histRange === 'today' ? 'Today' : histRange === 'all' ? 'All time' : 'Last ' + histRange + ' days';
+    $('histSub').textContent = label + ' \u00b7 ' + items.length + (items.length === 1 ? ' task done' : ' tasks done') + (sess ? ' \u00b7 ' + sess + ' focus sessions' : '') + ' \u00b7 as of ' + new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    $('histEdit').textContent = histEdit ? 'Done' : 'Edit';
+    Array.prototype.forEach.call($('histSeg').children, function (b) { b.className = b.getAttribute('data-r') === histRange ? 'on' : ''; });
+    if (!items.length) { var e = document.createElement('div'); e.className = 'hempty'; e.textContent = 'Nothing logged in this range. Tasks you tick off are recorded here automatically.'; box.appendChild(e); return; }
+    var count = {}; items.forEach(function (t) { var k = doneDayOf(t); count[k] = (count[k] || 0) + 1; });
+    var last = null;
+    items.forEach(function (t) {
+      var k = doneDayOf(t);
+      if (k !== last) {
+        var h = document.createElement('div'); h.className = 'day';
+        var a = document.createElement('span'); a.textContent = niceDay(k);
+        var c = document.createElement('span'); c.textContent = count[k] + ' done';
+        h.appendChild(a); h.appendChild(c); box.appendChild(h); last = k;
+      }
+      var row = document.createElement('div'); row.className = 'row' + (histEdit ? ' edit' : '');
+      if (!histEdit) {
+        var tk = document.createElement('span'); tk.className = 'tick'; tk.textContent = '\u2713';
+        var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = t.title;
+        var tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = timeOf(t);
+        row.appendChild(tk); row.appendChild(tt); row.appendChild(tm);
+      } else {
+        var main = document.createElement('div');
+        var inp = document.createElement('input'); inp.type = 'text'; inp.value = t.title; inp.maxLength = 120;
+        inp.addEventListener('change', function () { var v = inp.value.trim(); if (!v) { inp.value = t.title; return; } t.title = v; t.updated = Date.now(); changed(); });
+        var dt = document.createElement('input'); dt.type = 'date'; dt.value = k;
+        dt.addEventListener('change', function () { if (!dt.value) { dt.value = doneDayOf(t); return; } t.doneDay = dt.value; t.updated = Date.now(); changed(); renderHist(); });
+        main.appendChild(inp); main.appendChild(dt);
+        var del = document.createElement('button'); del.type = 'button'; del.className = 'del'; del.textContent = '\u2715'; del.setAttribute('aria-label', 'Delete: ' + t.title);
+        del.addEventListener('click', function () { if (window.confirm('Delete "' + t.title + '" from your log?')) { remove(t); renderHist(); } });
+        row.appendChild(main); row.appendChild(del);
+      }
+      box.appendChild(row);
+    });
+  }
+
+  function csvCell(v) { var s = String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  function histRows() { return [['Date', 'Time', 'Task', 'Focus sessions']].concat(histTasks().map(function (t) { return [doneDayOf(t), timeOf(t), t.title, t.sessions || 0]; })); }
+  function histCsv() { return histRows().map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n'; }
+  function histTsv() { return histRows().map(function (r) { return r.map(function (c) { return String(c).replace(/[\t\r\n]+/g, ' '); }).join('\t'); }).join('\n'); }
+
+  function copyText(text) {
+    function fb() { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); return ok; }
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fb(); });
+    return Promise.resolve(fb());
+  }
+  function shareCsv() {
+    if (!histTasks().length) { hnote('Nothing to export yet.'); return; }
+    var name = 'work-log-' + dayKey() + '.csv', text = '\ufeff' + histCsv();
+    try {
+      var file = new File([text], name, { type: 'text/csv' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'Work log' }).catch(function () {}); return; }
+    } catch (e) {}
+    try {
+      var url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })), a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000); hnote('Saved ' + name);
+    } catch (e) { hnote('Couldn\u2019t export. Try Copy.'); }
+  }
+
+  $('histOpen').addEventListener('click', function () { histEdit = false; $('hist').className = 'hist on'; hnote(''); renderHist(); $('hist').scrollTop = 0; });
+  $('histBack').addEventListener('click', function () { $('hist').className = 'hist'; });
+  $('histEdit').addEventListener('click', function () { histEdit = !histEdit; renderHist(); });
+  $('histSeg').addEventListener('click', function (e) { var r = e.target && e.target.getAttribute && e.target.getAttribute('data-r'); if (r) { histRange = r; renderHist(); } });
+  $('histShare').addEventListener('click', shareCsv);
+  $('histCopy').addEventListener('click', function () { if (!histTasks().length) { hnote('Nothing to copy yet.'); return; } copyText(histTsv()).then(function (ok) { hnote(ok ? 'Copied. Paste it into Numbers, Excel or Sheets.' : 'Couldn\u2019t copy here.'); }); });
 
   loadLocal();
   $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
