@@ -645,7 +645,7 @@
   .task-edit:hover { opacity: 1; color: var(--ink); }
   .task-edit svg { width: 14px; height: 14px; }
   .task-editinput {
-    width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.35;
+    width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.35; resize: none; overflow: hidden; display: block;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--accent, var(--focus)); border-radius: 8px; padding: 8px 10px;
   }
@@ -866,7 +866,7 @@
   </div>
   <form class="task-add" id="taskForm" autocomplete="off">
     <label class="sr-only" for="taskInput">New task</label>
-    <input type="text" id="taskInput" maxlength="300" placeholder="What needs doing today?">
+    <input type="text" id="taskInput" maxlength="600" placeholder="What needs doing today?">
     <button type="submit">Add</button>
   </form>
   <ul class="task-list" id="taskList"></ul>
@@ -2033,7 +2033,7 @@
       var li = el('li', 'hist-row');
       var main = el('div');
       var title = document.createElement('input');
-      title.type = 'text'; title.value = t.title; title.maxLength = 300; title.setAttribute('aria-label', 'Task name');
+      title.type = 'text'; title.value = t.title; title.maxLength = 600; title.setAttribute('aria-label', 'Task name');
       title.addEventListener('change', function () {
         var v = title.value.trim();
         if (!v) { title.value = t.title; return; }
@@ -2178,8 +2178,10 @@
     var editing = editingId === t.id;
     if (editing) {
       li.className += ' is-editing';
-      var inp = document.createElement('input');
-      inp.type = 'text'; inp.className = 'task-editinput'; inp.value = t.title; inp.maxLength = 300;
+      var inp = document.createElement('textarea');
+      inp.rows = 1; inp.className = 'task-editinput'; inp.value = t.title; inp.maxLength = 600;
+      var grow = function () { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; };
+      inp.addEventListener('input', grow);
       inp.setAttribute('aria-label', 'Edit task');
       var finished = false;
       inp.addEventListener('keydown', function (e) {
@@ -2188,7 +2190,7 @@
       });
       inp.addEventListener('blur', function () { if (!finished) { finished = true; commitEdit(t.id, inp.value); } });
       main.appendChild(inp);
-      requestAnimationFrame(function () { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); });
+      requestAnimationFrame(function () { grow(); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); });
     } else {
       main.appendChild(el('span', 'task-title', t.title));
       if (t.sessions) main.appendChild(el('span', 'task-meta', t.sessions + (t.sessions === 1 ? ' session' : ' sessions')));

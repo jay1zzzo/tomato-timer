@@ -43,7 +43,7 @@
   .chk, .ed, .del { align-self: flex-start; }
   .ed { flex: none; border: none; background: transparent; color: var(--muted); font-size: 18px; width: 34px; height: 34px; }
   li.edit-on .t { padding: 0; }
-  .t-in { flex: 1; min-width: 0; font: inherit; font-size: 17px; color: var(--ink); background: var(--bg); border: 2px solid var(--accent); border-radius: 10px; padding: 8px 10px; }
+  .t-in { flex: 1; min-width: 0; resize: none; overflow: hidden; display: block; font: inherit; font-size: 17px; color: var(--ink); background: var(--bg); border: 2px solid var(--accent); border-radius: 10px; padding: 8px 10px; }
   .del { flex: none; border: none; background: transparent; color: var(--muted); font-size: 20px; width: 34px; height: 34px; }
   .empty { color: var(--muted); text-align: center; padding: 26px 10px; font-size: 15px; line-height: 1.5; }
   .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; font-size: 13px; color: var(--muted); }
@@ -94,7 +94,7 @@
 
 <div class="tabs" role="tablist"><button class="tab on" id="tabToday" type="button" role="tab">Today<span class="n" id="nToday"></span></button><button class="tab" id="tabLater" type="button" role="tab">Later<span class="n" id="nLater"></span></button></div>
 <form id="form" autocomplete="off">
-  <input type="text" id="input" maxlength="300" placeholder="Add a task for today" aria-label="New task" enterkeyhint="done">
+  <input type="text" id="input" maxlength="600" placeholder="Add a task for today" aria-label="New task" enterkeyhint="done">
   <button class="add" type="submit">Add</button>
 </form>
 <ul id="list"></ul>
@@ -247,12 +247,14 @@
       var s;
       if (editingId === t.id) {
         li.className += ' edit-on';
-        s = document.createElement('input'); s.type = 'text'; s.className = 't-in'; s.value = t.title; s.maxLength = 300; s.setAttribute('aria-label', 'Edit task');
+        s = document.createElement('textarea'); s.rows = 1; s.className = 't-in'; s.value = t.title; s.maxLength = 600; s.setAttribute('aria-label', 'Edit task');
+        var grow = function () { s.style.height = 'auto'; s.style.height = s.scrollHeight + 'px'; };
+        s.addEventListener('input', grow);
         var fin = false;
         var commit = function (val) { if (fin) return; fin = true; editingId = null; var v = (val || '').trim(); if (v && v !== t.title) { t.title = v; t.updated = Date.now(); changed(); } else render(); };
         s.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(s.value); } else if (e.key === 'Escape') { commit(t.title); } });
         s.addEventListener('blur', function () { commit(s.value); });
-        setTimeout(function () { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }, 30);
+        setTimeout(function () { grow(); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }, 30);
       } else {
         s = document.createElement('span'); s.className = 't'; s.textContent = t.title;
       }
