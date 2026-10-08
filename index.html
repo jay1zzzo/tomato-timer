@@ -731,6 +731,34 @@
   .task.is-done .task-later { display: none; }
   .sync-status.is-ok { color: var(--break); }
   .sync-status.is-bad { color: #ff7a7a; }
+  /* ---- Past tasks log ---- */
+  .hist-link { appearance: none; align-self: center; font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--muted); background: transparent; border: none; padding: 6px 10px; cursor: pointer; border-radius: 8px; }
+  .hist-link:hover { color: var(--ink); }
+  .hist-link .hn { font-family: "IBM Plex Mono", monospace; }
+  .hist { position: absolute; inset: 0; z-index: 3; display: none; flex-direction: column; gap: 12px; padding: 22px 20px 18px; background: var(--drawer); }
+  .drawer.hist-open .hist { display: flex; }
+  .drawer.hist-open > :not(.hist) { visibility: hidden; }
+  body.photo-mode .hist { background: rgba(14, 12, 9, 0.96); }
+  .hist-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .hist-head h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .hist-back { appearance: none; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--accent, var(--focus)); background: transparent; border: none; cursor: pointer; padding: 6px 0; }
+  .hist-tools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .hist-tools select { font-family: inherit; font-size: 12.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 8px; }
+  .hist-tools button { appearance: none; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 11px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  .hist-tools button.pri { background: var(--accent, var(--focus)); border-color: transparent; color: var(--on-accent, #fff9f5); }
+  .hist-note { font-size: 12px; color: var(--accent, var(--focus)); min-height: 16px; margin: 0; }
+  .hist-list { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; }
+  .hist-day { margin: 14px 0 4px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+  .hist-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .hist-row input[type=text], .hist-row input[type=date] { font-family: inherit; font-size: 14px; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px 6px; width: 100%; min-width: 0; }
+  .hist-row input[type=text]:hover, .hist-row input[type=date]:hover { border-color: var(--line); }
+  .hist-row input:focus { outline: none; border-color: var(--accent, var(--focus)); background: var(--surface); }
+  .hist-meta { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .hist-meta input[type=date] { width: auto; font-size: 12px; padding: 3px 4px; color: var(--muted); color-scheme: dark; }
+  .hist-del { appearance: none; background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; opacity: .7; }
+  .hist-del:hover { opacity: 1; color: var(--ink); }
+  .hist-del svg { width: 14px; height: 14px; display: block; }
+  .hist-empty { color: var(--muted); font-size: 13px; line-height: 1.5; padding: 20px 0; text-align: center; }
 </style>
 
 <div class="bg-photos" id="bgPhotos" aria-hidden="true"></div>
@@ -824,6 +852,24 @@
   <ul class="task-list" id="taskList"></ul>
   <p class="task-empty" id="taskEmpty">Nothing on today&rsquo;s list yet. Add the few things that would make today a good one.</p>
   <p class="drawer-hint">Pick one with Focus. The rest stay out of sight until you switch.</p>
+  <button type="button" class="hist-link" id="histOpen">Past tasks <span class="hn" id="histN"></span></button>
+  <section class="hist" id="hist" aria-label="Past tasks">
+    <div class="hist-head">
+      <h2>Past tasks</h2>
+      <button type="button" class="hist-back" id="histBack">&larr; Back</button>
+    </div>
+    <div class="hist-tools">
+      <select id="histRange" aria-label="Show">
+        <option value="all">All time</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+      <button type="button" class="pri" id="histSave">Export</button>
+      <button type="button" id="histCopy">Copy</button>
+    </div>
+    <p class="hist-note" id="histNote" role="status"></p>
+    <ul class="hist-list" id="histList"></ul>
+  </section>
 </aside>
 
 <button class="cog-btn" id="cogBtn" type="button" aria-label="Open settings" title="Settings">
@@ -1297,6 +1343,13 @@
     window.chrome.webview.addEventListener('message', function (e) {
       if (e.data === 'toggle') toggleRunning();
       else if (e.data === 'pipclosed') { hostPipOpen = false; setPipButtonState(false); }
+      else if (e.data === 'saveopen') { if (savePending) { clearTimeout(savePending); savePending = null; } }
+      else if (e.data === 'savecancel') { var nc = document.getElementById('histNote'); if (nc) nc.textContent = ''; }
+      else if (typeof e.data === 'string' && e.data.indexOf('saved|') === 0) {
+        if (savePending) { clearTimeout(savePending); savePending = null; }
+        var nm = e.data.slice(6).split(/[\\/]/).pop();
+        var nn = document.getElementById('histNote'); if (nn) nn.textContent = 'Saved ' + nm;
+      }
     });
   }
 
@@ -1591,8 +1644,9 @@
 
   var drawerTab = 'today';
   function isLater(t) { return t.later === true; }
-  function todayTasks() { return tasksState.tasks.filter(function (t) { return !isLater(t); }); }
-  function laterTasks() { return tasksState.tasks.filter(isLater); }
+  function isPast(t) { return t.done && t.doneDay && t.doneDay < dayKey(); }
+  function todayTasks() { return tasksState.tasks.filter(function (t) { return !isLater(t) && !isPast(t); }); }
+  function laterTasks() { return tasksState.tasks.filter(function (t) { return isLater(t) && !isPast(t); }); }
 
   function openCount() {
     return tasksState.tasks.filter(function (t) { return !t.done && !isLater(t); }).length;
@@ -1613,8 +1667,7 @@
       if (raw && Array.isArray(raw.tasks)) {
         var today = dayKey();
         tasksState.tasks = raw.tasks.filter(function (t) {
-          return t && typeof t.id === 'string' && typeof t.title === 'string' &&
-            !(t.done && t.doneDay && t.doneDay < today);
+          return t && typeof t.id === 'string' && typeof t.title === 'string';
         });
         tasksState.focusId = raw.focusId || null;
         tasksState.deleted = Array.isArray(raw.deleted) ? raw.deleted : [];
@@ -1668,6 +1721,7 @@
     if (!t) return;
     t.done = done;
     t.doneDay = done ? dayKey() : null;
+    t.completedAt = done ? Date.now() : null;
     t.updated = Date.now();
     if (done && tasksState.focusId === id) tasksState.focusId = null;
     saveTasks();
@@ -1802,7 +1856,6 @@
     Object.keys(map).forEach(function (id) {
       var t = map[id];
       if (tombs[id] !== undefined && tombs[id] >= (t.updated || 0)) return;
-      if (t.done && t.doneDay && t.doneDay < today) return;
       out.push(t);
     });
     tasksState.tasks = out;
@@ -1900,6 +1953,180 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden) scheduleSync(300); });
     setInterval(function () { if (!document.hidden) doSync(); }, 60000);
     if (syncOn()) doSync();
+  }
+
+  // --- Past tasks: a log of everything you finished, editable and exportable ---
+  function doneDayOf(t) { return t.doneDay || t.day || dayKey(); }
+
+  function historyTasks() {
+    var range = document.getElementById('histRange').value;
+    var cutoff = null;
+    if (range !== 'all') {
+      var d = new Date(); d.setDate(d.getDate() - (parseInt(range, 10) - 1));
+      cutoff = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    return tasksState.tasks.filter(function (t) { return t.done && (!cutoff || doneDayOf(t) >= cutoff); })
+      .sort(function (a, b) {
+        var da = doneDayOf(a), db = doneDayOf(b);
+        if (da !== db) return da < db ? 1 : -1;
+        return (b.completedAt || b.updated || 0) - (a.completedAt || a.updated || 0);
+      });
+  }
+
+  function niceDay(k) {
+    var p = k.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    if (isNaN(d.getTime())) return k;
+    return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function timeOf(t) {
+    return t.completedAt ? new Date(t.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+
+  function openHistory() {
+    document.getElementById('drawer').classList.add('hist-open');
+    document.getElementById('histNote').textContent = '';
+    renderHistory();
+  }
+  function closeHistory() {
+    document.getElementById('drawer').classList.remove('hist-open');
+  }
+
+  function renderHistory() {
+    var list = document.getElementById('histList');
+    list.innerHTML = '';
+    var items = historyTasks();
+    if (!items.length) {
+      list.appendChild(el('li', 'hist-empty', 'Nothing here yet. Tasks you tick off are logged here automatically.'));
+      return;
+    }
+    var lastDay = null, group = null, count = {};
+    items.forEach(function (t) { var k = doneDayOf(t); count[k] = (count[k] || 0) + 1; });
+    items.forEach(function (t) {
+      var k = doneDayOf(t);
+      if (k !== lastDay) {
+        var h = el('li', 'hist-day');
+        h.appendChild(el('span', null, niceDay(k)));
+        h.appendChild(el('span', null, count[k] + (count[k] === 1 ? ' done' : ' done')));
+        list.appendChild(h);
+        lastDay = k;
+      }
+      var li = el('li', 'hist-row');
+      var main = el('div');
+      var title = document.createElement('input');
+      title.type = 'text'; title.value = t.title; title.maxLength = 120; title.setAttribute('aria-label', 'Task name');
+      title.addEventListener('change', function () {
+        var v = title.value.trim();
+        if (!v) { title.value = t.title; return; }
+        t.title = v; t.updated = Date.now(); saveTasks(); renderTasks();
+      });
+      var meta = el('div', 'hist-meta');
+      var date = document.createElement('input');
+      date.type = 'date'; date.value = k; date.setAttribute('aria-label', 'Date finished');
+      date.addEventListener('change', function () {
+        if (!date.value) { date.value = doneDayOf(t); return; }
+        t.doneDay = date.value; t.updated = Date.now(); saveTasks(); renderTasks(); renderHistory();
+      });
+      meta.appendChild(date);
+      var bits = [];
+      if (timeOf(t)) bits.push(timeOf(t));
+      if (t.sessions) bits.push(t.sessions + (t.sessions === 1 ? ' focus session' : ' focus sessions'));
+      if (bits.length) meta.appendChild(el('span', null, bits.join(' · ')));
+      main.appendChild(title); main.appendChild(meta);
+      var del = el('button', 'hist-del');
+      del.type = 'button'; del.setAttribute('aria-label', 'Delete: ' + t.title); del.innerHTML = TRASH_SVG;
+      del.addEventListener('click', function () {
+        if (!window.confirm('Delete "' + t.title + '" from your log?')) return;
+        deleteTask(t.id); renderHistory();
+      });
+      li.appendChild(main); li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  function historyRows() {
+    return historyTasks().map(function (t) {
+      return [doneDayOf(t), timeOf(t), t.title, t.sessions || 0];
+    });
+  }
+  function csvCell(v) {
+    var s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function csvText() {
+    var rows = [['Date', 'Time', 'Task', 'Focus sessions']].concat(historyRows());
+    return rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n';
+  }
+  function tsvText() {
+    var rows = [['Date', 'Time', 'Task', 'Focus sessions']].concat(historyRows());
+    return rows.map(function (r) { return r.map(function (c) { return String(c).replace(/[\t\r\n]+/g, ' '); }).join('\t'); }).join('\n');
+  }
+
+  function histNote(msg) {
+    var n = document.getElementById('histNote');
+    n.textContent = msg;
+  }
+
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      return ok;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); });
+    }
+    return Promise.resolve(fallback());
+  }
+
+  var savePending = null;
+  function exportFile() {
+    var items = historyTasks();
+    if (!items.length) { histNote('Nothing to export yet.'); return; }
+    var name = 'tomato-log-' + dayKey() + '.csv';
+    var text = '﻿' + csvText();
+    if (hostBridge) {
+      var bytes = new TextEncoder().encode(text), bin = '';
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      savePending = setTimeout(function () {
+        // The app didn't answer (older app version): put it on the clipboard instead.
+        savePending = null;
+        copyText(tsvText()).then(function (ok) {
+          histNote(ok ? 'Copied. Paste it into Excel, Numbers or Google Sheets.' : 'Couldn’t save here. Try Copy.');
+        });
+      }, 1500);
+      hostPost('save|' + name + '|' + btoa(bin));
+      return;
+    }
+    try {
+      var blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      histNote('Saved ' + name + ' to your downloads.');
+    } catch (e) { histNote('Couldn’t save. Try Copy.'); }
+  }
+
+  function initHistory() {
+    document.getElementById('histOpen').addEventListener('click', openHistory);
+    document.getElementById('histBack').addEventListener('click', closeHistory);
+    document.getElementById('histRange').addEventListener('change', function () { renderHistory(); });
+    document.getElementById('histSave').addEventListener('click', exportFile);
+    document.getElementById('histCopy').addEventListener('click', function () {
+      if (!historyTasks().length) { histNote('Nothing to copy yet.'); return; }
+      copyText(tsvText()).then(function (ok) {
+        histNote(ok ? 'Copied. Paste it into Excel, Numbers or Google Sheets.' : 'Couldn’t copy here.');
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.getElementById('drawer').classList.contains('hist-open')) { closeHistory(); e.stopPropagation(); }
+    }, true);
   }
 
   var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -2002,6 +2229,8 @@
     els.handleCount.hidden = n === 0;
     els.handleCount.textContent = String(n);
     document.body.classList.toggle('focusing', !!focusedTask());
+    var hn = tasksState.tasks.filter(function (t) { return t.done; }).length;
+    document.getElementById('histN').textContent = hn ? '\u00b7 ' + hn : '';
     syncPip();
   }
 
@@ -2082,5 +2311,6 @@
   renderTasks();
   render();
   initSync();
+  initHistory();
 })();
 </script>

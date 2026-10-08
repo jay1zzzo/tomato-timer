@@ -129,7 +129,6 @@
     Object.keys(map).forEach(function (id) {
       var t = map[id];
       if (tombs[id] !== undefined && tombs[id] >= (t.updated || 0)) return;
-      if (t.done && t.doneDay && t.doneDay < today) return;
       out.push(t);
     });
     state.tasks = out;
@@ -174,7 +173,7 @@
 
   function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: tab === 'later' }); changed(); }
   function move(t, later) { t.later = later; t.updated = Date.now(); changed(); }
-  function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.updated = Date.now(); changed(); }
+  function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.completedAt = t.done ? Date.now() : null; t.updated = Date.now(); changed(); }
   function remove(t) {
     state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
     state.deleted.push({ id: t.id, updated: Date.now() });
