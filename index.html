@@ -779,6 +779,117 @@
   .hist-del:hover { opacity: 1; color: var(--ink); }
   .hist-del svg { width: 14px; height: 14px; display: block; }
   .hist-empty { color: var(--muted); font-size: 13px; line-height: 1.5; padding: 20px 0; text-align: center; }
+
+  /* ---- Content calendar (calm at rest, coral only while open) ---- */
+  .cal-handle {
+    position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 20;
+    appearance: none; writing-mode: vertical-rl; display: flex; align-items: center; gap: 10px;
+    padding: 16px 9px; font-family: inherit; font-size: 11.5px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--line); border-left: none;
+    border-radius: 0 10px 10px 0; cursor: pointer;
+    transition: color 0.15s ease, opacity 0.2s ease;
+  }
+  .cal-handle:hover { color: var(--ink); }
+  .cal-handle .handle-count { color: var(--accent, var(--focus)); }
+  body.photo-mode .cal-handle { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  body.cal-open .cal-handle, body.focusing .cal-handle { opacity: 0; visibility: hidden; pointer-events: none; }
+  .cal-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(8,7,5,0.38); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  body.cal-open .cal-backdrop { opacity: 1; pointer-events: auto; }
+
+  .cal {
+    --cal: #ff6b4a; --cal-dim: rgba(255,107,74,0.14); --cal-ok: #3fb779;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; width: min(480px, 100vw);
+    display: flex; flex-direction: column; background: var(--drawer); color: var(--ink);
+    border-right: 1px solid var(--line); border-top: 4px solid var(--cal);
+    box-shadow: var(--drawer-edge);
+    transform: translateX(-104%); visibility: hidden;
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s linear .3s;
+  }
+  body.cal-open .cal { transform: none; visibility: visible; transition: transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  body.photo-mode .cal { backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); }
+  .cal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 18px 10px; }
+  .cal-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .cal-sub { margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .cal-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 0 18px 12px; }
+  .cal-bs {
+    appearance: none; font-family: inherit; font-size: 13px; font-weight: 700; padding: 10px 14px;
+    border: none; border-radius: 10px; cursor: pointer; color: #fff; background: var(--cal);
+  }
+  .cal-bs:hover { filter: brightness(1.08); }
+  .cal-bs.small { padding: 7px 11px; font-size: 12px; }
+  .cal-seg { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin-left: auto; }
+  .cal-seg button { appearance: none; font-family: inherit; font-size: 12px; font-weight: 700; padding: 6px 10px; border: none; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+  .cal-seg button.is-on { background: var(--cal); color: #fff; }
+  .cal-scroll { flex: 1; overflow-y: auto; padding: 0 18px 22px; }
+
+  .cal-brief { border: 1px solid var(--line); border-left: 4px solid var(--cal); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; background: var(--surface); }
+  .cal-brief h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--cal); }
+  .cal-brief p { margin: 0; font-size: 13px; line-height: 1.55; }
+  .cal-more { appearance: none; margin-top: 8px; padding: 0; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--cal); background: none; border: none; cursor: pointer; }
+  .cal-brief-more { display: none; margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .cal-brief.open .cal-brief-more { display: block; }
+  .cal-brief-more b { color: var(--ink); }
+  .cal-brief-more div { margin-top: 6px; }
+  .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+
+  .cal-week { margin: 18px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .cal-week.cur { color: var(--cal); }
+  .cal-post { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: var(--surface); }
+  .cal-post.soon { border-color: var(--cal); }
+  .cal-post.today { border: 2px solid var(--cal); padding: 11px; box-shadow: 0 0 0 4px var(--cal-dim); }
+  .cal-post.late:not(.is-ready) { border: 2px dashed var(--cal); padding: 11px; }
+  .cal-post.is-ready { opacity: .92; }
+  .cal-post.is-ready .cal-title { color: var(--muted); }
+  .cal-post.support { border-style: dashed; }
+  .cal-tick {
+    flex: none; width: 42px; height: 42px; border-radius: 50%; appearance: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; background: transparent; color: transparent;
+    border: 2px solid var(--cal); transition: transform .12s ease;
+  }
+  .cal-tick:hover { transform: scale(1.06); }
+  .cal-tick svg { width: 22px; height: 22px; }
+  .cal-post.is-ready .cal-tick { background: var(--cal-ok); border-color: var(--cal-ok); color: #fff; }
+  .cal-main { flex: 1; min-width: 0; }
+  .cal-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--muted); }
+  .cal-date { font-weight: 700; color: var(--ink); }
+  .cal-tag { font-weight: 700; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: var(--cal-dim); color: var(--cal); }
+  .cal-tag.ok { background: rgba(63,183,121,.16); color: var(--cal-ok); }
+  .cal-title { margin: 3px 0 0; font-size: 15px; font-weight: 700; line-height: 1.3; }
+  .cal-purpose { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  .cal-purpose.open { display: block; }
+  .cal-chan { margin-top: 6px; font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+  .cal-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+  .cal-act {
+    appearance: none; font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+  }
+  .cal-act:hover { color: var(--ink); border-color: var(--muted); }
+  .cal-act.go { color: var(--cal); border-color: var(--cal); }
+  .cal-act.del:hover { color: #e5484d; border-color: #e5484d; }
+  .cal-file { margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .cal-file b { color: var(--ink); font-weight: 600; word-break: break-all; }
+  .cal-in, .cal-notes {
+    font-family: inherit; font-size: 13px; color: var(--ink); background: var(--drawer);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-width: 0;
+  }
+  .cal-notes { display: block; width: 100%; margin-top: 8px; resize: none; line-height: 1.45; }
+  .cal-linkrow { display: flex; gap: 6px; margin-top: 8px; }
+  .cal-linkrow .cal-in { flex: 1; }
+  .cal-empty { font-size: 13px; color: var(--muted); padding: 18px 4px; }
+  .cal-addform { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .cal-addform .cal-in { flex: 1 1 140px; }
+  .cal-addform h3 { flex: 1 0 100%; margin: 0; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+  .cal-view { position: fixed; inset: 0; z-index: 70; display: none; flex-direction: column; background: rgba(8,7,5,.94); color: #f6f2e8; }
+  .cal-view.on { display: flex; }
+  .cal-view-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font-size: 13px; }
+  .cal-view-bar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-view-body { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 16px 16px; }
+  .cal-view-body img, .cal-view-body video { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+  .cal-view-body iframe { width: 100%; height: 100%; border: none; background: #fff; border-radius: 6px; }
+  .cal-handle:focus-visible, .cal-tick:focus-visible, .cal-act:focus-visible, .cal-bs:focus-visible { outline: 2px solid var(--cal, var(--accent)); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .cal, .cal-backdrop { transition: none; } }
 </style>
 
 <div class="bg-photos" id="bgPhotos" aria-hidden="true"></div>
@@ -938,6 +1049,58 @@
   </div>
 </aside>
 
+
+<button class="cal-handle" id="calHandle" type="button" aria-controls="cal" aria-expanded="false">
+  <span>Content</span><span class="handle-count" id="calCount" hidden></span>
+</button>
+<div class="cal-backdrop" id="calBackdrop" aria-hidden="true"></div>
+<aside class="cal" id="cal" aria-label="Content calendar" aria-hidden="true">
+  <div class="cal-head">
+    <div>
+      <h2>Content calendar</h2>
+      <div class="cal-sub">BlayCare &middot; 14 Oct to 16 Dec 2026</div>
+    </div>
+    <button class="drawer-close" id="calClose" type="button" aria-label="Close content calendar">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+    </button>
+  </div>
+  <div class="cal-bar">
+    <button class="cal-bs" id="calBS" type="button">Open Meta Business Suite &#8599;</button>
+    <div class="cal-seg" role="group" aria-label="Which ideas to show">
+      <button type="button" id="calSegCore" class="is-on">Core posts</button>
+      <button type="button" id="calSegAll">All ideas</button>
+    </div>
+  </div>
+  <div class="cal-scroll" id="calScroll">
+    <section class="cal-brief" id="calBrief">
+      <h3>Campaign brief &middot; Understanding Home Care in Derby</h3>
+      <p>One useful core post every Wednesday, adapted for Facebook, Instagram and Stories. The aim is to help local families understand home care, build trust in BlayCare and bring relevant visits to the website. It is written for adults in Derby who are researching care for a parent, relative or themselves.</p>
+      <button class="cal-more" id="calMore" type="button">More about the campaign</button>
+      <div class="cal-brief-more">
+        <div><b>Four pillars</b></div>
+        <div><span class="pdot" style="background:#ff8a6b"></span><b>Home Care Explained</b> what support looks like day to day</div>
+        <div><span class="pdot" style="background:#8ab4ff"></span><b>Guidance for Families</b> practical next steps</div>
+        <div><span class="pdot" style="background:#6fd39a"></span><b>Trust and Reassurance</b> safe, respectful, person-centred care</div>
+        <div><span class="pdot" style="background:#c79bff"></span><b>Our People and Community</b> the team and Derby</div>
+        <div><b>Measure</b> tracked website visits, reach, engagement, link clicks. Then enquiries, video views and watch time.</div>
+        <div><b>Each post</b> create, approve, publish, measure, improve. Use a trackable link where relevant.</div>
+        <div><b>Content check</b> keep it clear and accurate, get consent before using staff or client photos, and never post confidential or identifying information.</div>
+      </div>
+    </section>
+    <div id="calList"></div>
+    <form class="cal-addform" id="calAdd" autocomplete="off">
+      <h3>Add your own idea</h3>
+      <input class="cal-in" id="calAddTitle" type="text" maxlength="120" placeholder="Post idea" aria-label="Post idea">
+      <input class="cal-in" id="calAddDate" type="date" aria-label="Date" style="flex:0 1 150px">
+      <button class="cal-bs small" type="submit">Add</button>
+    </form>
+  </div>
+</aside>
+<input type="file" id="calFile" accept="image/*,video/*,application/pdf" hidden>
+<div class="cal-view" id="calView" role="dialog" aria-label="Post preview">
+  <div class="cal-view-bar"><span id="calViewName"></span><button class="cal-act" id="calViewClose" type="button" style="color:#f6f2e8">Close</button></div>
+  <div class="cal-view-body" id="calViewBody"></div>
+</div>
 
 <script>
 (function () {
@@ -1157,6 +1320,7 @@
   function $(id) { return document.getElementById(id); }
 
   function openSettings() {
+    closeCal();
     settingsOpen = true;
     document.body.classList.add('settings-open');
     $('spanel').setAttribute('aria-hidden', 'false');
@@ -1343,6 +1507,435 @@
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildSwatches('swFocus', 'focus'); buildSwatches('swBreak', 'brk'); render();
     });
+  }
+
+  // --- Content calendar: ideas, a ready tick, an attached file, a link, and Meta Business Suite ---
+  var CAL_KEY = 'tomato-timer-lab-cal';
+  var CAL_UI_KEY = 'tomato-timer-lab-cal-ui';
+  var BS_URL = 'https://business.facebook.com/latest/home';
+  var PILLARS = {
+    explained: { n: 'Home Care Explained', c: '#ff8a6b' },
+    guidance: { n: 'Guidance for Families', c: '#8ab4ff' },
+    trust: { n: 'Trust and Reassurance', c: '#6fd39a' },
+    people: { n: 'Our People and Community', c: '#c79bff' }
+  };
+  // id, date, title, pillar, kind, what it is for
+  var CAL_SEED = [
+    ['c1', '2026-10-14', 'What Can Home Care Support With?', 'explained', 'core', 'Introduce the different types of everyday support available and direct readers to the relevant service page on the BlayCare website.'],
+    ['c2', '2026-10-21', 'Choosing a Home Care Provider', 'guidance', 'core', 'Share practical questions that families can ask when comparing home care providers.'],
+    ['c3', '2026-10-28', 'Staff Spotlight', 'people', 'core', 'Introduce a member of the team and highlight the qualities they bring to BlayCare.'],
+    ['c4', '2026-11-04', 'Personalised Care Plans', 'trust', 'core', 'Explain how care can be shaped around an individual’s needs, routines, preferences and choices.'],
+    ['c5', '2026-11-11', 'Care After Hospital Discharge', 'explained', 'core', 'Explain how short-term or ongoing home care may support a safer and more comfortable return home.'],
+    ['c6', '2026-11-18', 'Safeguarding Adults Week', 'trust', 'core', 'Explain BlayCare’s commitment to recognising concerns, reporting them correctly and protecting the people we support.'],
+    ['c7', '2026-11-25', 'How to Start Arranging Home Care', 'guidance', 'core', 'Give families a simple and reassuring set of next steps and direct them to contact BlayCare.'],
+    ['c8', '2026-12-02', 'Staff Training Spotlight', 'trust', 'core', 'Show how staff training supports safe, consistent and person-centred care.'],
+    ['c9', '2026-12-09', 'Winter Home Safety', 'guidance', 'core', 'Share seasonal advice about suitable clothing, hydration, good lighting and slippery paths or wet leaves.'],
+    ['c10', '2026-12-16', 'Christmas Companionship', 'explained', 'core', 'Highlight the importance of companionship and regular support during the festive period.'],
+    ['s1', '2026-11-05', 'Bonfire Night', '', 'support', 'A simple seasonal safety reminder.'],
+    ['s2', '2026-11-08', 'Remembrance Sunday', '', 'support', 'A respectful community acknowledgement.'],
+    ['s3', '2026-11-19', 'Carers Rights Day', '', 'support', 'Useful information and recognition for unpaid carers.'],
+    ['s4', '', 'Macmillan Coffee Morning', '', 'support', 'If approved, BlayCare could host a Coffee Morning, share photographs from the event and promote the fundraising purpose. Date to be agreed.'],
+    ['s5', '2026-11-28', 'Festive Derby', '', 'support', 'Relevant local community content highlighting seasonal activities in Derby.'],
+    ['s6', '2026-12-03', 'International Day of Persons with Disabilities', '', 'support', 'Content focused on inclusion, dignity, choice and independence.'],
+    ['s7', '2026-12-10', 'Christmas Jumper Day', '', 'support', 'Light staff or office content, if suitable and approved.'],
+    ['s8', '2026-12-23', 'Christmas Message (23 to 25 Dec)', '', 'support', 'A warm message for clients, families and staff.'],
+    ['s9', '', 'Animated educational video test', '', 'support', 'One short animated video with simple visuals, clear wording and memorable audio, on one of the approved themes. Test whether it improves reach, watch time and engagement. Only repeat it if the results justify the time and cost.']
+  ];
+
+  var calState = { posts: [], deleted: [] };
+  var calUI = { all: false, notes: {}, link: {}, open: {} };
+  var calFiles = {};
+  var calEditing = false;
+  var calAttachId = null;
+  var calViewURL = null;
+
+  function calLoad() {
+    try {
+      var o = JSON.parse(localStorage.getItem(CAL_KEY) || 'null');
+      if (o && Array.isArray(o.posts)) { calState.posts = o.posts; calState.deleted = Array.isArray(o.deleted) ? o.deleted : []; }
+    } catch (e) {}
+    try { var u = JSON.parse(localStorage.getItem(CAL_UI_KEY) || 'null'); if (u && u.all) calUI.all = true; } catch (e) {}
+    var have = {}, tomb = {};
+    calState.posts.forEach(function (p) { have[p.id] = 1; });
+    calState.deleted.forEach(function (d) { tomb[d.id] = 1; });
+    CAL_SEED.forEach(function (s) {
+      var id = 'seed-' + s[0];
+      if (have[id] || tomb[id]) return;
+      calState.posts.push({ id: id, date: s[1], title: s[2], pillar: s[3], kind: s[4], purpose: s[5], notes: '', ready: false, link: '', file: null, updated: 0 });
+    });
+  }
+  function calSaveLocal() { try { localStorage.setItem(CAL_KEY, JSON.stringify(calState)); } catch (e) {} }
+  function calSave() { calSaveLocal(); scheduleSync(); }
+  function calFind(id) { for (var i = 0; i < calState.posts.length; i++) if (calState.posts[i].id === id) return calState.posts[i]; }
+  function calTouch(p) { p.updated = Date.now(); calSave(); calRender(); calBadge(); }
+
+  // Merging with the other devices: newest edit to each post wins, deletions are remembered.
+  function calMerge(remote) {
+    var rp = remote && Array.isArray(remote.posts) ? remote.posts : [];
+    var rd = remote && Array.isArray(remote.deleted) ? remote.deleted : [];
+    var tombs = {}, map = {}, cutoff = Date.now() - 120 * 86400000;
+    calState.deleted.concat(rd).forEach(function (d) { if (d && typeof d.id === 'string') tombs[d.id] = Math.max(tombs[d.id] || 0, d.updated || 0); });
+    calState.posts.concat(rp).forEach(function (p) {
+      if (!p || typeof p.id !== 'string' || typeof p.title !== 'string') return;
+      if (!map[p.id] || (p.updated || 0) > (map[p.id].updated || 0)) map[p.id] = p;
+    });
+    var out = [];
+    Object.keys(map).forEach(function (id) { if (tombs[id] !== undefined && tombs[id] >= (map[id].updated || 0)) return; out.push(map[id]); });
+    calState.posts = out;
+    calState.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff || id.indexOf('seed-') === 0; })
+      .map(function (id) { return { id: id, updated: tombs[id] }; });
+    calSaveLocal();
+    if (!calEditing) calRender();
+    calBadge();
+  }
+  function calPayload() {
+    return {
+      v: 1,
+      posts: calState.posts.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }),
+      deleted: calState.deleted.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; })
+    };
+  }
+  function calNorm(p) { try { return JSON.stringify(p && Array.isArray(p.posts) ? { p: p.posts.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }), d: (p.deleted || []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }) } : null); } catch (e) { return ''; } }
+
+  function calSyncOnce(attempt) {
+    return ghFetch('GET', null, 'calendar.json').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (res.status === 401) throw fail('auth');
+      if (res.status === 403) throw fail('forbidden');
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) {
+        var data = null;
+        try { data = JSON.parse(b64dec(j.content)); } catch (e) {}
+        return { sha: j.sha, data: data };
+      });
+    }).then(function (remote) {
+      calMerge(remote.data);
+      if (remote.sha && calNorm(remote.data) === calNorm(calPayload())) return;
+      var body = { message: 'Sync content calendar', content: b64enc(JSON.stringify(calPayload(), null, 1)) };
+      if (remote.sha) body.sha = remote.sha;
+      return ghFetch('PUT', JSON.stringify(body), 'calendar.json').then(function (res) {
+        if (res.status === 409 || res.status === 422) {
+          if (attempt < 3) return calSyncOnce(attempt + 1);
+          throw fail('conflict');
+        }
+        if (res.status === 404) throw fail('norepo');
+        if (res.status === 401) throw fail('auth');
+        if (res.status === 403) throw fail('forbidden');
+        if (!res.ok) throw fail('http');
+      });
+    });
+  }
+
+  // Attached files stay on the device they were added on.
+  function cdb() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open('tomato-lab-content', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('files'); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function cfPut(id, blob) {
+    return cdb().then(function (db) { return new Promise(function (res, rej) {
+      var tx = db.transaction('files', 'readwrite'); tx.objectStore('files').put(blob, id);
+      tx.oncomplete = function () { res(); }; tx.onerror = function () { rej(tx.error); };
+    }); });
+  }
+  function cfGet(id) {
+    return cdb().then(function (db) { return new Promise(function (res, rej) {
+      var q = db.transaction('files', 'readonly').objectStore('files').get(id);
+      q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); };
+    }); });
+  }
+  function cfDel(id) {
+    return cdb().then(function (db) { return new Promise(function (res) {
+      var tx = db.transaction('files', 'readwrite'); tx.objectStore('files').delete(id);
+      tx.oncomplete = function () { res(); }; tx.onerror = function () { res(); };
+    }); });
+  }
+  function cfKeys() {
+    return cdb().then(function (db) { return new Promise(function (res, rej) {
+      var q = db.transaction('files', 'readonly').objectStore('files').getAllKeys();
+      q.onsuccess = function () { res(q.result || []); }; q.onerror = function () { rej(q.error); };
+    }); });
+  }
+
+  function parseDay(s) { var a = s.split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
+  function keyOf(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function addDays(key, n) { var d = parseDay(key); d.setDate(d.getDate() + n); return keyOf(d); }
+  function dayDiff(key) { return Math.round((parseDay(key) - parseDay(dayKey())) / 86400000); }
+  function mondayOf(key) { var d = parseDay(key); var w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return keyOf(d); }
+  function prettyDate(key) { return parseDay(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); }
+
+  function calBadge() {
+    var lim = addDays(dayKey(), 7);
+    var n = calState.posts.filter(function (p) { return p.kind !== 'support' && !p.ready && p.date && p.date <= lim; }).length;
+    var b = document.getElementById('calCount');
+    b.hidden = n === 0; b.textContent = n ? String(n) : '';
+    document.getElementById('calHandle').setAttribute('aria-label', n ? 'Content calendar, ' + n + ' not ready yet' : 'Content calendar');
+  }
+
+  function cleanUrl(v) {
+    v = (v || '').trim();
+    if (!v) return '';
+    if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    try { var u = new URL(v); return /^https?:$/.test(u.protocol) ? u.href : ''; } catch (e) { return ''; }
+  }
+  function openLink(url) {
+    var u = cleanUrl(url);
+    if (!u) return;
+    if (hostBridge) hostPost('link|' + u);
+    else window.open(u, '_blank', 'noopener');
+  }
+
+  function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+
+  function mkBtn(label, cls, fn) {
+    var b = el('button', 'cal-act' + (cls ? ' ' + cls : ''), label);
+    b.type = 'button'; b.addEventListener('click', fn); return b;
+  }
+
+  function buildPost(p) {
+    var today = dayKey(), diff = p.date ? dayDiff(p.date) : null;
+    var card = el('article', 'cal-post' + (p.kind === 'support' ? ' support' : '') + (p.ready ? ' is-ready' : ''));
+    if (!p.ready && diff !== null && p.kind !== 'support') {
+      if (diff === 0) card.classList.add('today');
+      else if (diff < 0) card.classList.add('late');
+      else if (diff <= 7) card.classList.add('soon');
+    }
+    var tick = el('button', 'cal-tick');
+    tick.type = 'button';
+    tick.setAttribute('aria-pressed', p.ready ? 'true' : 'false');
+    tick.title = p.ready ? 'Ready. Tap to undo' : 'Tap when this post is written, made and approved';
+    tick.setAttribute('aria-label', (p.ready ? 'Ready: ' : 'Mark ready: ') + p.title);
+    tick.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    tick.addEventListener('click', function () { p.ready = !p.ready; calTouch(p); });
+    card.appendChild(tick);
+
+    var main = el('div', 'cal-main');
+    var meta = el('div', 'cal-meta');
+    meta.appendChild(el('span', 'cal-date', p.date ? prettyDate(p.date) : 'No date yet'));
+    if (p.ready) meta.appendChild(el('span', 'cal-tag ok', 'Ready'));
+    else if (diff === 0) meta.appendChild(el('span', 'cal-tag', 'Today'));
+    else if (diff !== null && diff < 0) meta.appendChild(el('span', 'cal-tag', Math.abs(diff) + (Math.abs(diff) === 1 ? ' day' : ' days') + ' late'));
+    else if (diff === 1) meta.appendChild(el('span', 'cal-tag', 'Tomorrow'));
+    else if (diff !== null && diff <= 7) meta.appendChild(el('span', 'cal-tag', 'In ' + diff + ' days'));
+    if (PILLARS[p.pillar]) {
+      var pl = el('span');
+      var dot = el('span', 'pdot'); dot.style.background = PILLARS[p.pillar].c;
+      pl.appendChild(dot); pl.appendChild(document.createTextNode(PILLARS[p.pillar].n));
+      meta.appendChild(pl);
+    } else if (p.kind === 'support') meta.appendChild(document.createTextNode('Optional'));
+    main.appendChild(meta);
+    main.appendChild(el('h4', 'cal-title', p.title));
+    if (p.purpose) {
+      var pur = el('p', 'cal-purpose' + (calUI.open[p.id] ? ' open' : ''), p.purpose);
+      pur.title = 'Tap to show all';
+      pur.addEventListener('click', function () { calUI.open[p.id] = !calUI.open[p.id]; pur.classList.toggle('open', !!calUI.open[p.id]); });
+      main.appendChild(pur);
+    }
+    if (p.kind !== 'support') main.appendChild(el('div', 'cal-chan', 'Facebook · Instagram · Stories'));
+
+    // the file attached on this device, or its name from another device
+    if (p.file) {
+      var fr = el('div', 'cal-file');
+      var nm = el('b', null, p.file.name);
+      fr.appendChild(nm);
+      fr.appendChild(document.createTextNode(fmtSize(p.file.size || 0)));
+      if (calFiles[p.id]) {
+        fr.appendChild(mkBtn('Open', 'go', function () { calOpenFile(p); }));
+      } else {
+        var nd = el('span', null, 'Not on this device. Attach it here to preview.'); nd.style.flexBasis = '100%'; fr.appendChild(nd);
+      }
+      fr.appendChild(mkBtn('Remove', 'del', function () {
+        cfDel(p.id).then(function () { delete calFiles[p.id]; p.file = null; calTouch(p); });
+      }));
+      main.appendChild(fr);
+    }
+    if (p.link && !calUI.link[p.id]) {
+      var lr = el('div', 'cal-file');
+      var host = p.link; try { host = new URL(p.link).hostname.replace(/^www\./, ''); } catch (e) {}
+      lr.appendChild(document.createTextNode('Link'));
+      lr.appendChild(el('b', null, host));
+      lr.appendChild(mkBtn('Open', 'go', function () { openLink(p.link); }));
+      lr.appendChild(mkBtn('Edit', '', function () { calUI.link[p.id] = true; calRender(); }));
+      main.appendChild(lr);
+    }
+    if (calUI.link[p.id]) {
+      var row = el('div', 'cal-linkrow');
+      var inp = el('input', 'cal-in cal-edit'); inp.type = 'url'; inp.placeholder = 'Paste a Drive or Dropbox link'; inp.value = p.link || '';
+      inp.setAttribute('aria-label', 'Link to the finished post');
+      var save = mkBtn('Save', 'go', function () {
+        var u = cleanUrl(inp.value);
+        if (inp.value.trim() && !u) { inp.style.borderColor = '#e5484d'; return; }
+        p.link = u; delete calUI.link[p.id]; calEditing = false; calTouch(p);
+      });
+      inp.addEventListener('focus', function () { calEditing = true; });
+      inp.addEventListener('blur', function () { calEditing = false; });
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); save.click(); } if (e.key === 'Escape') { e.stopPropagation(); delete calUI.link[p.id]; calEditing = false; calRender(); } });
+      row.appendChild(inp); row.appendChild(save);
+      main.appendChild(row);
+      setTimeout(function () { inp.focus(); }, 0);
+    }
+    if (calUI.notes[p.id] || p.notes) {
+      var ta = el('textarea', 'cal-notes cal-edit'); ta.rows = 2; ta.maxLength = 600; ta.value = p.notes || '';
+      ta.placeholder = 'Your idea, caption, hook…';
+      ta.setAttribute('aria-label', 'Notes for ' + p.title);
+      var grow = function () { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+      ta.addEventListener('input', grow);
+      ta.addEventListener('focus', function () { calEditing = true; });
+      ta.addEventListener('blur', function () {
+        calEditing = false;
+        if (ta.value !== (p.notes || '')) { p.notes = ta.value; calTouch(p); }
+        else if (!ta.value) { delete calUI.notes[p.id]; calRender(); }
+      });
+      ta.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); ta.value = p.notes || ''; ta.blur(); } });
+      main.appendChild(ta);
+      setTimeout(grow, 0);
+      if (calUI.notes[p.id] && !p.notes) setTimeout(function () { ta.focus(); }, 0);
+    }
+
+    var acts = el('div', 'cal-acts');
+    if (!p.file) acts.appendChild(mkBtn('Attach file', '', function () { calAttachId = p.id; var f = document.getElementById('calFile'); f.value = ''; f.click(); }));
+    if (!p.link && !calUI.link[p.id]) acts.appendChild(mkBtn('Add link', '', function () { calUI.link[p.id] = true; calRender(); }));
+    if (!p.notes && !calUI.notes[p.id]) acts.appendChild(mkBtn('Notes', '', function () { calUI.notes[p.id] = true; calRender(); }));
+    if (p.ready) acts.appendChild(mkBtn('Schedule in Business Suite ↗', 'go', function () { openLink(BS_URL); }));
+    if (p.kind !== 'core') {
+      var di = el('input', 'cal-in cal-edit'); di.type = 'date'; di.value = p.date || ''; di.style.padding = '4px 6px'; di.style.fontSize = '12px';
+      di.setAttribute('aria-label', 'Date for ' + p.title);
+      di.addEventListener('focus', function () { calEditing = true; });
+      di.addEventListener('blur', function () { calEditing = false; });
+      di.addEventListener('change', function () { p.date = di.value; calEditing = false; calTouch(p); });
+      acts.appendChild(di);
+      acts.appendChild(mkBtn('Delete', 'del', function () {
+        if (!window.confirm('Delete “' + p.title + '”?')) return;
+        cfDel(p.id).catch(function () {});
+        calState.posts = calState.posts.filter(function (x) { return x.id !== p.id; });
+        calState.deleted.push({ id: p.id, updated: Date.now() });
+        calSave(); calRender(); calBadge();
+      }));
+    }
+    main.appendChild(acts);
+    card.appendChild(main);
+    return card;
+  }
+
+  function calRender() {
+    var list = document.getElementById('calList');
+    if (!list) return;
+    list.textContent = '';
+    var posts = calState.posts.filter(function (p) { return calUI.all || p.kind !== 'support'; });
+    var dated = posts.filter(function (p) { return p.date; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.title < b.title ? -1 : 1); });
+    var undated = posts.filter(function (p) { return !p.date; });
+    var thisWeek = mondayOf(dayKey()), cur = null;
+    dated.forEach(function (p) {
+      var w = mondayOf(p.date);
+      if (w !== cur) {
+        cur = w;
+        var diffW = Math.round((parseDay(w) - parseDay(thisWeek)) / 604800000);
+        var label = diffW === 0 ? 'This week' : diffW === 1 ? 'Next week' : 'Week of ' + parseDay(w).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+        list.appendChild(el('div', 'cal-week' + (diffW === 0 ? ' cur' : ''), label));
+      }
+      list.appendChild(buildPost(p));
+    });
+    if (undated.length) {
+      list.appendChild(el('div', 'cal-week', 'No date yet'));
+      undated.forEach(function (p) { list.appendChild(buildPost(p)); });
+    }
+    if (!posts.length) list.appendChild(el('div', 'cal-empty', 'Nothing here yet. Add an idea below.'));
+    document.getElementById('calSegCore').classList.toggle('is-on', !calUI.all);
+    document.getElementById('calSegAll').classList.toggle('is-on', calUI.all);
+  }
+
+  function calOpenFile(p) {
+    cfGet(p.id).then(function (blob) {
+      if (!blob) { delete calFiles[p.id]; calRender(); return; }
+      if (calViewURL) URL.revokeObjectURL(calViewURL);
+      calViewURL = URL.createObjectURL(blob);
+      var body = document.getElementById('calViewBody'); body.textContent = '';
+      var t = (blob.type || p.file.type || '');
+      var node;
+      if (t.indexOf('image/') === 0) { node = document.createElement('img'); node.alt = p.title; }
+      else if (t.indexOf('video/') === 0) { node = document.createElement('video'); node.controls = true; node.autoplay = false; }
+      else { node = document.createElement('iframe'); node.title = p.title; }
+      node.src = calViewURL;
+      body.appendChild(node);
+      document.getElementById('calViewName').textContent = p.title + '  ·  ' + p.file.name;
+      document.getElementById('calView').classList.add('on');
+    });
+  }
+  function calCloseView() {
+    document.getElementById('calView').classList.remove('on');
+    document.getElementById('calViewBody').textContent = '';
+    if (calViewURL) { URL.revokeObjectURL(calViewURL); calViewURL = null; }
+  }
+
+  function openCal() {
+    if (settingsOpen) closeSettings();
+    closeDrawer();
+    document.body.classList.add('cal-open');
+    document.getElementById('calHandle').setAttribute('aria-expanded', 'true');
+    document.getElementById('cal').setAttribute('aria-hidden', 'false');
+    calRender();
+    var sc = document.getElementById('calScroll');
+    var target = document.querySelector('#calList .cal-post.today') || document.querySelector('#calList .cal-post:not(.is-ready):not(.late)');
+    sc.scrollTop = 0;
+    if (target) {
+      var off = target.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+      if (off > sc.clientHeight - 140) sc.scrollTop = Math.max(0, off + sc.scrollTop - 90);
+    }
+    setTimeout(function () { document.getElementById('calClose').focus(); }, 320);
+  }
+  function closeCal() {
+    if (!document.body.classList.contains('cal-open')) return;
+    calCloseView();
+    document.body.classList.remove('cal-open');
+    document.getElementById('calHandle').setAttribute('aria-expanded', 'false');
+    document.getElementById('cal').setAttribute('aria-hidden', 'true');
+    if (document.activeElement && document.getElementById('cal').contains(document.activeElement)) document.activeElement.blur();
+  }
+
+  function initCal() {
+    calLoad();
+    calBadge();
+    document.getElementById('calHandle').addEventListener('click', openCal);
+    document.getElementById('calClose').addEventListener('click', closeCal);
+    document.getElementById('calBackdrop').addEventListener('click', closeCal);
+    document.getElementById('calViewClose').addEventListener('click', calCloseView);
+    document.getElementById('calBS').addEventListener('click', function () { openLink(BS_URL); });
+    document.getElementById('calMore').addEventListener('click', function () {
+      var b = document.getElementById('calBrief'); var on = b.classList.toggle('open');
+      this.textContent = on ? 'Show less' : 'More about the campaign';
+    });
+    function seg(all) { calUI.all = all; try { localStorage.setItem(CAL_UI_KEY, JSON.stringify({ all: all })); } catch (e) {} calRender(); }
+    document.getElementById('calSegCore').addEventListener('click', function () { seg(false); });
+    document.getElementById('calSegAll').addEventListener('click', function () { seg(true); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (document.getElementById('calView').classList.contains('on')) { calCloseView(); return; }
+      if (document.body.classList.contains('cal-open')) closeCal();
+    });
+    document.getElementById('calFile').addEventListener('change', function () {
+      var f = this.files && this.files[0], id = calAttachId; this.value = '';
+      var p = id && calFind(id);
+      if (!f || !p) return;
+      cfPut(id, f).then(function () {
+        calFiles[id] = true;
+        p.file = { name: f.name, size: f.size, type: f.type || '' };
+        calTouch(p);
+      }).catch(function () { window.alert('Couldn’t store that file on this device.'); });
+    });
+    document.getElementById('calAdd').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var ti = document.getElementById('calAddTitle'), da = document.getElementById('calAddDate');
+      var title = ti.value.trim(); if (!title) return;
+      calState.posts.push({ id: 'p' + newId(), date: da.value || '', title: title, pillar: '', kind: 'custom', purpose: '', notes: '', ready: false, link: '', file: null, updated: Date.now() });
+      ti.value = ''; da.value = '';
+      calSave(); calRender(); calBadge();
+    });
+    cfKeys().then(function (keys) { keys.forEach(function (k) { calFiles[k] = true; }); calRender(); }).catch(function () {});
+    calRender();
+    setInterval(calBadge, 3600000);
   }
 
   // --- Floating mini timer (Document Picture-in-Picture) ---
@@ -1715,6 +2308,7 @@
   }
 
   function openDrawer() {
+    closeCal();
     drawerTab = 'today'; renderList();
     els.drawerDate.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
     document.body.classList.add('drawer-open');
@@ -1831,7 +2425,7 @@
     return new TextDecoder().decode(bytes);
   }
 
-  function ghFetch(method, body) {
+  function ghFetch(method, body, file) {
     var opts = {
       method: method,
       cache: 'no-store',
@@ -1842,7 +2436,7 @@
       }
     };
     if (body) { opts.body = body; opts.headers['Content-Type'] = 'application/json'; }
-    return fetch('https://api.github.com/repos/' + sync.repo + '/contents/tasks.json', opts);
+    return fetch('https://api.github.com/repos/' + sync.repo + '/contents/' + (file || 'tasks.json'), opts);
   }
 
   function fail(code) { var e = new Error(code); e.code = code; return e; }
@@ -1922,7 +2516,7 @@
     if (syncBusy) { syncAgain = true; return Promise.resolve(); }
     syncBusy = true;
     setSyncStatus('Syncing…');
-    return syncOnce(1).then(function () {
+    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () {
       sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
     }).catch(function (e) {
       var c = e && e.code;
@@ -2371,6 +2965,7 @@
   loadTasks();
   renderTasks();
   render();
+  initCal();
   initSync();
   initHistory();
 })();
