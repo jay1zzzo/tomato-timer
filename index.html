@@ -892,6 +892,12 @@
   .cal-addform .cal-in { flex: 1 1 140px; }
   .cal-addform h3 { flex: 1 0 100%; margin: 0; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 
+  .cal-editform { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .cal-editform .cal-in, .cal-editform .cal-notes { width: 100%; margin: 0; font-size: 14px; }
+  .cal-editrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .cal-editrow .cal-in { width: auto; flex: 1 1 130px; }
+  .cal-briefedit { display: flex; flex-direction: column; gap: 8px; }
+  .cal-briefedit textarea { width: 100%; font-family: inherit; font-size: 13px; line-height: 1.5; color: var(--ink); background: var(--drawer); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; resize: vertical; min-height: 110px; }
   .cal-view { position: fixed; inset: 0; z-index: 70; display: none; flex-direction: column; background: rgba(8,7,5,.94); color: #f6f2e8; }
   .cal-view.on { display: flex; }
   .cal-view-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font-size: 13px; }
@@ -1085,8 +1091,9 @@
   <div class="cal-scroll" id="calScroll">
     <section class="cal-brief" id="calBrief">
       <h3>Campaign brief &middot; Understanding Home Care in Derby</h3>
-      <p>One useful core post every Wednesday, adapted for Facebook, Instagram and Stories. The aim is to help local families understand home care, build trust in BlayCare and bring relevant visits to the website. It is written for adults in Derby who are researching care for a parent, relative or themselves.</p>
-      <button class="cal-more" id="calMore" type="button">More about the campaign</button>
+      <p id="calBriefText"></p>
+      <div id="calBriefEdit" class="cal-briefedit" hidden></div>
+      <div class="cal-editrow" id="calBriefBtns" style="gap:14px;margin-top:8px"><button class="cal-more" id="calMore" type="button" style="margin-top:0">More about the campaign</button><button class="cal-more" id="calBriefEditBtn" type="button" style="margin-top:0;color:var(--muted)">Edit brief</button></div>
       <div class="cal-brief-more">
         <div><b>Four pillars</b></div>
         <div><span class="pdot" style="background:#ff8a6b"></span><b>Home Care Explained</b> what support looks like day to day</div>
@@ -1553,8 +1560,9 @@
     ['s9', '', 'Animated educational video test', '', 'support', 'One short animated video with simple visuals, clear wording and memorable audio, on one of the approved themes. Test whether it improves reach, watch time and engagement. Only repeat it if the results justify the time and cost.']
   ];
 
-  var calState = { posts: [], deleted: [] };
-  var calUI = { all: false, notes: {}, link: {}, open: {} };
+  var BRIEF_DEFAULT = 'One useful core post every Wednesday, adapted for Facebook, Instagram and Stories. The aim is to help local families understand home care, build trust in BlayCare and bring relevant visits to the website. It is written for adults in Derby who are researching care for a parent, relative or themselves.';
+  var calState = { posts: [], deleted: [], brief: null };
+  var calUI = { all: false, notes: {}, link: {}, open: {}, edit: null };
   var calFiles = {};
   var calEditing = false;
   var calAttachId = null;
@@ -1563,7 +1571,7 @@
   function calLoad() {
     try {
       var o = JSON.parse(localStorage.getItem(CAL_KEY) || 'null');
-      if (o && Array.isArray(o.posts)) { calState.posts = o.posts; calState.deleted = Array.isArray(o.deleted) ? o.deleted : []; }
+      if (o && Array.isArray(o.posts)) { calState.posts = o.posts; calState.deleted = Array.isArray(o.deleted) ? o.deleted : []; if (o.brief && typeof o.brief.text === 'string') calState.brief = o.brief; }
     } catch (e) {}
     try { var u = JSON.parse(localStorage.getItem(CAL_UI_KEY) || 'null'); if (u && u.all) calUI.all = true; } catch (e) {}
     var have = {}, tomb = {};
@@ -1592,21 +1600,23 @@
     });
     var out = [];
     Object.keys(map).forEach(function (id) { if (tombs[id] !== undefined && tombs[id] >= (map[id].updated || 0)) return; out.push(map[id]); });
+    if (remote && remote.brief && typeof remote.brief.text === 'string' && (!calState.brief || (remote.brief.updated || 0) > (calState.brief.updated || 0))) calState.brief = remote.brief;
     calState.posts = out;
     calState.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff || id.indexOf('seed-') === 0; })
       .map(function (id) { return { id: id, updated: tombs[id] }; });
     calSaveLocal();
-    if (!calEditing) calRender();
+    if (!calEditing) { calRender(); calRenderBrief(); }
     calBadge();
   }
   function calPayload() {
     return {
       v: 1,
       posts: calState.posts.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }),
-      deleted: calState.deleted.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; })
+      deleted: calState.deleted.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }),
+      brief: calState.brief
     };
   }
-  function calNorm(p) { try { return JSON.stringify(p && Array.isArray(p.posts) ? { p: p.posts.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }), d: (p.deleted || []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }) } : null); } catch (e) { return ''; } }
+  function calNorm(p) { try { return JSON.stringify(p && Array.isArray(p.posts) ? { p: p.posts.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }), d: (p.deleted || []).slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; }), b: p.brief || null } : null); } catch (e) { return ''; } }
 
   function calSyncOnce(attempt) {
     return ghFetch('GET', null, 'calendar.json').then(function (res) {
@@ -1738,8 +1748,41 @@
       meta.appendChild(pl);
     } else if (p.kind === 'support') meta.appendChild(document.createTextNode('Optional'));
     main.appendChild(meta);
-    main.appendChild(el('h4', 'cal-title', p.title));
-    if (p.purpose) {
+    if (calUI.edit === p.id) {
+      var ef = el('div', 'cal-editform');
+      var eti = el('input', 'cal-in cal-edit'); eti.type = 'text'; eti.maxLength = 120; eti.value = p.title; eti.setAttribute('aria-label', 'Post title');
+      var er = el('div', 'cal-editrow');
+      var edi = el('input', 'cal-in cal-edit'); edi.type = 'date'; edi.value = p.date || ''; edi.setAttribute('aria-label', 'Date');
+      var esel = el('select', 'cal-in cal-edit'); esel.setAttribute('aria-label', 'Pillar');
+      var opt0 = el('option', null, 'No pillar'); opt0.value = ''; esel.appendChild(opt0);
+      Object.keys(PILLARS).forEach(function (k) { var o = el('option', null, PILLARS[k].n); o.value = k; if (p.pillar === k) o.selected = true; esel.appendChild(o); });
+      er.appendChild(edi); er.appendChild(esel);
+      var epu = el('textarea', 'cal-notes cal-edit'); epu.rows = 3; epu.maxLength = 600; epu.value = p.purpose || ''; epu.placeholder = 'What this post is for'; epu.setAttribute('aria-label', 'What this post is for');
+      var eb = el('div', 'cal-editrow');
+      var okb = mkBtn('Save', 'go', function () {
+        var t = eti.value.trim(); if (!t) { eti.style.borderColor = '#e5484d'; return; }
+        p.title = t; p.date = edi.value; p.pillar = esel.value; p.purpose = epu.value.trim();
+        calUI.edit = null; calEditing = false; calTouch(p);
+      });
+      eb.appendChild(okb);
+      eb.appendChild(mkBtn('Cancel', '', function () { calUI.edit = null; calEditing = false; calRender(); }));
+      var delb = mkBtn('Delete post', 'del', function () {
+        if (!window.confirm('Delete \u201c' + p.title + '\u201d? This can\u2019t be undone.')) return;
+        cfDel(p.id).catch(function () {});
+        calState.posts = calState.posts.filter(function (x) { return x.id !== p.id; });
+        calState.deleted.push({ id: p.id, updated: Date.now() });
+        calUI.edit = null; calEditing = false;
+        calSave(); calRender(); calBadge();
+      });
+      delb.style.marginLeft = 'auto';
+      eb.appendChild(delb);
+      ef.appendChild(eti); ef.appendChild(er); ef.appendChild(epu); ef.appendChild(eb);
+      ef.addEventListener('focusin', function () { calEditing = true; });
+      ef.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); calUI.edit = null; calEditing = false; calRender(); } });
+      main.appendChild(ef);
+      setTimeout(function () { eti.focus(); calEditing = true; }, 0);
+    } else main.appendChild(el('h4', 'cal-title', p.title));
+    if (calUI.edit !== p.id && p.purpose) {
       var pur = el('p', 'cal-purpose' + (calUI.open[p.id] ? ' open' : ''), p.purpose);
       pur.title = 'Tap to show all';
       pur.addEventListener('click', function () { calUI.open[p.id] = !calUI.open[p.id]; pur.classList.toggle('open', !!calUI.open[p.id]); });
@@ -1807,24 +1850,19 @@
     }
 
     var acts = el('div', 'cal-acts');
+    if (calUI.edit !== p.id) acts.appendChild(mkBtn('Edit', '', function () { calUI.edit = p.id; calEditing = true; calRender(); }));
     if (!p.file) acts.appendChild(mkBtn('Attach file', '', function () { calAttachId = p.id; var f = document.getElementById('calFile'); f.value = ''; f.click(); }));
     if (!p.link && !calUI.link[p.id]) acts.appendChild(mkBtn('Add link', '', function () { calUI.link[p.id] = true; calRender(); }));
     if (!p.notes && !calUI.notes[p.id]) acts.appendChild(mkBtn('Notes', '', function () { calUI.notes[p.id] = true; calRender(); }));
     if (p.ready) acts.appendChild(mkBtn('Schedule in Business Suite ↗', 'go', function () { openLink(BS_URL); }));
-    if (p.kind !== 'core') {
+    {
       var di = el('input', 'cal-in cal-edit'); di.type = 'date'; di.value = p.date || ''; di.style.padding = '4px 6px'; di.style.fontSize = '12px';
       di.setAttribute('aria-label', 'Date for ' + p.title);
+      di.style.display = p.kind === 'core' ? 'none' : '';
       di.addEventListener('focus', function () { calEditing = true; });
       di.addEventListener('blur', function () { calEditing = false; });
       di.addEventListener('change', function () { p.date = di.value; calEditing = false; calTouch(p); });
       acts.appendChild(di);
-      acts.appendChild(mkBtn('Delete', 'del', function () {
-        if (!window.confirm('Delete “' + p.title + '”?')) return;
-        cfDel(p.id).catch(function () {});
-        calState.posts = calState.posts.filter(function (x) { return x.id !== p.id; });
-        calState.deleted.push({ id: p.id, updated: Date.now() });
-        calSave(); calRender(); calBadge();
-      }));
     }
     main.appendChild(acts);
     card.appendChild(main);
@@ -1881,6 +1919,30 @@
     if (calViewURL) { URL.revokeObjectURL(calViewURL); calViewURL = null; }
   }
 
+  function calRenderBrief() {
+    var t = (calState.brief && calState.brief.text) || BRIEF_DEFAULT;
+    document.getElementById('calBriefText').textContent = t;
+  }
+  function calBriefEdit(on) {
+    var box = document.getElementById('calBriefEdit'), txt = document.getElementById('calBriefText'), btns = document.getElementById('calBriefBtns');
+    box.hidden = !on; txt.hidden = on; btns.hidden = on;
+    calEditing = on;
+    if (!on) { calRenderBrief(); return; }
+    box.textContent = '';
+    var ta = document.createElement('textarea'); ta.maxLength = 1200; ta.value = (calState.brief && calState.brief.text) || BRIEF_DEFAULT;
+    ta.setAttribute('aria-label', 'Campaign brief');
+    var row = el('div', 'cal-editrow');
+    row.appendChild(mkBtn('Save', 'go', function () {
+      var v = ta.value.trim();
+      calState.brief = { text: v || BRIEF_DEFAULT, updated: Date.now() };
+      calSave(); calBriefEdit(false);
+    }));
+    row.appendChild(mkBtn('Cancel', '', function () { calBriefEdit(false); }));
+    row.appendChild(mkBtn('Back to original', '', function () { ta.value = BRIEF_DEFAULT; }));
+    ta.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); calBriefEdit(false); } });
+    box.appendChild(ta); box.appendChild(row); ta.focus();
+  }
+
   function openCal() {
     if (settingsOpen) closeSettings();
     closeDrawer();
@@ -1914,6 +1976,8 @@
     document.getElementById('calBackdrop').addEventListener('click', closeCal);
     document.getElementById('calViewClose').addEventListener('click', calCloseView);
     document.getElementById('calBS').addEventListener('click', function () { openLink(BS_URL); });
+    calRenderBrief();
+    document.getElementById('calBriefEditBtn').addEventListener('click', function () { calBriefEdit(true); });
     document.getElementById('calMore').addEventListener('click', function () {
       var b = document.getElementById('calBrief'); var on = b.classList.toggle('open');
       this.textContent = on ? 'Show less' : 'More about the campaign';
