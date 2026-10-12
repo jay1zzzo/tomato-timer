@@ -643,6 +643,17 @@
     color: var(--muted); opacity: 0.65; cursor: pointer;
   }
   .task-edit:hover { opacity: 1; color: var(--ink); }
+  .task-star {
+    appearance: none; flex: none; align-self: flex-start; width: 30px; height: 28px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 6px; color: var(--muted); opacity: 0.7; cursor: pointer;
+  }
+  .task-star:hover { opacity: 1; color: #ffc83d; }
+  .task-star svg { width: 17px; height: 17px; }
+  .task.is-starred { border-left: 3px solid #ffc83d; padding-left: 8px; background: rgba(255,200,61,0.09); border-radius: 8px; }
+  .task.is-starred .task-star { color: #ffc83d; opacity: 1; }
+  .task.is-starred .task-star svg { fill: #ffc83d; }
+  .task.is-starred .task-title { font-weight: 600; }
   .task-edit svg { width: 14px; height: 14px; }
   .task-editinput {
     width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.35; resize: none; overflow: hidden; display: block;
@@ -2360,6 +2371,15 @@
     renderTasks();
   }
 
+  function toggleStar(id) {
+    var t = findTask(id);
+    if (!t) return;
+    t.starred = !t.starred;
+    t.updated = Date.now();
+    saveTasks();
+    renderTasks();
+  }
+
   function setTab(tab) {
     drawerTab = tab;
     renderTasks();
@@ -2743,6 +2763,7 @@
     }, true);
   }
 
+  var STAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1L3.2 9.6l6.1-.8z"/></svg>';
   var EDIT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
   var editingId = null;
 
@@ -2758,7 +2779,7 @@
   var TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>';
 
   function buildTaskRow(t) {
-    var li = el('li', 'task' + (t.done ? ' is-done' : ''));
+    var li = el('li', 'task' + (t.done ? ' is-done' : '') + (t.starred && !t.done ? ' is-starred' : ''));
 
     var check = el('button', 'task-check');
     check.type = 'button';
@@ -2797,6 +2818,14 @@
     editBtn.innerHTML = EDIT_SVG;
     editBtn.addEventListener('click', function () { editingId = t.id; renderList(); });
 
+    var starBtn = el('button', 'task-star');
+    starBtn.type = 'button';
+    starBtn.setAttribute('aria-pressed', t.starred ? 'true' : 'false');
+    starBtn.setAttribute('aria-label', (t.starred ? 'Unstar: ' : 'Star: ') + t.title);
+    starBtn.title = t.starred ? 'Starred. Tap to unstar' : 'Star to pin to the top';
+    starBtn.innerHTML = STAR_SVG;
+    starBtn.addEventListener('click', function () { toggleStar(t.id); });
+
     var focusBtn = el('button', 'task-focus', isLater(t) ? 'Today' : 'Focus');
     focusBtn.type = 'button';
     focusBtn.setAttribute('aria-label', (isLater(t) ? 'Move to today: ' : 'Focus on: ') + t.title);
@@ -2823,6 +2852,7 @@
       acts.appendChild(focusBtn);
       if (laterBtn) acts.appendChild(laterBtn);
       main.appendChild(acts);
+      if (!t.done) li.appendChild(starBtn);
       li.appendChild(editBtn);
       li.appendChild(del);
     }
@@ -2833,6 +2863,7 @@
     els.taskList.innerHTML = '';
     var pool = drawerTab === 'later' ? laterTasks() : todayTasks();
     var open = pool.filter(function (t) { return !t.done; });
+    open = open.filter(function (t) { return t.starred; }).concat(open.filter(function (t) { return !t.starred; }));
     var done = pool.filter(function (t) { return t.done; });
     open.concat(done).forEach(function (t) { els.taskList.appendChild(buildTaskRow(t)); });
     els.taskEmpty.hidden = pool.length > 0;

@@ -42,6 +42,10 @@
   li { align-items: flex-start; }
   .chk, .ed, .del { align-self: flex-start; }
   .ed { flex: none; border: none; background: transparent; color: var(--muted); font-size: 18px; width: 34px; height: 34px; }
+  .st { flex: none; align-self: flex-start; border: none; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; width: 34px; height: 34px; padding: 0; }
+  li.starred { border-color: #ffc83d; border-width: 2px; padding: 11px; background: rgba(255,200,61,0.09); }
+  li.starred .st { color: #ffc83d; }
+  li.starred .t { font-weight: 700; }
   li.edit-on .t { padding: 0; }
   .t-in { flex: 1; min-width: 0; resize: none; overflow: hidden; display: block; font: inherit; font-size: 17px; color: var(--ink); background: var(--bg); border: 2px solid var(--accent); border-radius: 10px; padding: 8px 10px; }
   .del { flex: none; border: none; background: transparent; color: var(--muted); font-size: 20px; width: 34px; height: 34px; }
@@ -238,9 +242,9 @@
     $('input').placeholder = tab === 'later' ? 'Park something for later' : 'Add a task for today';
     $('empty').textContent = tab === 'later' ? 'Nothing parked for later. Type anything you don\u2019t want to think about today.' : 'Nothing on today\u2019s list. When someone gives you a task, type it above.';
     var items = all.filter(function (t) { return tab === 'later' ? !!t.later : !t.later; });
-    items.sort(function (a, b) { return (a.done - b.done) || ((a.updated || 0) - (b.updated || 0)); });
+    items.sort(function (a, b) { return (a.done - b.done) || ((b.starred ? 1 : 0) - (a.starred ? 1 : 0)) || ((a.updated || 0) - (b.updated || 0)); });
     items.forEach(function (t) {
-      var li = document.createElement('li'); li.className = t.done ? 'done' : '';
+      var li = document.createElement('li'); li.className = t.done ? 'done' : (t.starred ? 'starred' : '');
       var c = document.createElement('button'); c.type = 'button'; c.className = 'chk'; c.textContent = t.done ? '✓' : '';
       c.setAttribute('aria-label', (t.done ? 'Mark not done: ' : 'Mark done: ') + t.title);
       c.addEventListener('click', function () { toggle(t); });
@@ -269,6 +273,12 @@
         col.appendChild(m);
         var e = document.createElement('button'); e.type = 'button'; e.className = 'ed'; e.textContent = '\u270e'; e.setAttribute('aria-label', 'Edit: ' + t.title);
         e.addEventListener('click', function () { editingId = t.id; render(); });
+        if (!t.done) {
+          var st = document.createElement('button'); st.type = 'button'; st.className = 'st'; st.textContent = t.starred ? '\u2605' : '\u2606';
+          st.setAttribute('aria-pressed', t.starred ? 'true' : 'false'); st.setAttribute('aria-label', (t.starred ? 'Unstar: ' : 'Star: ') + t.title);
+          st.addEventListener('click', function () { t.starred = !t.starred; t.updated = Date.now(); changed(); });
+          li.appendChild(st);
+        }
         li.appendChild(e); li.appendChild(d);
       }
       list.appendChild(li);
