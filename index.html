@@ -461,14 +461,14 @@
   .now-done:hover .tk, .now-done:focus-visible .tk { background: #3fb779; color: #fff; }
   .now-done:focus-visible { outline: 2px solid #3fb779; outline-offset: 3px; }
   body.photo-mode .now-done { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-  body[data-nowstyle="box"] .now { max-width: 480px; padding: 20px 24px 22px; border-radius: 22px; background: rgba(12,10,8,.58); border: 2px solid var(--accent, var(--focus)); box-shadow: 0 0 0 6px var(--focus-dim, rgba(255,107,74,.12)), 0 18px 50px rgba(0,0,0,.5); }
-  body[data-nowstyle="box"] .now:has(.now-title) { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  body[data-nowstyle="box"] .now.has-task { max-width: 480px; padding: 20px 24px 22px; border-radius: 22px; background: rgba(12,10,8,.58); border: 2px solid var(--accent, var(--focus)); box-shadow: 0 0 0 6px var(--focus-dim, rgba(255,107,74,.12)), 0 18px 50px rgba(0,0,0,.5); }
+  body[data-nowstyle="box"] .now.has-task { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   body[data-nowstyle="box"] .now-eyebrow { color: var(--accent, var(--focus)); font-size: 13px; font-weight: 800; letter-spacing: .18em; text-shadow: none; }
   body[data-nowstyle="box"] .now-title { color: var(--now-color, #fff); font-weight: 700; text-shadow: none; }
-  body[data-nowstyle="glow"] .now { max-width: 520px; gap: 10px; }
+  body[data-nowstyle="glow"] .now.has-task { max-width: 520px; gap: 10px; }
   body[data-nowstyle="glow"] .now-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .2em; color: #1c1510; background: var(--now-color, #ffd23f); padding: 5px 14px; border-radius: 99px; text-shadow: none; }
   body[data-nowstyle="glow"] .now-title { font-weight: 800; line-height: 1.15; color: var(--now-color, #ffd23f); text-shadow: 0 0 24px color-mix(in srgb, var(--now-color, #ffd23f) 45%, transparent), 0 3px 14px rgba(0,0,0,.9); }
-  body[data-nowstyle="banner"] .now { max-width: 500px; align-items: stretch; text-align: left; background: rgba(10,8,6,.82); border-left: 8px solid var(--accent, var(--focus)); border-radius: 6px 18px 18px 6px; padding: 18px 22px 20px; gap: 6px; }
+  body[data-nowstyle="banner"] .now.has-task { max-width: 500px; align-items: stretch; text-align: left; background: rgba(10,8,6,.82); border-left: 8px solid var(--accent, var(--focus)); border-radius: 6px 18px 18px 6px; padding: 18px 22px 20px; gap: 6px; }
   body[data-nowstyle="banner"] .now-eyebrow { color: var(--accent, var(--focus)); font-size: 12px; font-weight: 800; letter-spacing: .2em; text-shadow: none; }
   body[data-nowstyle="banner"] .now-title { color: var(--now-color, #fff); font-weight: 700; text-wrap: pretty; text-shadow: none; }
   body[data-nowstyle="banner"] .now-actions { justify-content: flex-start; }
@@ -3034,6 +3034,7 @@
   function renderNow() {
     els.now.innerHTML = '';
     var t = focusedTask();
+    els.now.classList.toggle('has-task', !!t);
     if (t) {
       els.now.appendChild(el('div', 'now-eyebrow', 'Working on'));
       els.now.appendChild(el('p', 'now-title', t.title));
