@@ -83,7 +83,7 @@
     color: var(--ink);
     font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     padding: 68px 20px 40px;
     position: relative;
@@ -137,6 +137,7 @@
   body.photo-mode .bg-scrim { opacity: var(--scrim, 1); }
 
   .app {
+    margin: auto;
     width: 100%;
     max-width: 420px;
     display: flex;
@@ -413,8 +414,11 @@
     letter-spacing: -0.01em;
     text-wrap: balance;
     overflow-wrap: anywhere;
+    font-size: var(--now-size, 26px);
+    font-family: var(--now-font, inherit);
+    color: var(--now-color, var(--ink));
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: var(--now-lines, 5);
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -445,6 +449,32 @@
   body.photo-mode .now-title,
   body.photo-mode .now-eyebrow { text-shadow: 0 2px 18px rgba(0,0,0,0.6); }
   body.photo-mode .now-btn, body.photo-mode .now-pick { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+  /* Task text look: box (default), plain, glow, banner */
+  .now-done {
+    appearance: none; font-family: inherit; display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+    padding: 5px 16px 5px 6px; border-radius: 99px; font-size: 13px; font-weight: 700; letter-spacing: .04em;
+    color: var(--ink); background: transparent; border: 1.5px solid #3fb779;
+  }
+  .now-done .tk { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid #3fb779; color: #3fb779; display: flex; align-items: center; justify-content: center; transition: background .15s ease, color .15s ease; }
+  .now-done .tk svg { width: 20px; height: 20px; }
+  .now-done:hover .tk, .now-done:focus-visible .tk { background: #3fb779; color: #fff; }
+  .now-done:focus-visible { outline: 2px solid #3fb779; outline-offset: 3px; }
+  body.photo-mode .now-done { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  body[data-nowstyle="box"] .now { max-width: 480px; padding: 20px 24px 22px; border-radius: 22px; background: rgba(12,10,8,.58); border: 2px solid var(--accent, var(--focus)); box-shadow: 0 0 0 6px var(--focus-dim, rgba(255,107,74,.12)), 0 18px 50px rgba(0,0,0,.5); }
+  body[data-nowstyle="box"] .now:has(.now-title) { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  body[data-nowstyle="box"] .now-eyebrow { color: var(--accent, var(--focus)); font-size: 13px; font-weight: 800; letter-spacing: .18em; text-shadow: none; }
+  body[data-nowstyle="box"] .now-title { color: var(--now-color, #fff); font-weight: 700; text-shadow: none; }
+  body[data-nowstyle="glow"] .now { max-width: 520px; gap: 10px; }
+  body[data-nowstyle="glow"] .now-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .2em; color: #1c1510; background: var(--now-color, #ffd23f); padding: 5px 14px; border-radius: 99px; text-shadow: none; }
+  body[data-nowstyle="glow"] .now-title { font-weight: 800; line-height: 1.15; color: var(--now-color, #ffd23f); text-shadow: 0 0 24px color-mix(in srgb, var(--now-color, #ffd23f) 45%, transparent), 0 3px 14px rgba(0,0,0,.9); }
+  body[data-nowstyle="banner"] .now { max-width: 500px; align-items: stretch; text-align: left; background: rgba(10,8,6,.82); border-left: 8px solid var(--accent, var(--focus)); border-radius: 6px 18px 18px 6px; padding: 18px 22px 20px; gap: 6px; }
+  body[data-nowstyle="banner"] .now-eyebrow { color: var(--accent, var(--focus)); font-size: 12px; font-weight: 800; letter-spacing: .2em; text-shadow: none; }
+  body[data-nowstyle="banner"] .now-title { color: var(--now-color, #fff); font-weight: 700; text-wrap: pretty; text-shadow: none; }
+  body[data-nowstyle="banner"] .now-actions { justify-content: flex-start; }
+  .sp-opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .sp-opt { appearance: none; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 11px; border-radius: 9px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+  .sp-opt.is-on { background: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); color: var(--on-accent, #fff9f5); }
 
   .drawer-handle {
     position: fixed;
@@ -1050,6 +1080,18 @@
     <div class="sp-row"><span>Content calendar colour</span></div>
     <div class="sw-row" id="swCal"></div>
 
+    <div class="sp-sec">Task text (when focusing)</div>
+    <div class="sp-row"><span>Look</span></div>
+    <div class="sp-opts" id="optNowStyle"></div>
+    <div class="sp-row"><span>Text colour</span></div>
+    <div class="sw-row" id="swNow"></div>
+    <div class="sp-row"><span>Size</span></div>
+    <div class="sp-opts" id="optNowSize"></div>
+    <div class="sp-row"><span>Font</span></div>
+    <div class="sp-opts" id="optNowFont"></div>
+    <div class="sp-row"><span>Lines shown</span></div>
+    <div class="sp-opts" id="optNowLines"></div>
+
     <div class="sp-sec">Sync tasks</div>
     <p class="sp-hint">Keep your task list the same on every computer using a private GitHub repo. Make the repo <b>Private</b>, then paste a GitHub token that can read and write only that repo.</p>
     <div class="sp-row"><label for="syncRepo">Repo</label></div>
@@ -1208,7 +1250,7 @@
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1227,6 +1269,8 @@
         if (typeof raw.focus === 'string') cfg.focus = raw.focus;
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
+        if (typeof raw.now === 'string') cfg.now = raw.now;
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1336,9 +1380,44 @@
       root.setProperty('--cal-user', cfg.cal); root.setProperty('--cal-user-dim', cfg.cal + '26');
       root.setProperty('--cal-on', lum(cfg.cal) > 0.38 ? '#1c1510' : '#fff');
     } else { root.removeProperty('--cal-user'); root.removeProperty('--cal-user-dim'); root.removeProperty('--cal-on'); }
+    applyNow();
     var cur = state.mode === 'focus' ? cfg.focus : cfg.brk;
     if (validHex(cur) && lum(cur) > 0.38) root.setProperty('--on-accent', '#1c1510');
     else root.removeProperty('--on-accent');
+  }
+
+  var NOW_SIZES = { s: '20px', m: '26px', l: '34px', xl: '42px' };
+  var NOW_FONTS = {
+    'default': '',
+    rounded: 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Segoe UI", system-ui, sans-serif',
+    serif: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif',
+    mono: '"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace',
+    condensed: '"Arial Narrow", "Roboto Condensed", "Helvetica Neue", Impact, sans-serif'
+  };
+  function applyNow() {
+    var root = document.documentElement.style;
+    if (validHex(cfg.now)) root.setProperty('--now-color', cfg.now); else root.removeProperty('--now-color');
+    root.setProperty('--now-size', NOW_SIZES[cfg.nowSize] || NOW_SIZES.m);
+    var f = NOW_FONTS[cfg.nowFont]; if (f) root.setProperty('--now-font', f); else root.removeProperty('--now-font');
+    root.setProperty('--now-lines', cfg.nowLines === 'all' ? '30' : String(parseInt(cfg.nowLines, 10) || 5));
+    document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
+  }
+  function buildOpts(rowId, key, opts) {
+    var row = document.getElementById(rowId);
+    row.innerHTML = '';
+    opts.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'sp-opt' + (cfg[key] === o[0] ? ' is-on' : ''); b.textContent = o[1];
+      b.setAttribute('aria-pressed', cfg[key] === o[0] ? 'true' : 'false');
+      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); });
+      row.appendChild(b);
+    });
+  }
+  function buildNowOpts() {
+    buildOpts('optNowStyle', 'nowStyle', [['box', 'Box'], ['plain', 'Plain'], ['glow', 'Big glow'], ['banner', 'Banner']]);
+    buildOpts('optNowSize', 'nowSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'Huge']]);
+    buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
+    buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
   }
 
   // --- settings panel ---
@@ -1480,12 +1559,12 @@
     });
     var c = document.createElement('input');
     c.type = 'color'; c.className = 'sw-custom'; c.title = 'Pick any colour';
-    c.value = validHex(cfg[key]) ? cfg[key] : (key === 'focus' || key === 'cal' ? DEF_FOCUS_HEX : DEF_BREAK_HEX);
+    c.value = validHex(cfg[key]) ? cfg[key] : (key === 'focus' || key === 'cal' ? DEF_FOCUS_HEX : key === 'now' ? '#ffffff' : DEF_BREAK_HEX);
     c.addEventListener('input', function () { cfg[key] = c.value.toLowerCase(); applyColours(); render(); });
     c.addEventListener('change', function () { colourChanged(); });
     row.appendChild(c);
   }
-  function buildAllSwatches() { buildSwatches('swFocus', 'focus'); buildSwatches('swBreak', 'brk'); buildSwatches('swCal', 'cal'); }
+  function buildAllSwatches() { buildSwatches('swFocus', 'focus'); buildSwatches('swBreak', 'brk'); buildSwatches('swCal', 'cal'); buildSwatches('swNow', 'now'); buildNowOpts(); }
   function colourChanged() {
     saveCfg(); applyColours(); render();
     buildAllSwatches();
@@ -1529,7 +1608,7 @@
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
@@ -2959,8 +3038,11 @@
       els.now.appendChild(el('div', 'now-eyebrow', 'Working on'));
       els.now.appendChild(el('p', 'now-title', t.title));
       var actions = el('div', 'now-actions');
-      var done = el('button', 'now-btn primary', 'Mark done');
+      var done = el('button', 'now-done');
       done.type = 'button';
+      done.setAttribute('aria-label', 'Mark done: ' + t.title);
+      done.title = 'Mark this task done';
+      done.innerHTML = '<span class="tk">' + CHECK_SVG + '</span><span>Done</span>';
       done.addEventListener('click', finishFocused);
       var sw = el('button', 'now-btn quiet', 'Switch task');
       sw.type = 'button';
