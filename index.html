@@ -518,6 +518,10 @@
   .rem-add input { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 13px; color: var(--ink); background: transparent; border: 0; border-top: 1px solid var(--line); padding: 9px 2px 3px; }
   .rem-add input:focus { outline: none; }
   .rem-add input::placeholder { color: var(--muted); }
+  .rem-focus { appearance: none; flex: none; font-family: inherit; font-size: 11px; font-weight: 600; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; cursor: pointer; }
+  .rem-focus:hover { color: var(--ink); border-color: var(--accent, var(--focus)); }
+  .rem-focus.on { color: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); cursor: default; }
+  .rem-focus[hidden] { display: none; }
   .rem-x { appearance: none; flex: none; width: 22px; height: 22px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; opacity: .45; border-radius: 6px; }
   .rem-item:hover .rem-x, .rem-x:focus { opacity: 1; }
   .rem-x:hover { color: #e5484d; }
@@ -2239,7 +2243,12 @@
         calState.deleted.push({ id: p.id, updated: Date.now() });
         calSave(); renderReminders();
       });
-      li.appendChild(tk); li.appendChild(el('span', 'rem-text', p.title)); li.appendChild(x);
+      var ft = focusedTask(), isFoc = !!(ft && ft.remId === p.id);
+      var fb = el('button', 'rem-focus' + (isFoc ? ' on' : ''), isFoc ? 'Focusing' : 'Focus'); fb.type = 'button';
+      fb.title = isFoc ? 'You are focusing on this' : 'Focus on this now';
+      fb.addEventListener('click', function (e) { e.stopPropagation(); if (!isFoc) { remClose(); focusReminder(p); } });
+      if (p.doneDay === today) fb.hidden = true;
+      li.appendChild(tk); li.appendChild(el('span', 'rem-text', p.title)); li.appendChild(fb); li.appendChild(x);
       ul.appendChild(li);
     });
   }
@@ -3149,6 +3158,10 @@
     t.doneDay = done ? dayKey() : null;
     t.completedAt = done ? Date.now() : null;
     t.updated = Date.now();
+    if (done && t.remId) {
+      var rp = calFind(t.remId);
+      if (rp) { rp.doneDay = dayKey(); rp.updated = Date.now(); calSave(); }
+    }
     if (done && tasksState.focusId === id) tasksState.focusId = null;
     saveTasks();
     renderTasks();
@@ -3193,10 +3206,25 @@
     renderTasks();
   }
 
-  function switchTask() {
+  // A reminder you start working on becomes a task in Today (tagged with the reminder). Leaving it unfinished drops the task again; the reminder stays.
+  function focusReminder(p) {
+    var t = null;
+    tasksState.tasks.forEach(function (x) { if (x.remId === p.id && !x.done) t = x; });
+    if (!t) {
+      t = { id: newId(), title: p.title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: false, remId: p.id };
+      tasksState.tasks.push(t);
+    }
+    focusOn(t.id);
+  }
+  function dropFocus() {
+    var t = focusedTask();
+    if (t && t.remId && !t.done) { deleteTask(t.id); return; }
     tasksState.focusId = null;
     saveTasks();
     renderTasks();
+  }
+  function switchTask() {
+    dropFocus();
     openDrawer();
   }
 
@@ -3734,8 +3762,12 @@
       var sw = el('button', 'now-btn quiet', 'Switch task');
       sw.type = 'button';
       sw.addEventListener('click', switchTask);
+      var uf = el('button', 'now-btn quiet', 'Unfocus');
+      uf.type = 'button'; uf.title = 'Stop focusing on this task';
+      uf.addEventListener('click', dropFocus);
       actions.appendChild(done);
       actions.appendChild(sw);
+      actions.appendChild(uf);
       els.now.appendChild(actions);
       return;
     }
@@ -3752,6 +3784,7 @@
   function renderTasks() {
     renderList();
     renderNow();
+    renderReminders();
     var n = openCount();
     els.handleCount.hidden = n === 0;
     els.handleCount.textContent = String(n);
