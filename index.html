@@ -289,8 +289,8 @@
     padding: 2px 0;
   }
   details.settings summary::-webkit-details-marker { display: none; }
-  details.settings summary > span { line-height: 1; }
-  details.settings summary .sum-chev { flex: none; display: block; transition: transform .2s ease; }
+  details.settings summary > span { line-height: 1; position: relative; margin-right: -0.08em; }
+  details.settings summary .sum-chev { position: absolute; left: calc(100% + 8px); top: 50%; margin-top: -7px; display: block; transition: transform .2s ease; }
   details.settings[open] summary .sum-chev { transform: rotate(180deg); }
   details.settings summary:hover { color: var(--ink); }
 
@@ -821,6 +821,8 @@
   .ph-tools { display: flex; gap: 4px; }
   .ph-tools button { appearance: none; width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; line-height: 1; }
   .ph-tools button:hover:not(:disabled) { color: var(--ink); border-color: var(--muted); }
+  .ph-tools button.ph-only { width: auto; padding: 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+  body[data-bgpause="on"] .bg-layer.is-active { animation-play-state: paused; }
   .ph-tools button:disabled { opacity: .3; cursor: default; }
   .ph-blur { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); }
   .ph-blur input { flex: 1; min-width: 0; }
@@ -1033,7 +1035,7 @@
   <div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
 
   <details class="settings">
-    <summary><span>Session lengths</span><svg class="sum-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <summary><span>Session lengths<svg class="sum-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
     <div class="settings-grid">
       <div class="field">
         <label for="focusLen">Focus (min)</label>
@@ -1112,7 +1114,10 @@
       <button class="sp-btn" id="phAdd" type="button">+ Add photos</button>
       <input type="file" id="phFile" accept="image/*" multiple hidden>
     </div>
-    <p class="sp-hint">Tap a photo to preview it behind the app. Blur is per photo. Untick to skip a photo without deleting it.</p>
+    <div class="sp-row"><span>Slideshow</span></div>
+    <div class="sp-opts" id="optBgPause"></div>
+    <p class="sp-hint">Tick the photos you want in the slideshow. Tick just one to keep it fixed. Tap a photo to preview it. Blur is per photo.</p>
+    <div class="sp-actions"><button class="sp-btn" id="phAll" type="button">Use all photos</button></div>
     <ul class="ph-list" id="phList"></ul>
 
     <div class="sp-sec">Timing</div>
@@ -1321,7 +1326,7 @@
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1341,7 +1346,7 @@
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1420,7 +1425,7 @@
   }
 
   function startBgRotation() {
-    if (bgInterval || bgLayers.length < 2) return;
+    if (bgInterval || bgLayers.length < 2 || cfg.bgPause === 'on') return;
     bgInterval = setInterval(function () { showPhoto(bgIndex + 1); }, cfg.interval * 1000);
   }
   function stopBgRotation() {
@@ -1465,7 +1470,14 @@
     mono: '"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace',
     condensed: '"Arial Narrow", "Roboto Condensed", "Helvetica Neue", Impact, sans-serif'
   };
+  function startBgRotationIfOn() { if (document.body.classList.contains('photo-mode')) { stopBgRotation(); startBgRotation(); } }
+  function applyBgPause() {
+    var paused = cfg.bgPause === 'on';
+    document.body.setAttribute('data-bgpause', paused ? 'on' : 'off');
+    if (paused) stopBgRotation(); else if (document.body.classList.contains('photo-mode')) startBgRotation();
+  }
   function applyNow() {
+    applyBgPause();
     var root = document.documentElement.style;
     if (validHex(cfg.now)) root.setProperty('--now-color', cfg.now); else root.removeProperty('--now-color');
     root.setProperty('--now-size', NOW_SIZES[cfg.nowSize] || NOW_SIZES.m);
@@ -1484,7 +1496,7 @@
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'sp-opt' + (cfg[key] === o[0] ? ' is-on' : ''); b.textContent = o[1];
       b.setAttribute('aria-pressed', cfg[key] === o[0] ? 'true' : 'false');
-      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); });
+      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); if (key === 'bgPause') applyBgPause(); });
       row.appendChild(b);
     });
   }
@@ -1493,6 +1505,7 @@
     buildOpts('optNowSize', 'nowSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'Huge']]);
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
+    buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
     buildOpts('optPipTask', 'pipTask', [['on', 'Show'], ['off', 'Hide']]);
     buildOpts('optRemPill', 'remPill', [['on', 'Show'], ['off', 'Hide']]);
     buildOpts('optTimeFont', 'timeFont', [['mono', 'Mono'], ['sans', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['condensed', 'Bold condensed']]);
@@ -1550,8 +1563,9 @@
       var tools = document.createElement('div'); tools.className = 'ph-tools';
       function tool(txt, label, dis, fn) {
         var b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.title = label; b.setAttribute('aria-label', label);
-        b.disabled = dis; b.addEventListener('click', fn); tools.appendChild(b);
+        b.disabled = dis; b.addEventListener('click', fn); tools.appendChild(b); return b;
       }
+      tool('Only', 'Use only this photo', false, function () { cfg.images.forEach(function (x) { x.on = (x === m); }); saveCfg(); buildLayers(); renderPhotos(); }).classList.add('ph-only');
       tool('↑', 'Move earlier', i === 0, function () { move(i, -1); });
       tool('↓', 'Move later', i === cfg.images.length - 1, function () { move(i, 1); });
       tool('✕', 'Delete photo', false, function () { removePhoto(i); });
@@ -1680,6 +1694,7 @@
     $('spClose').addEventListener('click', closeSettings);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && settingsOpen) closeSettings(); });
     $('phAdd').addEventListener('click', function () { $('phFile').click(); });
+    $('phAll').addEventListener('click', function () { cfg.images.forEach(function (x) { x.on = true; }); saveCfg(); buildLayers(); renderPhotos(); startBgRotationIfOn(); });
     $('phFile').addEventListener('change', function () { if (this.files && this.files.length) addFiles(this.files); this.value = ''; });
     $('tmInterval').addEventListener('input', function () { cfg.interval = +this.value; syncTimingUI(); applyTiming(); });
     $('tmFade').addEventListener('input', function () { cfg.fade = +this.value; syncTimingUI(); applyTiming(); });
@@ -1688,7 +1703,7 @@
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
