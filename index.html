@@ -200,10 +200,10 @@
   }
 
   .time {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--time-font, "IBM Plex Mono", ui-monospace, monospace);
     font-variant-numeric: tabular-nums;
-    font-size: 64px;
-    font-weight: 500;
+    font-size: var(--time-size, 64px);
+    font-weight: var(--time-weight, 500);
     letter-spacing: -0.02em;
     line-height: 1;
   }
@@ -331,7 +331,7 @@
 
   @media (max-width: 400px) {
     .dial { width: 240px; height: 240px; }
-    .time { font-size: 52px; }
+    .time { font-size: min(var(--time-size, 64px), 52px); }
   }
 
   /* Glass treatment for the UI chrome once the vision board is behind it */
@@ -472,6 +472,52 @@
   body[data-nowstyle="banner"] .now-eyebrow { color: var(--accent, var(--focus)); font-size: 12px; font-weight: 800; letter-spacing: .2em; text-shadow: none; }
   body[data-nowstyle="banner"] .now-title { color: var(--now-color, #fff); font-weight: 700; text-wrap: pretty; text-shadow: none; }
   body[data-nowstyle="banner"] .now-actions { justify-content: flex-start; }
+  .now.has-task { position: relative; }
+  .now-edit {
+    appearance: none; position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; padding: 0;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    background: transparent; border: 1px solid transparent; border-radius: 9px; color: var(--muted); opacity: .8;
+  }
+  .now-edit:hover, .now-edit:focus-visible { opacity: 1; color: var(--ink); border-color: var(--line); }
+  .now-edit svg { width: 16px; height: 16px; }
+  .now-title { cursor: text; }
+  .now-editinput {
+    width: 100%; display: block; resize: none; overflow: hidden; text-align: center;
+    font-family: var(--now-font, inherit); font-size: var(--now-size, 26px); font-weight: 700; line-height: 1.25;
+    color: var(--ink); background: rgba(0,0,0,.35); border: 2px solid var(--accent, var(--focus)); border-radius: 12px; padding: 10px 12px;
+  }
+  .now-editinput:focus-visible { outline: none; }
+  .now-edithint { font-size: 11.5px; color: var(--muted); }
+
+  .rem-pill {
+    appearance: none; position: fixed; top: 14px; right: 14px; z-index: 25; font-family: inherit; font-size: 12px; font-weight: 700;
+    padding: 8px 14px; border-radius: 99px; cursor: pointer; color: var(--ink); background: var(--surface);
+    border: 1.5px solid var(--accent, var(--focus)); transition: opacity .2s ease;
+  }
+  .rem-pill[hidden], .rem-pop[hidden] { display: none; }
+  body.photo-mode .rem-pill { background: rgba(12,10,8,.62); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  body.drawer-open .rem-pill, body.drawer-open .rem-pop { opacity: 0; visibility: hidden; pointer-events: none; }
+  .rem-pop {
+    position: fixed; top: 54px; right: 14px; z-index: 26; width: min(300px, calc(100vw - 28px)); padding: 8px 12px 10px;
+    border-radius: 14px; background: var(--drawer); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0,0,0,.45);
+  }
+  body.photo-mode .rem-pop { background: rgba(12,10,8,.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .rem-pop ul { list-style: none; margin: 0; padding: 0; }
+  .rem-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; cursor: pointer; font-size: 13.5px; line-height: 1.4; }
+  .rem-item + .rem-item { border-top: 1px solid var(--line); }
+  .rem-tick { flex: none; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid var(--accent, var(--focus)); color: transparent; display: flex; align-items: center; justify-content: center; }
+  .rem-tick svg { width: 13px; height: 13px; }
+  .rem-item.done .rem-tick { background: #3fb779; border-color: #3fb779; color: #fff; }
+  .rem-text { flex: 1; min-width: 0; overflow-wrap: anywhere; padding-top: 1px; }
+  .rem-item.done .rem-text { color: var(--muted); text-decoration: line-through; }
+  .rem-hint { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
+  .rem-set { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rem-set li { display: flex; gap: 6px; }
+  .rem-set input, .rem-setadd input { flex: 1; min-width: 0; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .rem-set input:focus, .rem-setadd input:focus { outline: none; border-color: var(--accent, var(--focus)); }
+  .rem-setadd { display: flex; gap: 6px; margin-top: 8px; }
+  .rem-x { appearance: none; flex: none; width: 34px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
+  .rem-x:hover { color: #e5484d; border-color: #e5484d; }
   .sp-opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
   .sp-opt { appearance: none; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 11px; border-radius: 9px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
   .sp-opt.is-on { background: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); color: var(--on-accent, #fff9f5); }
@@ -1091,6 +1137,26 @@
     <div class="sp-opts" id="optNowFont"></div>
     <div class="sp-row"><span>Lines shown</span></div>
     <div class="sp-opts" id="optNowLines"></div>
+    <div class="sp-row"><span>Task name on the floating timer</span></div>
+    <div class="sp-opts" id="optPipTask"></div>
+
+    <div class="sp-sec">Reminders</div>
+    <div class="sp-row"><span>Corner button</span></div>
+    <div class="sp-opts" id="optRemPill"></div>
+    <ul class="rem-set" id="remSet"></ul>
+    <form class="rem-setadd" id="remSetAdd" autocomplete="off">
+      <input id="remSetInput" type="text" maxlength="200" placeholder="New reminder, e.g. Revise theory" aria-label="New reminder">
+      <button class="sp-btn" type="submit">Add</button>
+    </form>
+    <p class="sp-hint">They show in the top-right corner. Tick them off there. Ticks reset every morning.</p>
+
+    <div class="sp-sec">Timer numbers</div>
+    <div class="sp-row"><span>Font</span></div>
+    <div class="sp-opts" id="optTimeFont"></div>
+    <div class="sp-row"><span>Size</span></div>
+    <div class="sp-opts" id="optTimeSize"></div>
+    <div class="sp-row"><span>Weight</span></div>
+    <div class="sp-opts" id="optTimeWeight"></div>
 
     <div class="sp-sec">Sync tasks</div>
     <p class="sp-hint">Keep your task list the same on every computer using a private GitHub repo. Make the repo <b>Private</b>, then paste a GitHub token that can read and write only that repo.</p>
@@ -1158,6 +1224,11 @@
     </form>
   </div>
 </aside>
+<button class="rem-pill" id="remPill" type="button" aria-haspopup="true" aria-expanded="false" hidden>Reminders</button>
+<div class="rem-pop" id="remPop" role="dialog" aria-label="Reminders" hidden>
+  <ul id="remList"></ul>
+  <p class="rem-hint">Tap one to tick it off for today. Add or change them in Settings.</p>
+</div>
 <input type="file" id="calFile" accept="image/*,video/*,application/pdf" hidden>
 <div class="cal-view" id="calView" role="dialog" aria-label="Post preview">
   <div class="cal-view-bar"><span id="calViewName"></span><button class="cal-act" id="calViewClose" type="button" style="color:#f6f2e8">Close</button></div>
@@ -1250,7 +1321,7 @@
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1270,7 +1341,7 @@
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1400,6 +1471,10 @@
     root.setProperty('--now-size', NOW_SIZES[cfg.nowSize] || NOW_SIZES.m);
     var f = NOW_FONTS[cfg.nowFont]; if (f) root.setProperty('--now-font', f); else root.removeProperty('--now-font');
     root.setProperty('--now-lines', cfg.nowLines === 'all' ? '30' : String(parseInt(cfg.nowLines, 10) || 5));
+    var TF = { mono: '', sans: '"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif', rounded: NOW_FONTS.rounded, serif: NOW_FONTS.serif, condensed: NOW_FONTS.condensed };
+    if (TF[cfg.timeFont]) root.setProperty('--time-font', TF[cfg.timeFont]); else root.removeProperty('--time-font');
+    root.setProperty('--time-size', { s: '52px', m: '64px', l: '74px' }[cfg.timeSize] || '64px');
+    root.setProperty('--time-weight', { l: '300', r: '500', b: '800' }[cfg.timeWeight] || '500');
     document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
   }
   function buildOpts(rowId, key, opts) {
@@ -1409,7 +1484,7 @@
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'sp-opt' + (cfg[key] === o[0] ? ' is-on' : ''); b.textContent = o[1];
       b.setAttribute('aria-pressed', cfg[key] === o[0] ? 'true' : 'false');
-      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); });
+      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); });
       row.appendChild(b);
     });
   }
@@ -1418,6 +1493,11 @@
     buildOpts('optNowSize', 'nowSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'Huge']]);
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
+    buildOpts('optPipTask', 'pipTask', [['on', 'Show'], ['off', 'Hide']]);
+    buildOpts('optRemPill', 'remPill', [['on', 'Show'], ['off', 'Hide']]);
+    buildOpts('optTimeFont', 'timeFont', [['mono', 'Mono'], ['sans', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['condensed', 'Bold condensed']]);
+    buildOpts('optTimeSize', 'timeSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]);
+    buildOpts('optTimeWeight', 'timeWeight', [['l', 'Light'], ['r', 'Regular'], ['b', 'Bold']]);
   }
 
   // --- settings panel ---
@@ -1608,7 +1688,7 @@
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
@@ -1692,7 +1772,7 @@
     calState.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff || id.indexOf('seed-') === 0; })
       .map(function (id) { return { id: id, updated: tombs[id] }; });
     calSaveLocal();
-    if (!calEditing) { calRender(); calRenderBrief(); }
+    if (!calEditing) { calRender(); calRenderBrief(); renderReminders(); }
     calBadge();
   }
   function calPayload() {
@@ -1777,7 +1857,7 @@
 
   function calBadge() {
     var lim = addDays(dayKey(), 7);
-    var n = calState.posts.filter(function (p) { return p.kind !== 'support' && !p.ready && p.date && p.date <= lim; }).length;
+    var n = calState.posts.filter(function (p) { return p.kind !== 'support' && p.kind !== 'reminder' && !p.ready && p.date && p.date <= lim; }).length;
     var b = document.getElementById('calCount');
     b.hidden = n === 0; b.textContent = n ? String(n) : '';
     document.getElementById('calHandle').setAttribute('aria-label', n ? 'Content calendar, ' + n + ' not ready yet' : 'Content calendar');
@@ -1960,7 +2040,7 @@
     var list = document.getElementById('calList');
     if (!list) return;
     list.textContent = '';
-    var posts = calState.posts.filter(function (p) { return calUI.all || p.kind !== 'support'; });
+    var posts = calState.posts.filter(function (p) { return p.kind !== 'reminder' && (calUI.all || p.kind !== 'support'); });
     var dated = posts.filter(function (p) { return p.date; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.title < b.title ? -1 : 1); });
     var undated = posts.filter(function (p) { return !p.date; });
     var thisWeek = mondayOf(dayKey()), cur = null;
@@ -2030,7 +2110,79 @@
     box.appendChild(ta); box.appendChild(row); ta.focus();
   }
 
+  // --- Reminders: a small top-right button that opens a short list. Edited in Settings. They sync with the calendar data. ---
+  var remDay = '';
+  function remItems() {
+    var today = dayKey();
+    var a = calState.posts.filter(function (p) { return p.kind === 'reminder'; });
+    var byAge = function (x, y) { return (x.created || x.updated || 0) - (y.created || y.updated || 0); };
+    return a.filter(function (p) { return p.doneDay !== today; }).sort(byAge).concat(a.filter(function (p) { return p.doneDay === today; }).sort(byAge));
+  }
+  function remTouch(p) { p.updated = Date.now(); calSave(); renderReminders(); }
+  function remClose() { var pop = $('remPop'); if (!pop || pop.hidden) return; pop.hidden = true; $('remPill').setAttribute('aria-expanded', 'false'); }
+  function renderReminders() {
+    var pill = $('remPill'), pop = $('remPop');
+    if (!pill) return;
+    var items = remItems(), today = dayKey();
+    remDay = today;
+    var left = items.filter(function (p) { return p.doneDay !== today; }).length;
+    pill.textContent = items.length === 0 ? 'Reminders' : left === 0 ? 'Reminders · all done' : 'Reminders · ' + left;
+    pill.hidden = cfg.remPill === 'off' || items.length === 0;
+    if (pill.hidden) remClose();
+    var ul = $('remList'); ul.textContent = '';
+    items.forEach(function (p) {
+      var li = el('li', 'rem-item' + (p.doneDay === today ? ' done' : ''));
+      var tk = el('span', 'rem-tick'); tk.innerHTML = CHECK_SVG;
+      li.setAttribute('role', 'checkbox'); li.tabIndex = 0;
+      li.setAttribute('aria-checked', p.doneDay === today ? 'true' : 'false');
+      var flip = function () { p.doneDay = p.doneDay === today ? '' : today; remTouch(p); };
+      li.addEventListener('click', flip);
+      li.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
+      li.appendChild(tk); li.appendChild(el('span', 'rem-text', p.title));
+      ul.appendChild(li);
+    });
+    // the editable list inside Settings (skipped while you are typing in it)
+    var set = $('remSet');
+    if (set && !(document.activeElement && set.contains(document.activeElement))) {
+      set.textContent = '';
+      items.slice().sort(function (x, y) { return (x.created || x.updated || 0) - (y.created || y.updated || 0); }).forEach(function (p) {
+        var li = el('li');
+        var inp = el('input'); inp.type = 'text'; inp.maxLength = 200; inp.value = p.title; inp.setAttribute('aria-label', 'Reminder');
+        var commit = function () { var v = inp.value.trim(); if (v && v !== p.title) { p.title = v; p.updated = Date.now(); calSave(); renderReminders(); } else if (!v) inp.value = p.title; };
+        inp.addEventListener('change', commit);
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); inp.blur(); } });
+        var x = el('button', 'rem-x', '✕'); x.type = 'button'; x.title = 'Delete this reminder'; x.setAttribute('aria-label', 'Delete: ' + p.title);
+        x.addEventListener('click', function () {
+          if (!window.confirm('Delete “' + p.title + '”?')) return;
+          calState.posts = calState.posts.filter(function (z) { return z.id !== p.id; });
+          calState.deleted.push({ id: p.id, updated: Date.now() });
+          calSave(); renderReminders();
+        });
+        li.appendChild(inp); li.appendChild(x); set.appendChild(li);
+      });
+    }
+  }
+  function initReminders() {
+    var pill = $('remPill'), pop = $('remPop');
+    pill.addEventListener('click', function (e) {
+      e.stopPropagation();
+      pop.hidden = !pop.hidden; pill.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true');
+    });
+    document.addEventListener('click', function (e) { if (!pop.hidden && !pop.contains(e.target) && e.target !== pill) remClose(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') remClose(); });
+    $('remSetAdd').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var inp = $('remSetInput'), v = inp.value.trim(); if (!v) return;
+      var now = Date.now();
+      calState.posts.push({ id: 'r' + newId(), kind: 'reminder', title: v, date: '', pillar: '', purpose: '', notes: '', ready: false, link: '', file: null, doneDay: '', created: now, updated: now });
+      inp.value = ''; calSave(); renderReminders(); inp.focus();
+    });
+    renderReminders();
+    setInterval(function () { if (dayKey() !== remDay) renderReminders(); }, 60000);
+  }
+
   function openCal() {
+    remClose();
     if (settingsOpen) closeSettings();
     closeDrawer();
     document.body.classList.add('cal-open');
@@ -2111,7 +2263,7 @@
   }
   function hostSendState() {
     var ft = focusedTask();
-    var tag = (state.mode === 'focus' && ft) ? ft.title : pipModeLabel(state.mode);
+    var tag = (state.mode === 'focus' && ft && cfg.pipTask !== 'off') ? ft.title : pipModeLabel(state.mode);
     hostPost('state|' + els.time.textContent + '|' + (state.running ? '1' : '0') + '|' + accentHex(state.mode) + '|' + tag.replace(/\|/g, '/'));
   }
   if (hostBridge) {
@@ -2180,7 +2332,7 @@
     if (!tEl || !btn) return;
     tEl.textContent = els.time.textContent;
     var ft = focusedTask();
-    tagEl.textContent = (state.mode === 'focus' && ft) ? ft.title : pipModeLabel(state.mode);
+    tagEl.textContent = (state.mode === 'focus' && ft && cfg.pipTask !== 'off') ? ft.title : pipModeLabel(state.mode);
     doc.body.style.setProperty('--accent', accentHex(state.mode));
     btn.innerHTML = state.running
       ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
@@ -2470,7 +2622,7 @@
   }
 
   function openDrawer() {
-    closeCal();
+    closeCal(); remClose();
     drawerTab = 'today'; renderList();
     els.drawerDate.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
     document.body.classList.add('drawer-open');
@@ -3031,13 +3183,47 @@
     document.getElementById('tabLaterN').textContent = ln ? ln : '';
   }
 
+  var nowEditing = null;
+  function endNowEdit(id, val, save) {
+    if (nowEditing !== id) return;
+    nowEditing = null;
+    if (save) commitEdit(id, val); else renderNow();
+  }
+
   function renderNow() {
+    if (nowEditing && document.activeElement && document.activeElement.className === 'now-editinput') return;
     els.now.innerHTML = '';
     var t = focusedTask();
+    if (!t) nowEditing = null;
     els.now.classList.toggle('has-task', !!t);
+    if (t && nowEditing === t.id) {
+      els.now.appendChild(el('div', 'now-eyebrow', 'Working on'));
+      var ta = document.createElement('textarea');
+      ta.rows = 1; ta.className = 'now-editinput'; ta.value = t.title; ta.maxLength = 600;
+      ta.setAttribute('aria-label', 'Edit the task you are working on');
+      var gr = function () { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+      ta.addEventListener('input', gr);
+      ta.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); endNowEdit(t.id, ta.value, true); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endNowEdit(t.id, t.title, false); }
+      });
+      ta.addEventListener('blur', function () { endNowEdit(t.id, ta.value, true); });
+      els.now.appendChild(ta);
+      els.now.appendChild(el('div', 'now-edithint', 'Enter to save \u00b7 Esc to cancel'));
+      requestAnimationFrame(function () { gr(); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); });
+      return;
+    }
     if (t) {
       els.now.appendChild(el('div', 'now-eyebrow', 'Working on'));
-      els.now.appendChild(el('p', 'now-title', t.title));
+      var ttl = el('p', 'now-title', t.title);
+      ttl.title = 'Double-click to edit';
+      ttl.addEventListener('dblclick', function () { nowEditing = t.id; renderNow(); });
+      els.now.appendChild(ttl);
+      var pen = el('button', 'now-edit');
+      pen.type = 'button'; pen.title = 'Edit this task'; pen.setAttribute('aria-label', 'Edit this task: ' + t.title);
+      pen.innerHTML = EDIT_SVG;
+      pen.addEventListener('click', function () { nowEditing = t.id; renderNow(); });
+      els.now.appendChild(pen);
       var actions = el('div', 'now-actions');
       var done = el('button', 'now-done');
       done.type = 'button';
@@ -3152,6 +3338,7 @@
   renderTasks();
   render();
   initCal();
+  initReminders();
   initSync();
   initHistory();
 })();
