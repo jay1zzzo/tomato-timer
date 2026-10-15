@@ -1312,9 +1312,10 @@
     <textarea class="fl-text" id="flText" placeholder="Write here. It saves as you type." aria-label="Page text"></textarea>
   </div>
   <input type="file" id="flFile" multiple hidden>
+  <input type="file" id="flReplaceFile" hidden>
 </aside>
 <div class="cal-view" id="flView" role="dialog" aria-label="File preview">
-  <div class="cal-view-bar"><input class="fl-view-title" id="flViewName" type="text" maxlength="200" aria-label="File name"><button class="cal-act" id="flViewSave" type="button" style="color:#f6f2e8">Save a copy</button><button class="cal-act" id="flViewClose" type="button" style="color:#f6f2e8">Close</button></div>
+  <div class="cal-view-bar"><input class="fl-view-title" id="flViewName" type="text" maxlength="200" aria-label="File name"><button class="cal-act" id="flViewOpen" type="button" style="color:#f6f2e8" hidden>Open</button><button class="cal-act" id="flViewReplace" type="button" style="color:#f6f2e8" title="Swap in an edited version of this file">Replace</button><button class="cal-act" id="flViewSave" type="button" style="color:#f6f2e8">Save a copy</button><button class="cal-act" id="flViewClose" type="button" style="color:#f6f2e8">Close</button></div>
   <div class="cal-view-body fl-view-body" id="flViewBody"></div>
 </div>
 
@@ -2588,6 +2589,8 @@
       body.firstChild.style.whiteSpace = 'pre-line';
     }
     $('flViewSave').onclick = function () { flDownload(it.name || it.title, blob); };
+    var ob = $('flViewOpen'); ob.hidden = !(hostBridge && window.__tomatoMac);
+    ob.onclick = function () { flReadB64(blob).then(function (b64) { hostPost('openfile|' + (it.name || it.title).replace(/\|/g, '-') + '|' + b64); }); };
     $('flView').classList.add('on');
   }
   function flCloseView(quiet) {
@@ -2596,6 +2599,20 @@
     if (flViewURL) { URL.revokeObjectURL(flViewURL); flViewURL = null; }
     flViewItem = null;
     if (!quiet) flRender();
+  }
+  function flReplace(it, f) {
+    if (!f) return;
+    if (f.size > FL_MAX) { flNote('That file is over 20 MB.', true); return; }
+    var id = 'f' + newId(), now = Date.now();
+    cfPut('f:' + id, f).then(function () {
+      flHave[id] = true;
+      flState.items.push({ id: id, kind: 'file', title: it.title, name: f.name, size: f.size, type: f.type || '', remote: false, created: it.created || now, updated: now });
+      flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
+      var t = { id: it.id, updated: now + 1 };
+      if (it.kind === 'file') { t.file = !!it.remote; cfDel('f:' + it.id); delete flHave[it.id]; }
+      flState.deleted.push(t);
+      flCloseView(true); flSave(); flRender(); flNote('Replaced.');
+    }).catch(function () { flNote('Couldn’t store that file on this device.', true); });
   }
   function flCommitName() {
     var it = flViewItem; if (!it) return;
@@ -2640,6 +2657,8 @@
       flDownload(nm + '.txt', new Blob(['﻿' + (it.title ? it.title + '\n\n' : '') + it.body], { type: 'text/plain;charset=utf-8' }));
     });
     $('flViewClose').addEventListener('click', function () { flCloseView(); });
+    $('flViewReplace').addEventListener('click', function () { $('flReplaceFile').click(); });
+    $('flReplaceFile').addEventListener('change', function () { var f = this.files && this.files[0], it = flViewItem; this.value = ''; if (f && it) flReplace(it, f); });
     $('flViewName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); flCommitName(); this.blur(); } });
     var panel = $('fl');
     panel.addEventListener('dragover', function (e) { if (flUI.edit) return; e.preventDefault(); panel.classList.add('drag'); });
