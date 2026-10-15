@@ -1241,6 +1241,11 @@
     </div>
     <p class="sp-hint sync-status" id="syncStatus" role="status"></p>
 
+    <div class="sp-sec">About</div>
+    <div class="sp-row"><span id="abVer">Version</span></div>
+    <div class="sp-actions"><button class="sp-btn ghost" id="abCheck" type="button">Check for updates</button><button class="sp-btn" id="abGo" type="button" hidden>Update now</button></div>
+    <p class="sp-hint" id="abStatus" role="status"></p>
+
     <div class="sp-sec">Reset</div>
     <div class="sp-actions"><button class="sp-btn ghost" id="spReset" type="button">Reset everything to default</button></div>
   </div>
@@ -1342,6 +1347,8 @@
 
 <script>
 (function () {
+  var APP_VERSION = 30;
+  var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
   var state = {
@@ -2779,6 +2786,36 @@
     flRender();
   }
 
+  // --- Updates, checked from inside the page (works even if the app's own update check didn't run) ---
+  var abNewHtml = null;
+  function abSay(msg) { var n = $('abStatus'); if (n) n.textContent = msg || ''; }
+  function abFetch(path) {
+    return fetch(UPDATE_BASE + '/' + path + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.text(); });
+  }
+  function abCheck() {
+    abSay('Checking…'); $('abGo').hidden = true; abNewHtml = null;
+    return abFetch('version.txt').then(function (t) {
+      var v = parseInt(String(t).trim(), 10);
+      if (!v) throw new Error('bad');
+      if (v <= APP_VERSION) { abSay('You have the latest version.'); return; }
+      return abFetch('index.html').then(function (html) {
+        if (html.length < 20000 || html.indexOf('Tomato Timer') < 0) throw new Error('bad');
+        abNewHtml = html;
+        abSay('Version ' + v + ' is ready.'); $('abGo').hidden = false;
+      });
+    }).catch(function () { abSay('Couldn’t reach GitHub. Check you’re online and try again.'); });
+  }
+  function abApply() {
+    if (!abNewHtml) return;
+    var h = abNewHtml; abNewHtml = null;
+    document.open(); document.write(h); document.close();
+  }
+  function initAbout() {
+    var v = $('abVer'); if (v) v.textContent = 'Version ' + APP_VERSION;
+    $('abCheck').addEventListener('click', abCheck);
+    $('abGo').addEventListener('click', abApply);
+  }
+
   // --- Floating mini timer (Document Picture-in-Picture) ---
   // Opens a small always-on-top OS window with just the time, so the
   // timer stays visible even when the app itself is minimized.
@@ -3893,6 +3930,7 @@
   initCal();
   initReminders();
   initFiles();
+  initAbout();
   initSync();
   initHistory();
 })();
