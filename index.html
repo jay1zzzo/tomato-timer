@@ -718,6 +718,8 @@
     color: var(--muted); opacity: 0.65; cursor: pointer;
   }
   .task-edit:hover { opacity: 1; color: var(--ink); }
+  .task:not(.is-editing) .task-title { cursor: text; }
+  .task:not(.is-editing):not(.is-done) .task-title:hover { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: var(--muted); }
   .task-star {
     appearance: none; flex: none; align-self: flex-start; width: 30px; height: 28px; padding: 0;
     display: flex; align-items: center; justify-content: center;
@@ -3092,7 +3094,10 @@
       main.appendChild(inp);
       requestAnimationFrame(function () { grow(); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); });
     } else {
-      main.appendChild(el('span', 'task-title', t.title));
+      var ttl = el('span', 'task-title', t.title);
+      ttl.title = 'Click to edit';
+      ttl.addEventListener('click', function () { editingId = t.id; renderList(); });
+      main.appendChild(ttl);
       if (t.sessions) main.appendChild(el('span', 'task-meta', t.sessions + (t.sessions === 1 ? ' session' : ' sessions')));
     }
 
@@ -3138,7 +3143,6 @@
       if (laterBtn) acts.appendChild(laterBtn);
       main.appendChild(acts);
       if (!t.done) li.appendChild(starBtn);
-      li.appendChild(editBtn);
       li.appendChild(del);
     }
     return li;
