@@ -285,9 +285,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
+    padding: 2px 0;
   }
   details.settings summary::-webkit-details-marker { display: none; }
+  details.settings summary > span { line-height: 1; }
+  details.settings summary .sum-chev { flex: none; display: block; transition: transform .2s ease; }
+  details.settings[open] summary .sum-chev { transform: rotate(180deg); }
   details.settings summary:hover { color: var(--ink); }
 
   .settings-grid {
@@ -1029,7 +1033,7 @@
   <div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
 
   <details class="settings">
-    <summary>Session lengths ⌄</summary>
+    <summary><span>Session lengths</span><svg class="sum-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
     <div class="settings-grid">
       <div class="field">
         <label for="focusLen">Focus (min)</label>
