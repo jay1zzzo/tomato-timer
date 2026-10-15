@@ -510,14 +510,13 @@
   .rem-item.done .rem-tick { background: #3fb779; border-color: #3fb779; color: #fff; }
   .rem-text { flex: 1; min-width: 0; overflow-wrap: anywhere; padding-top: 1px; }
   .rem-item.done .rem-text { color: var(--muted); text-decoration: line-through; }
-  .rem-hint { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
-  .rem-set { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  .rem-set li { display: flex; gap: 6px; }
-  .rem-set input, .rem-setadd input { flex: 1; min-width: 0; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .rem-set input:focus, .rem-setadd input:focus { outline: none; border-color: var(--accent, var(--focus)); }
-  .rem-setadd { display: flex; gap: 6px; margin-top: 8px; }
-  .rem-x { appearance: none; flex: none; width: 34px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
-  .rem-x:hover { color: #e5484d; border-color: #e5484d; }
+  .rem-add { margin: 6px 0 0; }
+  .rem-add input { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 13px; color: var(--ink); background: transparent; border: 0; border-top: 1px solid var(--line); padding: 9px 2px 3px; }
+  .rem-add input:focus { outline: none; }
+  .rem-add input::placeholder { color: var(--muted); }
+  .rem-x { appearance: none; flex: none; width: 22px; height: 22px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; opacity: .45; border-radius: 6px; }
+  .rem-item:hover .rem-x, .rem-x:focus { opacity: 1; }
+  .rem-x:hover { color: #e5484d; }
   .sp-opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
   .sp-opt { appearance: none; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 11px; border-radius: 9px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
   .sp-opt.is-on { background: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); color: var(--on-accent, #fff9f5); }
@@ -1143,12 +1142,7 @@
     <div class="sp-sec">Reminders</div>
     <div class="sp-row"><span>Corner button</span></div>
     <div class="sp-opts" id="optRemPill"></div>
-    <ul class="rem-set" id="remSet"></ul>
-    <form class="rem-setadd" id="remSetAdd" autocomplete="off">
-      <input id="remSetInput" type="text" maxlength="200" placeholder="New reminder, e.g. Revise theory" aria-label="New reminder">
-      <button class="sp-btn" type="submit">Add</button>
-    </form>
-    <p class="sp-hint">They show in the top-right corner. Tick them off there. Ticks reset every morning.</p>
+    <p class="sp-hint">Add, tick and delete them from the button in the top-right corner.</p>
 
     <div class="sp-sec">Timer numbers</div>
     <div class="sp-row"><span>Font</span></div>
@@ -1227,7 +1221,7 @@
 <button class="rem-pill" id="remPill" type="button" aria-haspopup="true" aria-expanded="false" hidden>Reminders</button>
 <div class="rem-pop" id="remPop" role="dialog" aria-label="Reminders" hidden>
   <ul id="remList"></ul>
-  <p class="rem-hint">Tap one to tick it off for today. Add or change them in Settings.</p>
+  <form class="rem-add" id="remAdd" autocomplete="off"><input id="remInput" type="text" maxlength="200" placeholder="+ Add a reminder" aria-label="Add a reminder"></form>
 </div>
 <input type="file" id="calFile" accept="image/*,video/*,application/pdf" hidden>
 <div class="cal-view" id="calView" role="dialog" aria-label="Post preview">
@@ -2126,8 +2120,8 @@
     var items = remItems(), today = dayKey();
     remDay = today;
     var left = items.filter(function (p) { return p.doneDay !== today; }).length;
-    pill.textContent = items.length === 0 ? 'Reminders' : left === 0 ? 'Reminders · all done' : 'Reminders · ' + left;
-    pill.hidden = cfg.remPill === 'off' || items.length === 0;
+    pill.textContent = items.length === 0 ? 'Reminders · add' : left === 0 ? 'Reminders · all done' : 'Reminders · ' + left;
+    pill.hidden = cfg.remPill === 'off';
     if (pill.hidden) remClose();
     var ul = $('remList'); ul.textContent = '';
     items.forEach(function (p) {
@@ -2138,41 +2132,29 @@
       var flip = function () { p.doneDay = p.doneDay === today ? '' : today; remTouch(p); };
       li.addEventListener('click', flip);
       li.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
-      li.appendChild(tk); li.appendChild(el('span', 'rem-text', p.title));
+      var x = el('button', 'rem-x', '✕'); x.type = 'button'; x.title = 'Delete'; x.setAttribute('aria-label', 'Delete: ' + p.title);
+      x.addEventListener('click', function (e) {
+        e.stopPropagation();
+        calState.posts = calState.posts.filter(function (z) { return z.id !== p.id; });
+        calState.deleted.push({ id: p.id, updated: Date.now() });
+        calSave(); renderReminders();
+      });
+      li.appendChild(tk); li.appendChild(el('span', 'rem-text', p.title)); li.appendChild(x);
       ul.appendChild(li);
     });
-    // the editable list inside Settings (skipped while you are typing in it)
-    var set = $('remSet');
-    if (set && !(document.activeElement && set.contains(document.activeElement))) {
-      set.textContent = '';
-      items.slice().sort(function (x, y) { return (x.created || x.updated || 0) - (y.created || y.updated || 0); }).forEach(function (p) {
-        var li = el('li');
-        var inp = el('input'); inp.type = 'text'; inp.maxLength = 200; inp.value = p.title; inp.setAttribute('aria-label', 'Reminder');
-        var commit = function () { var v = inp.value.trim(); if (v && v !== p.title) { p.title = v; p.updated = Date.now(); calSave(); renderReminders(); } else if (!v) inp.value = p.title; };
-        inp.addEventListener('change', commit);
-        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); inp.blur(); } });
-        var x = el('button', 'rem-x', '✕'); x.type = 'button'; x.title = 'Delete this reminder'; x.setAttribute('aria-label', 'Delete: ' + p.title);
-        x.addEventListener('click', function () {
-          if (!window.confirm('Delete “' + p.title + '”?')) return;
-          calState.posts = calState.posts.filter(function (z) { return z.id !== p.id; });
-          calState.deleted.push({ id: p.id, updated: Date.now() });
-          calSave(); renderReminders();
-        });
-        li.appendChild(inp); li.appendChild(x); set.appendChild(li);
-      });
-    }
   }
   function initReminders() {
     var pill = $('remPill'), pop = $('remPop');
     pill.addEventListener('click', function (e) {
       e.stopPropagation();
       pop.hidden = !pop.hidden; pill.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true');
+      if (!pop.hidden && remItems().length === 0) $('remInput').focus();
     });
-    document.addEventListener('click', function (e) { if (!pop.hidden && !pop.contains(e.target) && e.target !== pill) remClose(); });
+    document.addEventListener('click', function (e) { if (!pop.hidden && document.contains(e.target) && !pop.contains(e.target) && e.target !== pill) remClose(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') remClose(); });
-    $('remSetAdd').addEventListener('submit', function (e) {
+    $('remAdd').addEventListener('submit', function (e) {
       e.preventDefault();
-      var inp = $('remSetInput'), v = inp.value.trim(); if (!v) return;
+      var inp = $('remInput'), v = inp.value.trim(); if (!v) return;
       var now = Date.now();
       calState.posts.push({ id: 'r' + newId(), kind: 'reminder', title: v, date: '', pillar: '', purpose: '', notes: '', ready: false, link: '', file: null, doneDay: '', created: now, updated: now });
       inp.value = ''; calSave(); renderReminders(); inp.focus();
