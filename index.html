@@ -1116,7 +1116,7 @@
     </div>
     <div class="sp-row"><span>Slideshow</span></div>
     <div class="sp-opts" id="optBgPause"></div>
-    <p class="sp-hint">Tick the photos you want in the slideshow. Tick just one to keep it fixed. Tap a photo to preview it. Blur is per photo.</p>
+    <p class="sp-hint">Tick the photos you want in the slideshow. Tick just one to keep it fixed. Tap a photo to preview it.</p>
     <div class="sp-actions"><button class="sp-btn" id="phAll" type="button">Use all photos</button></div>
     <ul class="ph-list" id="phList"></ul>
 
@@ -1565,7 +1565,6 @@
         var b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.title = label; b.setAttribute('aria-label', label);
         b.disabled = dis; b.addEventListener('click', fn); tools.appendChild(b); return b;
       }
-      tool('Only', 'Use only this photo', false, function () { cfg.images.forEach(function (x) { x.on = (x === m); }); saveCfg(); buildLayers(); renderPhotos(); }).classList.add('ph-only');
       tool('↑', 'Move earlier', i === 0, function () { move(i, -1); });
       tool('↓', 'Move later', i === cfg.images.length - 1, function () { move(i, 1); });
       tool('✕', 'Delete photo', false, function () { removePhoto(i); });
