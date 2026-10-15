@@ -2571,6 +2571,60 @@
       flShowView(it, blob);
     }).catch(function () { flBusy[it.id] = false; flNote('Couldn’t get that file. Check you’re online and synced.', true); });
   }
+  // Previews for zip-based documents (Pages, Numbers, Keynote, Word): read the preview picture or text packed inside.
+  function flZipList(blob) {
+    var size = blob.size, tail = Math.min(size, 66000);
+    return blob.slice(size - tail, size).arrayBuffer().then(function (buf) {
+      var v = new DataView(buf), i;
+      for (i = buf.byteLength - 22; i >= 0; i--) if (v.getUint32(i, true) === 0x06054b50) break;
+      if (i < 0) throw new Error('nozip');
+      var count = v.getUint16(i + 10, true), cdSize = v.getUint32(i + 12, true), cdOff = v.getUint32(i + 16, true);
+      if (count === 0xFFFF || cdOff === 0xFFFFFFFF) throw new Error('zip64');
+      return blob.slice(cdOff, cdOff + cdSize).arrayBuffer().then(function (cb) {
+        var d = new DataView(cb), u8 = new Uint8Array(cb), p = 0, out = [], dec = new TextDecoder();
+        while (p + 46 <= cb.byteLength && d.getUint32(p, true) === 0x02014b50) {
+          var nl = d.getUint16(p + 28, true), el2 = d.getUint16(p + 30, true), cl = d.getUint16(p + 32, true);
+          out.push({ name: dec.decode(u8.subarray(p + 46, p + 46 + nl)), method: d.getUint16(p + 10, true), csize: d.getUint32(p + 20, true), off: d.getUint32(p + 42, true) });
+          p += 46 + nl + el2 + cl;
+        }
+        return out;
+      });
+    });
+  }
+  function flZipRead(blob, e) {
+    if (e.csize === 0xFFFFFFFF || e.off === 0xFFFFFFFF) return Promise.reject(new Error('zip64'));
+    return blob.slice(e.off, e.off + 30).arrayBuffer().then(function (hb) {
+      var h = new DataView(hb), start = e.off + 30 + h.getUint16(26, true) + h.getUint16(28, true);
+      var raw = blob.slice(start, start + e.csize);
+      if (e.method === 0) return raw;
+      if (e.method === 8 && typeof DecompressionStream === 'function') return new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+      throw new Error('method');
+    });
+  }
+  function flZipPreview(blob, name) {
+    return flZipList(blob).then(function (entries) {
+      var ext = (/\.([a-z0-9]+)$/i.exec(name) || [])[1] || '';
+      ext = ext.toLowerCase();
+      var by = {}; entries.forEach(function (e) { by[e.name.toLowerCase()] = e; });
+      if (ext === 'docx' || ext === 'dotx') {
+        var de = by['word/document.xml']; if (!de) throw new Error('none');
+        return flZipRead(blob, de).then(function (b) { return b.text(); }).then(function (xml) {
+          var t = xml.replace(/<w:tab\/>/g, '\t').replace(/<\/w:p>/g, '\n').replace(/<w:br\/>/g, '\n').replace(/<[^>]+>/g, '')
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+          return { text: t.trim().slice(0, 60000) };
+        });
+      }
+      var order = ['quicklook/preview.pdf', 'preview.pdf', 'quicklook/preview.png', 'quicklook/preview.jpg', 'preview.jpg', 'preview.png', 'quicklook/thumbnail.jpg', 'quicklook/thumbnail.png', 'docprops/thumbnail.jpeg', 'preview-web.jpg', 'preview-micro.jpg'];
+      var pick = null;
+      order.forEach(function (n) { if (!pick && by[n]) pick = by[n]; });
+      if (!pick) entries.forEach(function (e) { if (!pick && /(^|\/)(preview|thumbnail)[^\/]*\.(jpe?g|png|pdf)$/i.test(e.name)) pick = e; });
+      if (!pick) throw new Error('none');
+      var pe = (/\.([a-z]+)$/i.exec(pick.name) || [])[1].toLowerCase();
+      var type = pe === 'pdf' ? 'application/pdf' : pe === 'png' ? 'image/png' : 'image/jpeg';
+      return flZipRead(blob, pick).then(function (b) { return { blob: new Blob([b], { type: type }), type: type, first: true }; });
+    });
+  }
+
   function flShowView(it, blob) {
     flCloseView(true);
     flViewItem = it;
@@ -2585,8 +2639,30 @@
       var pre = document.createElement('pre'); body.appendChild(pre);
       blob.slice(0, 300000).text().then(function (s) { pre.textContent = s; });
     } else {
-      body.appendChild(el('div', 'fl-msg', 'No preview for this kind of file.\nUse “Save a copy” to open it in another program.'));
-      body.firstChild.style.whiteSpace = 'pre-line';
+      var mac = hostBridge && window.__tomatoMac;
+      var nope = function () {
+        if (flViewItem !== it) return;
+        body.textContent = '';
+        var m = el('div', 'fl-msg', 'No preview for this kind of file.\n' + (mac ? 'Use “Open” to open it in another program.' : 'Use “Save a copy” to open it in another program.'));
+        m.style.whiteSpace = 'pre-line'; body.appendChild(m);
+      };
+      if (/\.(pages|numbers|key|docx|dotx|pptx|xlsx|odt|ods|odp)$/.test(name)) {
+        var ld = el('div', 'fl-msg', 'Loading preview…'); body.appendChild(ld);
+        flZipPreview(blob, name).then(function (r) {
+          if (flViewItem !== it) return;
+          body.textContent = '';
+          var wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;height:100%;min-height:0';
+          if (r.text !== undefined) {
+            var pre = document.createElement('pre'); pre.textContent = r.text || '(No text found in this document.)'; pre.style.flex = '1'; wrap.appendChild(pre);
+          } else {
+            flViewURL = URL.createObjectURL(r.blob);
+            var pn = document.createElement(r.type === 'application/pdf' ? 'iframe' : 'img'); pn.src = flViewURL; pn.style.cssText = 'flex:1;min-height:0;max-width:100%;object-fit:contain;width:' + (r.type === 'application/pdf' ? '100%' : 'auto');
+            wrap.appendChild(pn);
+          }
+          var cap = el('div', 'fl-msg', r.text !== undefined ? 'Text only. ' + (mac ? 'Use “Open” for the full document.' : 'Save a copy for the full document.') : 'Preview of the first page. ' + (mac ? 'Use “Open” for the full document.' : 'Save a copy for the full document.'));
+          cap.style.fontSize = '12px'; wrap.appendChild(cap); body.appendChild(wrap);
+        }).catch(nope);
+      } else nope();
     }
     $('flViewSave').onclick = function () { flDownload(it.name || it.title, blob); };
     var ob = $('flViewOpen'); ob.hidden = !(hostBridge && window.__tomatoMac);
