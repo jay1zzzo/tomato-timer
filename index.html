@@ -874,6 +874,51 @@
   .hist-del svg { width: 14px; height: 14px; display: block; }
   .hist-empty { color: var(--muted); font-size: 13px; line-height: 1.5; padding: 20px 0; text-align: center; }
 
+  /* ---- Files (synced pages and files) ---- */
+  .cal-handle.fl-handle { top: calc(50% + 72px); transform: none; }
+  body.fl-open .fl-handle, body.fl-open .cal-handle, body.cal-open .fl-handle, body.focusing .fl-handle { opacity: 0; visibility: hidden; pointer-events: none; }
+  body.photo-mode .fl-handle { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  body.fl-open .fl-backdrop { opacity: 1; pointer-events: auto; }
+  .fl {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; width: min(480px, 100vw);
+    display: flex; flex-direction: column; background: var(--drawer); color: var(--ink);
+    border-right: 1px solid var(--line); border-top: 4px solid var(--accent, var(--focus));
+    box-shadow: var(--drawer-edge);
+    transform: translateX(-104%); visibility: hidden;
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s linear .3s;
+  }
+  body.fl-open .fl { transform: none; visibility: visible; transition: transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  body.photo-mode .fl { backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); }
+  .fl-bar { display: flex; gap: 8px; padding: 4px 18px 10px; align-items: center; }
+  .fl-search, .fl-title, .fl-text { font-family: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .fl-search { flex: 1; min-width: 0; font-size: 13px; padding: 8px 10px; }
+  .fl-search:focus, .fl-title:focus, .fl-text:focus { outline: none; border-color: var(--accent, var(--focus)); }
+  .fl-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 18px; }
+  .fl-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .fl-row:hover .fl-name { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-color: var(--muted); }
+  .fl-chip { flex: none; min-width: 42px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 5px 4px; }
+  .fl-row.is-page .fl-chip { color: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); }
+  .fl-info { flex: 1; min-width: 0; }
+  .fl-name { font-size: 14.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fl-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fl-x { appearance: none; flex: none; width: 24px; height: 24px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; opacity: 0; border-radius: 6px; }
+  .fl-row:hover .fl-x, .fl-x:focus { opacity: .8; }
+  .fl-x:hover { color: #e5484d; opacity: 1; }
+  .fl-empty { padding: 28px 4px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+  .fl-note { padding: 0 18px 12px; font-size: 12px; color: var(--muted); min-height: 14px; }
+  .fl-note.bad { color: #e5484d; }
+  .fl.drag .fl-scroll { outline: 2px dashed var(--accent, var(--focus)); outline-offset: -6px; }
+  .fl-edit { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 10px; padding: 4px 18px 18px; }
+  .fl.editing .fl-edit { display: flex; }
+  .fl.editing .fl-bar, .fl.editing .fl-scroll { display: none; }
+  .fl-editbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .fl-title { font-size: 17px; font-weight: 700; padding: 10px 12px; width: 100%; box-sizing: border-box; }
+  .fl-text { flex: 1; min-height: 0; resize: none; font-size: 14.5px; line-height: 1.55; padding: 12px; }
+  .fl-view-title { flex: 1; min-width: 0; font-family: inherit; font-size: 13px; color: #f6f2e8; background: transparent; border: 0; border-bottom: 1px dotted rgba(246,242,232,.35); padding: 4px 0; }
+  .fl-view-title:focus { outline: none; border-bottom-color: #f6f2e8; }
+  .fl-view-body pre { margin: 0; width: 100%; height: 100%; overflow: auto; box-sizing: border-box; padding: 16px; background: rgba(255,255,255,.06); border-radius: 6px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: #f6f2e8; }
+  .fl-view-body .fl-msg { color: #cfc8b8; font-size: 14px; text-align: center; line-height: 1.6; }
+
   /* ---- Content calendar (calm at rest, coral only while open) ---- */
   .cal-handle {
     position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 20;
@@ -1239,6 +1284,40 @@
   <div class="cal-view-bar"><span id="calViewName"></span><button class="cal-act" id="calViewClose" type="button" style="color:#f6f2e8">Close</button></div>
   <div class="cal-view-body" id="calViewBody"></div>
 </div>
+<button class="cal-handle fl-handle" id="flHandle" type="button" aria-controls="fl" aria-expanded="false"><span>Files</span></button>
+<div class="cal-backdrop fl-backdrop" id="flBackdrop" aria-hidden="true"></div>
+<aside class="fl" id="fl" aria-label="Files" aria-hidden="true">
+  <div class="cal-head">
+    <div>
+      <h2>Files</h2>
+      <div class="cal-sub">Pages and files, synced to your devices</div>
+    </div>
+    <button class="drawer-close" id="flClose" type="button" aria-label="Close files">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+    </button>
+  </div>
+  <div class="fl-bar">
+    <input class="fl-search" id="flSearch" type="search" placeholder="Search" aria-label="Search files">
+    <button class="cal-act go" id="flNew" type="button">+ Page</button>
+    <button class="cal-act go" id="flAdd" type="button">+ Files</button>
+  </div>
+  <div class="fl-scroll" id="flList"></div>
+  <div class="fl-note" id="flNote" role="status" aria-live="polite"></div>
+  <div class="fl-edit" id="flEdit">
+    <div class="fl-editbar">
+      <button class="cal-act" id="flBack" type="button">&#8249; Files</button>
+      <button class="cal-act" id="flSaveAs" type="button">Save as file</button>
+    </div>
+    <input class="fl-title" id="flTitle" type="text" maxlength="200" placeholder="Title" aria-label="Page title">
+    <textarea class="fl-text" id="flText" placeholder="Write here. It saves as you type." aria-label="Page text"></textarea>
+  </div>
+  <input type="file" id="flFile" multiple hidden>
+</aside>
+<div class="cal-view" id="flView" role="dialog" aria-label="File preview">
+  <div class="cal-view-bar"><input class="fl-view-title" id="flViewName" type="text" maxlength="200" aria-label="File name"><button class="cal-act" id="flViewSave" type="button" style="color:#f6f2e8">Save a copy</button><button class="cal-act" id="flViewClose" type="button" style="color:#f6f2e8">Close</button></div>
+  <div class="cal-view-body fl-view-body" id="flViewBody"></div>
+</div>
+
 
 <script>
 (function () {
@@ -1517,7 +1596,7 @@
   function $(id) { return document.getElementById(id); }
 
   function openSettings() {
-    closeCal();
+    closeCal(); closeFl();
     settingsOpen = true;
     document.body.classList.add('settings-open');
     $('spanel').setAttribute('aria-hidden', 'false');
@@ -2184,7 +2263,7 @@
   }
 
   function openCal() {
-    remClose();
+    remClose(); closeFl();
     if (settingsOpen) closeSettings();
     closeDrawer();
     document.body.classList.add('cal-open');
@@ -2252,6 +2331,328 @@
     cfKeys().then(function (keys) { keys.forEach(function (k) { calFiles[k] = true; }); calRender(); }).catch(function () {});
     calRender();
     setInterval(calBadge, 3600000);
+  }
+
+  // --- Files: pages you write plus any files you add. They sync through the same private repo as your tasks. ---
+  var FL_KEY = 'tomato-timer-lab-files', FL_MAX = 20 * 1024 * 1024;
+  var flState = { items: [], deleted: [] }, flUI = { q: '', edit: null }, flHave = {}, flViewURL = null, flViewItem = null, flBusy = {};
+  function flLoad() {
+    try { var o = JSON.parse(localStorage.getItem(FL_KEY) || 'null'); if (o && Array.isArray(o.items)) { flState.items = o.items; flState.deleted = Array.isArray(o.deleted) ? o.deleted : []; } } catch (e) {}
+  }
+  function flSaveLocal() { try { localStorage.setItem(FL_KEY, JSON.stringify(flState)); } catch (e) {} }
+  function flSave() { flSaveLocal(); scheduleSync(); }
+  function flFind(id) { for (var i = 0; i < flState.items.length; i++) if (flState.items[i].id === id) return flState.items[i]; }
+  function flNote(msg, bad) { var n = $('flNote'); if (!n) return; n.textContent = msg || ''; n.className = 'fl-note' + (bad ? ' bad' : ''); clearTimeout(flNote.t); if (msg) flNote.t = setTimeout(function () { n.textContent = ''; }, 5000); }
+  function flExt(name) { var m = /\.([a-z0-9]{1,5})$/i.exec(name || ''); return m ? m[1].toUpperCase() : 'FILE'; }
+
+  // Newest edit to each item wins; deletions are remembered so they don't come back.
+  function flMerge(remote) {
+    var ri = remote && Array.isArray(remote.items) ? remote.items : [];
+    var rd = remote && Array.isArray(remote.deleted) ? remote.deleted : [];
+    var tombs = {}, map = {}, cutoff = Date.now() - 120 * 86400000;
+    flState.deleted.concat(rd).forEach(function (d) {
+      if (!d || typeof d.id !== 'string') return;
+      var t = tombs[d.id];
+      if (!t) tombs[d.id] = { id: d.id, updated: d.updated || 0, file: !!d.file, purged: !!d.purged };
+      else { t.updated = Math.max(t.updated, d.updated || 0); t.file = t.file || !!d.file; t.purged = t.purged || !!d.purged; }
+    });
+    flState.items.concat(ri).forEach(function (p) {
+      if (!p || typeof p.id !== 'string' || typeof p.title !== 'string') return;
+      if (!map[p.id] || (p.updated || 0) > (map[p.id].updated || 0)) map[p.id] = p;
+    });
+    var out = [];
+    Object.keys(map).forEach(function (id) { if (tombs[id] && tombs[id].updated >= (map[id].updated || 0)) return; out.push(map[id]); });
+    flState.items = out;
+    flState.deleted = Object.keys(tombs).map(function (id) { return tombs[id]; }).filter(function (t) { return t.updated > cutoff || (t.file && !t.purged); });
+    flSaveLocal();
+    if (!flUI.edit) flRender();
+  }
+  function flPayload() {
+    var by = function (a, b) { return a.id < b.id ? -1 : 1; };
+    return { v: 1, items: flState.items.slice().sort(by), deleted: flState.deleted.slice().sort(by) };
+  }
+  function flNorm(p) { try { var by = function (a, b) { return a.id < b.id ? -1 : 1; }; return JSON.stringify(p && Array.isArray(p.items) ? { i: p.items.slice().sort(by), d: (p.deleted || []).slice().sort(by) } : null); } catch (e) { return ''; } }
+
+  function flReadB64(blob) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { var s = String(r.result); res(s.slice(s.indexOf(',') + 1)); };
+      r.onerror = function () { rej(r.error); };
+      r.readAsDataURL(blob);
+    });
+  }
+  function flRawGet(id) { return ghFetch('GET', null, 'files/' + id, 'application/vnd.github.raw+json'); }
+
+  // Upload files that were added on this device, and remove deleted files from the repo.
+  function flUploadPending() {
+    var todo = flState.items.filter(function (it) { return it.kind === 'file' && !it.remote && flHave[it.id]; });
+    var chain = Promise.resolve();
+    todo.forEach(function (it) {
+      chain = chain.then(function () {
+        return cfGet('f:' + it.id).then(function (blob) {
+          if (!blob) return;
+          return flReadB64(blob).then(function (b64) {
+            return ghFetch('PUT', JSON.stringify({ message: 'Add file', content: b64 }), 'files/' + it.id).then(function (res) {
+              if (res.status === 401) throw fail('auth');
+              if (res.ok || res.status === 422) { it.remote = true; it.updated = Date.now(); flSaveLocal(); }
+              else if (res.status === 403) throw fail('forbidden');
+              else if (res.status === 404) throw fail('norepo');
+            });
+          });
+        });
+      });
+    });
+    flState.deleted.filter(function (t) { return t.file && !t.purged; }).forEach(function (t) {
+      chain = chain.then(function () {
+        return ghFetch('GET', null, 'files/' + t.id).then(function (res) {
+          if (res.status === 404) { t.purged = true; return; }
+          if (!res.ok) return;
+          return res.json().then(function (j) {
+            return ghFetch('DELETE', JSON.stringify({ message: 'Remove file', sha: j.sha }), 'files/' + t.id).then(function (r2) { if (r2.ok || r2.status === 404) t.purged = true; });
+          });
+        });
+      });
+    });
+    return chain.then(function () { flSaveLocal(); });
+  }
+
+  function flSyncOnce(attempt) {
+    return ghFetch('GET', null, 'files.json').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (res.status === 401) throw fail('auth');
+      if (res.status === 403) throw fail('forbidden');
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) {
+        var data = null;
+        try { data = JSON.parse(b64dec(j.content)); } catch (e) {}
+        return { sha: j.sha, data: data };
+      });
+    }).then(function (remote) {
+      flMerge(remote.data);
+      return flUploadPending().then(function () {
+        if (remote.sha && flNorm(remote.data) === flNorm(flPayload())) return;
+        if (!remote.sha && !flState.items.length && !flState.deleted.length) return;
+        var body = { message: 'Sync files', content: b64enc(JSON.stringify(flPayload(), null, 1)) };
+        if (remote.sha) body.sha = remote.sha;
+        return ghFetch('PUT', JSON.stringify(body), 'files.json').then(function (res) {
+          if (res.status === 409 || res.status === 422) { if (attempt < 3) return flSyncOnce(attempt + 1); throw fail('conflict'); }
+          if (res.status === 404) throw fail('norepo');
+          if (res.status === 401) throw fail('auth');
+          if (res.status === 403) throw fail('forbidden');
+          if (!res.ok) throw fail('http');
+        });
+      });
+    }).then(function () { if (!flUI.edit) flRender(); });
+  }
+
+  function flPrettyDate(ts) { return ts ? new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''; }
+  function flRender() {
+    var list = $('flList'); if (!list) return;
+    list.textContent = '';
+    var q = flUI.q.trim().toLowerCase();
+    var items = flState.items.filter(function (it) {
+      if (!q) return true;
+      return (it.title || '').toLowerCase().indexOf(q) >= 0 || (it.name || '').toLowerCase().indexOf(q) >= 0 || (it.body || '').toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
+    if (!items.length) {
+      list.appendChild(el('div', 'fl-empty', flState.items.length ? 'Nothing matches that search.' : 'Nothing here yet. Add a page for your notes, or add files like PDFs and images. They sync to your other devices.'));
+      return;
+    }
+    items.forEach(function (it) {
+      var isPage = it.kind !== 'file';
+      var row = el('div', 'fl-row' + (isPage ? ' is-page' : ''));
+      row.tabIndex = 0; row.setAttribute('role', 'button');
+      row.appendChild(el('span', 'fl-chip', isPage ? 'PAGE' : flExt(it.name)));
+      var info = el('div', 'fl-info');
+      info.appendChild(el('div', 'fl-name', it.title || (isPage ? 'Untitled page' : it.name)));
+      var meta = isPage ? ((it.body || '').replace(/\s+/g, ' ').trim().slice(0, 70) || 'Empty page') + '  ·  ' + flPrettyDate(it.updated)
+        : fmtSize(it.size || 0) + '  ·  ' + (flHave[it.id] ? (it.remote ? 'synced' : 'on this device only') : 'in the cloud') + '  ·  ' + flPrettyDate(it.updated);
+      info.appendChild(el('div', 'fl-meta', meta));
+      row.appendChild(info);
+      var x = el('button', 'fl-x', '✕'); x.type = 'button'; x.title = 'Delete'; x.setAttribute('aria-label', 'Delete: ' + (it.title || it.name));
+      x.addEventListener('click', function (e) { e.stopPropagation(); flDelete(it); });
+      row.appendChild(x);
+      var open = function () { if (isPage) flEditPage(it.id); else flOpenFile(it); };
+      row.addEventListener('click', open);
+      row.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); open(); } });
+      list.appendChild(row);
+    });
+  }
+  function flDelete(it) {
+    if (!window.confirm('Delete “' + (it.title || it.name || 'this page') + '”?')) return;
+    flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
+    var t = { id: it.id, updated: Date.now() };
+    if (it.kind === 'file') { t.file = !!it.remote; cfDel('f:' + it.id); delete flHave[it.id]; }
+    flState.deleted.push(t);
+    flSave(); flRender();
+  }
+
+  // pages
+  var flSaveTimer = null;
+  function flNewPage() {
+    var now = Date.now();
+    var it = { id: 'f' + newId(), kind: 'page', title: '', body: '', created: now, updated: now };
+    flState.items.push(it); flSaveLocal();
+    flEditPage(it.id);
+    setTimeout(function () { $('flTitle').focus(); }, 50);
+  }
+  function flEditPage(id) {
+    var it = flFind(id); if (!it) return;
+    flUI.edit = id;
+    $('flTitle').value = it.title || ''; $('flText').value = it.body || '';
+    $('fl').classList.add('editing');
+    setTimeout(function () { if (it.title || it.body) $('flText').focus(); }, 50);
+  }
+  function flCommitPage() {
+    clearTimeout(flSaveTimer);
+    var it = flFind(flUI.edit); if (!it) return;
+    var t = $('flTitle').value, b = $('flText').value;
+    if (t !== it.title || b !== it.body) { it.title = t; it.body = b; it.updated = Date.now(); flSave(); }
+  }
+  function flBackToList() {
+    flCommitPage();
+    var it = flFind(flUI.edit);
+    if (it && !it.title.trim() && !it.body.trim()) {
+      flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
+      flState.deleted.push({ id: it.id, updated: Date.now() }); flSave();
+    }
+    flUI.edit = null; $('fl').classList.remove('editing'); flRender();
+  }
+
+  // saving a copy out of the app (works for pages and files)
+  function flDownload(name, blob) {
+    if (hostBridge) {
+      flReadB64(blob).then(function (b64) { hostPost('save|' + name.replace(/\|/g, '-') + '|' + b64); });
+      return;
+    }
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  // files
+  function flAddFiles(files) {
+    var list = Array.prototype.slice.call(files || []), tooBig = 0, chain = Promise.resolve();
+    list.forEach(function (f) {
+      if (f.size > FL_MAX) { tooBig++; return; }
+      chain = chain.then(function () {
+        var id = 'f' + newId(), now = Date.now();
+        return cfPut('f:' + id, f).then(function () {
+          flHave[id] = true;
+          flState.items.push({ id: id, kind: 'file', title: f.name.replace(/\.[^.]+$/, ''), name: f.name, size: f.size, type: f.type || '', remote: false, created: now, updated: now });
+        });
+      }).catch(function () { flNote('Couldn’t store ' + f.name + ' on this device.', true); });
+    });
+    chain.then(function () {
+      flSave(); flRender();
+      if (tooBig) flNote(tooBig + (tooBig === 1 ? ' file was' : ' files were') + ' over 20 MB, so not added.', true);
+    });
+  }
+  function flGetBlob(it) {
+    return cfGet('f:' + it.id).then(function (blob) {
+      if (blob) return blob;
+      if (!it.remote || !syncOn()) return null;
+      return flRawGet(it.id).then(function (res) {
+        if (!res.ok) return null;
+        return res.blob().then(function (b) {
+          var typed = new Blob([b], { type: it.type || b.type });
+          return cfPut('f:' + it.id, typed).then(function () { flHave[it.id] = true; return typed; });
+        });
+      });
+    });
+  }
+  function flOpenFile(it) {
+    if (flBusy[it.id]) return;
+    flBusy[it.id] = true; flNote(flHave[it.id] ? '' : 'Downloading…');
+    flGetBlob(it).then(function (blob) {
+      flBusy[it.id] = false; flNote('');
+      if (!blob) { flNote('Couldn’t get that file. Check you’re online and synced.', true); return; }
+      flShowView(it, blob);
+    }).catch(function () { flBusy[it.id] = false; flNote('Couldn’t get that file. Check you’re online and synced.', true); });
+  }
+  function flShowView(it, blob) {
+    flCloseView(true);
+    flViewItem = it;
+    var body = $('flViewBody'); body.textContent = '';
+    $('flViewName').value = it.title || it.name;
+    var t = blob.type || it.type || '', name = (it.name || '').toLowerCase(), node;
+    if (t.indexOf('image/') === 0) { node = document.createElement('img'); node.alt = it.title; }
+    else if (t.indexOf('video/') === 0) { node = document.createElement('video'); node.controls = true; }
+    else if (t === 'application/pdf' || /\.pdf$/.test(name)) { node = document.createElement('iframe'); node.title = it.title; if (t !== 'application/pdf') blob = new Blob([blob], { type: 'application/pdf' }); }
+    if (node) { flViewURL = URL.createObjectURL(blob); node.src = flViewURL; body.appendChild(node); }
+    else if (/^text\//.test(t) || /\.(txt|md|csv|json|log)$/.test(name)) {
+      var pre = document.createElement('pre'); body.appendChild(pre);
+      blob.slice(0, 300000).text().then(function (s) { pre.textContent = s; });
+    } else {
+      body.appendChild(el('div', 'fl-msg', 'No preview for this kind of file.\nUse “Save a copy” to open it in another program.'));
+      body.firstChild.style.whiteSpace = 'pre-line';
+    }
+    $('flViewSave').onclick = function () { flDownload(it.name || it.title, blob); };
+    $('flView').classList.add('on');
+  }
+  function flCloseView(quiet) {
+    if (flViewItem && !quiet) flCommitName();
+    $('flView').classList.remove('on'); $('flViewBody').textContent = '';
+    if (flViewURL) { URL.revokeObjectURL(flViewURL); flViewURL = null; }
+    flViewItem = null;
+    if (!quiet) flRender();
+  }
+  function flCommitName() {
+    var it = flViewItem; if (!it) return;
+    var v = $('flViewName').value.trim();
+    if (v && v !== it.title) { it.title = v; it.updated = Date.now(); flSave(); }
+  }
+
+  function openFl() {
+    remClose();
+    if (settingsOpen) closeSettings();
+    closeDrawer(); closeCal();
+    document.body.classList.add('fl-open');
+    $('flHandle').setAttribute('aria-expanded', 'true');
+    $('fl').setAttribute('aria-hidden', 'false');
+    flRender();
+    setTimeout(function () { $('flClose').focus(); }, 320);
+  }
+  function closeFl() {
+    if (!document.body.classList.contains('fl-open')) return;
+    if (flUI.edit) flBackToList();
+    flCloseView();
+    document.body.classList.remove('fl-open');
+    $('flHandle').setAttribute('aria-expanded', 'false');
+    $('fl').setAttribute('aria-hidden', 'true');
+    if (document.activeElement && $('fl').contains(document.activeElement)) document.activeElement.blur();
+  }
+  function initFiles() {
+    flLoad();
+    $('flHandle').addEventListener('click', openFl);
+    $('flClose').addEventListener('click', closeFl);
+    $('flBackdrop').addEventListener('click', closeFl);
+    $('flNew').addEventListener('click', flNewPage);
+    $('flAdd').addEventListener('click', function () { $('flFile').click(); });
+    $('flFile').addEventListener('change', function () { var f = this.files; flAddFiles(f); this.value = ''; });
+    $('flSearch').addEventListener('input', function () { flUI.q = this.value; flRender(); });
+    $('flBack').addEventListener('click', flBackToList);
+    ['flTitle', 'flText'].forEach(function (id) { $(id).addEventListener('input', function () { clearTimeout(flSaveTimer); flSaveTimer = setTimeout(flCommitPage, 500); }); });
+    $('flSaveAs').addEventListener('click', function () {
+      flCommitPage();
+      var it = flFind(flUI.edit); if (!it) return;
+      var nm = (it.title.trim() || 'Untitled page').replace(/[\\/:*?"<>|]/g, '-');
+      flDownload(nm + '.txt', new Blob(['﻿' + (it.title ? it.title + '\n\n' : '') + it.body], { type: 'text/plain;charset=utf-8' }));
+    });
+    $('flViewClose').addEventListener('click', function () { flCloseView(); });
+    $('flViewName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); flCommitName(); this.blur(); } });
+    var panel = $('fl');
+    panel.addEventListener('dragover', function (e) { if (flUI.edit) return; e.preventDefault(); panel.classList.add('drag'); });
+    panel.addEventListener('dragleave', function (e) { if (e.target === panel || !panel.contains(e.relatedTarget)) panel.classList.remove('drag'); });
+    panel.addEventListener('drop', function (e) { e.preventDefault(); panel.classList.remove('drag'); if (!flUI.edit && e.dataTransfer && e.dataTransfer.files.length) flAddFiles(e.dataTransfer.files); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if ($('flView').classList.contains('on')) { flCloseView(); return; }
+      if (flUI.edit) { flBackToList(); return; }
+      if (document.body.classList.contains('fl-open')) closeFl();
+    });
+    cfKeys().then(function (keys) { keys.forEach(function (k) { if (String(k).indexOf('f:') === 0) flHave[String(k).slice(2)] = true; }); flRender(); }).catch(function () {});
+    flRender();
   }
 
   // --- Floating mini timer (Document Picture-in-Picture) ---
@@ -2624,7 +3025,7 @@
   }
 
   function openDrawer() {
-    closeCal(); remClose();
+    closeCal(); closeFl(); remClose();
     drawerTab = 'today'; renderList();
     els.drawerDate.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
     document.body.classList.add('drawer-open');
@@ -2750,13 +3151,13 @@
     return new TextDecoder().decode(bytes);
   }
 
-  function ghFetch(method, body, file) {
+  function ghFetch(method, body, file, accept) {
     var opts = {
       method: method,
       cache: 'no-store',
       headers: {
         'Authorization': 'Bearer ' + sync.token,
-        'Accept': 'application/vnd.github+json',
+        'Accept': accept || 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28'
       }
     };
@@ -2841,7 +3242,7 @@
     if (syncBusy) { syncAgain = true; return Promise.resolve(); }
     syncBusy = true;
     setSyncStatus('Syncing…');
-    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () {
+    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () {
       sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
     }).catch(function (e) {
       var c = e && e.code;
@@ -3343,6 +3744,7 @@
   render();
   initCal();
   initReminders();
+  initFiles();
   initSync();
   initHistory();
 })();
