@@ -1315,13 +1315,13 @@
 <div class="launch" id="launch" aria-label="Quick launch">
   <button type="button" class="ln-claude" data-app="claude://open" data-web="https://claude.ai/new" title="Claude" aria-label="Open Claude">C</button>
   <button type="button" class="ln-gpt" data-app="https://chatgpt.com/" data-web="https://chatgpt.com/" title="ChatGPT" aria-label="Open ChatGPT">GPT</button>
+  <button type="button" class="ln-mail" data-app="https://mail.google.com/" data-web="https://mail.google.com/" title="Gmail" aria-label="Open Gmail"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 7 8.5-7"/></svg></button>
 </div>
 <style>
 .launch{position:fixed;left:14px;bottom:14px;z-index:15;display:flex;gap:6px}
 .launch button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.12);color:inherit;opacity:.5;display:grid;place-items:center;cursor:pointer;padding:0;backdrop-filter:blur(6px);transition:opacity .15s}
-.launch button{font:700 13px/1 Georgia,serif;color:#fff;border:0;opacity:.8}
-.launch .ln-claude{background:#d97757}
-.launch .ln-gpt{background:#10a37f;font:700 9px/1 system-ui,sans-serif;letter-spacing:.3px}
+.launch button{font:700 13px/1 Georgia,serif;color:inherit;opacity:.5}
+.launch .ln-gpt{font:700 9px/1 system-ui,sans-serif;letter-spacing:.3px}
 .launch button:hover,.launch button:focus-visible{opacity:1}
 </style>
 <button class="cal-handle fl-handle" id="flHandle" type="button" aria-controls="fl" aria-expanded="false"><span>Files</span></button>
@@ -1363,7 +1363,7 @@
 
 <script>
 (function () {
-  var APP_VERSION = 34;
+  var APP_VERSION = 35;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
