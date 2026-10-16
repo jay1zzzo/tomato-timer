@@ -929,7 +929,10 @@
   .fl.editing .fl-bar, .fl.editing .fl-scroll { display: none; }
   .fl-editbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .fl-title { font-size: 17px; font-weight: 700; padding: 10px 12px; width: 100%; box-sizing: border-box; }
-  .fl-text { flex: 1; min-height: 0; resize: none; font-size: 14.5px; line-height: 1.55; padding: 12px; }
+  .fl-text { flex: 1; min-height: 0; overflow-y: auto; font-size: 14.5px; line-height: 1.55; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .fl-text:empty:before { content: attr(data-ph); color: var(--muted); pointer-events: none; }
+  .fl-text img { display: block; max-width: 100%; height: auto; border-radius: 6px; margin: 8px 0; cursor: default; }
+  .fl-text img.sel { outline: 2px solid var(--accent, var(--focus)); outline-offset: 2px; }
   .fl-view-title { flex: 1; min-width: 0; font-family: inherit; font-size: 13px; color: #f6f2e8; background: transparent; border: 0; border-bottom: 1px dotted rgba(246,242,232,.35); padding: 4px 0; }
   .fl-view-title:focus { outline: none; border-bottom-color: #f6f2e8; }
   .fl-view-body pre { margin: 0; width: 100%; height: 100%; overflow: auto; box-sizing: border-box; padding: 16px; background: rgba(255,255,255,.06); border-radius: 6px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: #f6f2e8; }
@@ -1309,6 +1312,15 @@
   <div class="cal-view-bar"><span id="calViewName"></span><button class="cal-act" id="calViewClose" type="button" style="color:#f6f2e8">Close</button></div>
   <div class="cal-view-body" id="calViewBody"></div>
 </div>
+<div class="launch" id="launch" aria-label="Quick launch">
+  <button type="button" data-url="https://claude.ai/new" title="Claude" aria-label="Open Claude"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg></button>
+  <button type="button" data-url="https://chatgpt.com/" title="ChatGPT" aria-label="Open ChatGPT"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.2"/></svg></button>
+</div>
+<style>
+.launch{position:fixed;left:14px;bottom:14px;z-index:15;display:flex;gap:6px}
+.launch button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.12);color:inherit;opacity:.5;display:grid;place-items:center;cursor:pointer;padding:0;backdrop-filter:blur(6px);transition:opacity .15s}
+.launch button:hover,.launch button:focus-visible{opacity:1}
+</style>
 <button class="cal-handle fl-handle" id="flHandle" type="button" aria-controls="fl" aria-expanded="false"><span>Files</span></button>
 <div class="cal-backdrop fl-backdrop" id="flBackdrop" aria-hidden="true"></div>
 <aside class="fl" id="fl" aria-label="Files" aria-hidden="true">
@@ -1331,13 +1343,14 @@
   <div class="fl-edit" id="flEdit">
     <div class="fl-editbar">
       <button class="cal-act" id="flBack" type="button">&#8249; Files</button>
-      <button class="cal-act" id="flSaveAs" type="button">Save as file</button>
+      <span style="display:flex;gap:8px"><button class="cal-act" id="flImgBtn" type="button">+ Image</button><button class="cal-act" id="flSaveAs" type="button">Save as file</button></span>
     </div>
     <input class="fl-title" id="flTitle" type="text" maxlength="200" placeholder="Title" aria-label="Page title">
-    <textarea class="fl-text" id="flText" placeholder="Write here. It saves as you type." aria-label="Page text"></textarea>
+    <div class="fl-text" id="flText" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Page text" data-ph="Write here. Paste or drop pictures straight in. It saves as you type."></div>
   </div>
   <input type="file" id="flFile" multiple hidden>
   <input type="file" id="flReplaceFile" hidden>
+  <input type="file" id="flImgFile" accept="image/*" multiple hidden>
 </aside>
 <div class="cal-view" id="flView" role="dialog" aria-label="File preview">
   <div class="cal-view-bar"><input class="fl-view-title" id="flViewName" type="text" maxlength="200" aria-label="File name"><button class="cal-act" id="flViewOpen" type="button" style="color:#f6f2e8" hidden>Open</button><button class="cal-act" id="flViewReplace" type="button" style="color:#f6f2e8" title="Swap in an edited version of this file">Replace</button><button class="cal-act" id="flViewSave" type="button" style="color:#f6f2e8">Save a copy</button><button class="cal-act" id="flViewClose" type="button" style="color:#f6f2e8">Close</button></div>
@@ -1347,7 +1360,7 @@
 
 <script>
 (function () {
-  var APP_VERSION = 30;
+  var APP_VERSION = 32;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -2422,7 +2435,7 @@
 
   // Upload files that were added on this device, and remove deleted files from the repo.
   function flUploadPending() {
-    var todo = flState.items.filter(function (it) { return it.kind === 'file' && !it.remote && flHave[it.id]; });
+    var todo = flState.items.filter(function (it) { return (it.kind === 'file' || it.kind === 'img') && !it.remote && flHave[it.id]; });
     var chain = Promise.resolve();
     todo.forEach(function (it) {
       chain = chain.then(function () {
@@ -2488,11 +2501,12 @@
     list.textContent = '';
     var q = flUI.q.trim().toLowerCase();
     var items = flState.items.filter(function (it) {
+      if (it.kind === 'img') return false;
       if (!q) return true;
       return (it.title || '').toLowerCase().indexOf(q) >= 0 || (it.name || '').toLowerCase().indexOf(q) >= 0 || (it.body || '').toLowerCase().indexOf(q) >= 0;
     }).sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
     if (!items.length) {
-      list.appendChild(el('div', 'fl-empty', flState.items.length ? 'Nothing matches that search.' : 'Nothing here yet. Add a page for your notes, or add files like PDFs and images. They sync to your other devices.'));
+      list.appendChild(el('div', 'fl-empty', flState.items.some(function (z) { return z.kind !== 'img'; }) ? 'Nothing matches that search.' : 'Nothing here yet. Add a page for your notes, or add files like PDFs and images. They sync to your other devices.'));
       return;
     }
     items.forEach(function (it) {
@@ -2502,7 +2516,7 @@
       row.appendChild(el('span', 'fl-chip', isPage ? 'PAGE' : flExt(it.name)));
       var info = el('div', 'fl-info');
       info.appendChild(el('div', 'fl-name', it.title || (isPage ? 'Untitled page' : it.name)));
-      var meta = isPage ? ((it.body || '').replace(/\s+/g, ' ').trim().slice(0, 70) || 'Empty page') + '  ·  ' + flPrettyDate(it.updated)
+      var meta = isPage ? ((it.body || '').replace(/\s+/g, ' ').trim().slice(0, 70) || (/<img/.test(it.html || '') ? 'Pictures' : 'Empty page')) + '  ·  ' + flPrettyDate(it.updated)
         : fmtSize(it.size || 0) + '  ·  ' + (flHave[it.id] ? (it.remote ? 'synced' : 'on this device only') : 'in the cloud') + '  ·  ' + flPrettyDate(it.updated);
       info.appendChild(el('div', 'fl-meta', meta));
       row.appendChild(info);
@@ -2517,11 +2531,15 @@
   }
   function flDelete(it) {
     if (!window.confirm('Delete “' + (it.title || it.name || 'this page') + '”?')) return;
-    flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
-    var t = { id: it.id, updated: Date.now() };
-    if (it.kind === 'file') { t.file = !!it.remote; cfDel('f:' + it.id); delete flHave[it.id]; }
-    flState.deleted.push(t);
+    flDropItem(it);
+    if (it.kind === 'page') flState.items.filter(function (z) { return z.kind === 'img' && z.page === it.id; }).forEach(flDropItem);
     flSave(); flRender();
+  }
+  function flDropItem(it) {
+    flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
+    var t = { id: it.id, updated: Date.now() + 1 };
+    if (it.kind === 'file' || it.kind === 'img') { t.file = !!it.remote; cfDel('f:' + it.id); delete flHave[it.id]; }
+    flState.deleted.push(t);
   }
 
   // pages
@@ -2533,27 +2551,107 @@
     flEditPage(it.id);
     setTimeout(function () { $('flTitle').focus(); }, 50);
   }
+  // The page body is a small, clean subset of HTML. Pictures are separate synced items, referenced by data-fid.
+  var FL_OK = { DIV: 1, P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, UL: 1, OL: 1, LI: 1, H1: 1, H2: 1, H3: 1 };
+  function flEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function flClean(node) {
+    var out = '';
+    Array.prototype.forEach.call(node.childNodes, function (c) {
+      if (c.nodeType === 3) { out += flEsc(c.nodeValue); return; }
+      if (c.nodeType !== 1) return;
+      var tag = c.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE') return;
+      if (tag === 'IMG') { var f = c.getAttribute('data-fid'); if (f && /^[\w-]+$/.test(f)) out += '<img data-fid="' + f + '">'; return; }
+      if (tag === 'BR') { out += '<br>'; return; }
+      var inner = flClean(c), t = tag.toLowerCase();
+      out += FL_OK[tag] ? '<' + t + '>' + inner + '</' + t + '>' : inner;
+    });
+    return out;
+  }
+  function flCleanHtml(html) { var d = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html'); return flClean(d.body); }
+  function flTextToHtml(t) { return String(t || '').split('\n').map(function (l) { return l ? '<div>' + flEsc(l) + '</div>' : '<div><br></div>'; }).join(''); }
+  var flImgURLs = {};
+  function flHydrate() {
+    Array.prototype.forEach.call($('flText').querySelectorAll('img[data-fid]'), function (im) {
+      var id = im.getAttribute('data-fid');
+      if (flImgURLs[id]) { im.src = flImgURLs[id]; return; }
+      var it = flFind(id); if (!it) return;
+      flGetBlob(it).then(function (blob) {
+        if (!blob) return;
+        flImgURLs[id] = URL.createObjectURL(blob);
+        Array.prototype.forEach.call($('flText').querySelectorAll('img[data-fid="' + id + '"]'), function (x) { x.src = flImgURLs[id]; });
+      }).catch(function () {});
+    });
+  }
   function flEditPage(id) {
     var it = flFind(id); if (!it) return;
     flUI.edit = id;
-    $('flTitle').value = it.title || ''; $('flText').value = it.body || '';
+    $('flTitle').value = it.title || '';
+    $('flText').innerHTML = it.html !== undefined ? flCleanHtml(it.html) : flTextToHtml(it.body);
+    flHydrate();
     $('fl').classList.add('editing');
-    setTimeout(function () { if (it.title || it.body) $('flText').focus(); }, 50);
+    setTimeout(function () { if (it.title || it.body || it.html) $('flText').focus(); }, 50);
   }
+  function flSerialize() { return flCleanHtml($('flText').innerHTML); }
   function flCommitPage() {
     clearTimeout(flSaveTimer);
     var it = flFind(flUI.edit); if (!it) return;
-    var t = $('flTitle').value, b = $('flText').value;
-    if (t !== it.title || b !== it.body) { it.title = t; it.body = b; it.updated = Date.now(); flSave(); }
+    var t = $('flTitle').value, h = flSerialize(), b = $('flText').innerText.replace(/ /g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    if (t !== it.title || h !== (it.html || '') || b !== (it.body || '')) { it.title = t; it.html = h; it.body = b; it.updated = Date.now(); flSave(); }
   }
   function flBackToList() {
     flCommitPage();
     var it = flFind(flUI.edit);
-    if (it && !it.title.trim() && !it.body.trim()) {
-      flState.items = flState.items.filter(function (z) { return z.id !== it.id; });
-      flState.deleted.push({ id: it.id, updated: Date.now() }); flSave();
+    if (it) {
+      // drop pictures that are no longer in the page
+      var used = {}; (it.html || '').replace(/data-fid="([\w-]+)"/g, function (m, id) { used[id] = 1; return m; });
+      var gone = flState.items.filter(function (z) { return z.kind === 'img' && z.page === it.id && !used[z.id]; });
+      gone.forEach(flDropItem);
+      if (!it.title.trim() && !it.body.trim() && !/<img/.test(it.html || '')) flDropItem(it);
+      flSave();
     }
     flUI.edit = null; $('fl').classList.remove('editing'); flRender();
+  }
+
+  // pictures: paste, drop or pick. Big ones are shrunk first so syncing stays quick.
+  function flPrepImage(file) {
+    return new Promise(function (res) {
+      var type = file.type || '';
+      if (type === 'image/gif' || type === 'image/svg+xml' || typeof createImageBitmap !== 'function') { res(file); return; }
+      createImageBitmap(file).then(function (bm) {
+        var max = 1600, w = bm.width, h = bm.height, sc = Math.min(1, max / Math.max(w, h));
+        if (sc === 1 && file.size <= 1500000) { res(file); return; }
+        var cv = document.createElement('canvas'); cv.width = Math.round(w * sc); cv.height = Math.round(h * sc);
+        var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(bm, 0, 0, cv.width, cv.height);
+        cv.toBlob(function (b) { res(b && b.size < file.size ? b : file); }, 'image/jpeg', 0.86);
+      }).catch(function () { res(file); });
+    });
+  }
+  function flInsertImage(file) {
+    var it = flFind(flUI.edit); if (!it) return Promise.resolve();
+    if (file.size > FL_MAX) { flNote('That picture is over 20 MB.', true); return Promise.resolve(); }
+    return flPrepImage(file).then(function (blob) {
+      var id = 'f' + newId(), now = Date.now(), ext = (blob.type || 'image/png').split('/')[1].replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+      var name = (file.name && /\.\w+$/.test(file.name) && blob === file) ? file.name : 'picture.' + ext;
+      var typed = blob.type ? blob : new Blob([blob], { type: 'image/png' });
+      return cfPut('f:' + id, typed).then(function () {
+        flHave[id] = true;
+        flState.items.push({ id: id, kind: 'img', page: it.id, title: 'Picture', name: name, size: typed.size, type: typed.type, remote: false, created: now, updated: now });
+        flImgURLs[id] = URL.createObjectURL(typed);
+        var ed = $('flText'); ed.focus();
+        if (flRange) { var sel = getSelection(); sel.removeAllRanges(); sel.addRange(flRange); }
+        else { var r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); var sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); }
+        document.execCommand('insertHTML', false, '<img data-fid="' + id + '" src="' + flImgURLs[id] + '"><br>');
+        flRange = null;
+        clearTimeout(flSaveTimer); flSaveTimer = setTimeout(flCommitPage, 300);
+      });
+    }).catch(function () { flNote('Couldn’t add that picture.', true); });
+  }
+  var flRange = null;
+  function flInsertImages(list) {
+    var chain = Promise.resolve();
+    Array.prototype.slice.call(list).filter(function (f) { return /^image\//.test(f.type || ''); }).forEach(function (f) { chain = chain.then(function () { return flInsertImage(f); }); });
+    return chain;
   }
 
   // saving a copy out of the app (works for pages and files)
@@ -2762,11 +2860,53 @@
     $('flSearch').addEventListener('input', function () { flUI.q = this.value; flRender(); });
     $('flBack').addEventListener('click', flBackToList);
     ['flTitle', 'flText'].forEach(function (id) { $(id).addEventListener('input', function () { clearTimeout(flSaveTimer); flSaveTimer = setTimeout(flCommitPage, 500); }); });
+    try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch (e) {}
+    var ed = $('flText');
+    ed.addEventListener('paste', function (e) {
+      var cd = e.clipboardData; if (!cd) return;
+      var imgs = [];
+      Array.prototype.forEach.call(cd.items || [], function (i) { if (i.kind === 'file' && /^image\//.test(i.type)) { var f = i.getAsFile(); if (f) imgs.push(f); } });
+      if (imgs.length) { e.preventDefault(); flInsertImages(imgs); return; }
+      var txt = cd.getData('text/plain');
+      e.preventDefault();
+      if (txt) document.execCommand('insertText', false, txt);
+    });
+    ed.addEventListener('dragover', function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0) e.preventDefault(); });
+    ed.addEventListener('drop', function (e) {
+      var fs = e.dataTransfer && e.dataTransfer.files; if (!fs || !fs.length) return;
+      e.preventDefault();
+      try {
+        var r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+        if (r && ed.contains(r.startContainer)) flRange = r;
+      } catch (x) {}
+      flInsertImages(fs);
+    });
+    document.addEventListener('selectionchange', function () {
+      var sel = getSelection();
+      if (sel && sel.rangeCount && ed.contains(sel.anchorNode)) flRange = sel.getRangeAt(0).cloneRange();
+    });
+    ed.addEventListener('click', function (e) {
+      Array.prototype.forEach.call(ed.querySelectorAll('img.sel'), function (x) { x.classList.remove('sel'); });
+      if (e.target && e.target.tagName === 'IMG') {
+        e.target.classList.add('sel');
+        var r = document.createRange(); r.selectNode(e.target); var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }
+    });
+    $('flImgBtn').addEventListener('mousedown', function (e) { e.preventDefault(); });
+    $('flImgBtn').addEventListener('click', function () { $('flImgFile').click(); });
+    $('flImgFile').addEventListener('change', function () { var f = this.files; flInsertImages(f).then(function () {}); this.value = ''; });
     $('flSaveAs').addEventListener('click', function () {
       flCommitPage();
       var it = flFind(flUI.edit); if (!it) return;
       var nm = (it.title.trim() || 'Untitled page').replace(/[\\/:*?"<>|]/g, '-');
-      flDownload(nm + '.txt', new Blob(['﻿' + (it.title ? it.title + '\n\n' : '') + it.body], { type: 'text/plain;charset=utf-8' }));
+      var ids = []; (it.html || '').replace(/data-fid="([\w-]+)"/g, function (m, id) { ids.push(id); return m; });
+      if (!ids.length) { flDownload(nm + '.txt', new Blob(['﻿' + (it.title ? it.title + '\n\n' : '') + it.body], { type: 'text/plain;charset=utf-8' })); return; }
+      var urls = {};
+      Promise.all(ids.map(function (id) { var im = flFind(id); return im ? flGetBlob(im).then(function (b) { return b ? flReadB64(b).then(function (b64) { urls[id] = 'data:' + (b.type || 'image/png') + ';base64,' + b64; }) : null; }) : null; })).then(function () {
+        var body = (it.html || '').replace(/<img data-fid="([\w-]+)">/g, function (m, id) { return urls[id] ? '<img src="' + urls[id] + '" style="max-width:100%">' : ''; });
+        var doc = '<!doctype html><meta charset="utf-8"><title>' + flEsc(it.title || 'Page') + '</title><body style="font:16px/1.6 -apple-system,Segoe UI,sans-serif;max-width:760px;margin:40px auto;padding:0 16px"><h1>' + flEsc(it.title || '') + '</h1>' + body;
+        flDownload(nm + '.html', new Blob([doc], { type: 'text/html;charset=utf-8' }));
+      });
     });
     $('flViewClose').addEventListener('click', function () { flCloseView(); });
     $('flViewReplace').addEventListener('click', function () { $('flReplaceFile').click(); });
@@ -3930,6 +4070,7 @@
   initCal();
   initReminders();
   initFiles();
+  (function(){var l=document.getElementById('launch');if(l)l.addEventListener('click',function(e){var b=e.target.closest('button[data-url]');if(b)openLink(b.dataset.url);});})();
   initAbout();
   initSync();
   initHistory();
