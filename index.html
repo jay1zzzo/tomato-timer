@@ -1108,7 +1108,14 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
     <span>Float on top</span>
   </button>
-  <div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
+  <style>
+.undo-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:60;display:flex;align-items:center;gap:14px;padding:9px 10px 9px 16px;border:1px solid var(--line);border-radius:999px;background:rgba(20,18,16,.92);color:var(--ink);font-size:12.5px;opacity:0;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s}
+.undo-toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.undo-toast button{font:inherit;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11.5px;color:var(--focus);background:none;border:0;cursor:pointer;padding:4px 8px;border-radius:999px}
+.undo-toast button:hover{background:rgba(255,255,255,.08)}
+</style>
+<div class="undo-toast" id="undoToast" role="status" aria-live="polite"><span id="undoMsg">Deleted</span><button type="button" id="undoBtn">Undo</button></div>
+<div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
 
   <details class="settings">
     <summary><span class="sl-line">Session lengths</span><span class="sl-pill"><span id="slPill">Focus 25 · Break 5 · Long 15</span><svg class="sum-chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
@@ -1377,7 +1384,7 @@
 
 <script>
 (function () {
-  var APP_VERSION = 37;
+  var APP_VERSION = 38;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -2299,6 +2306,7 @@
       var x = el('button', 'rem-x', '✕'); x.type = 'button'; x.title = 'Delete'; x.setAttribute('aria-label', 'Delete: ' + p.title);
       x.addEventListener('click', function (e) {
         e.stopPropagation();
+        undoStack.push({ kind: 'rem', item: p }); if (undoStack.length > 10) undoStack.shift(); showUndo('Reminder deleted');
         calState.posts = calState.posts.filter(function (z) { return z.id !== p.id; });
         calState.deleted.push({ id: p.id, updated: Date.now() });
         calSave(); renderReminders();
@@ -3384,7 +3392,43 @@
     renderTasks();
   }
 
+  // Undo for deletions (tasks and reminders): the toast stays up a few seconds, Ctrl/Cmd+Z works too.
+  var undoStack = [], undoTimer = null;
+  function showUndo(msg) {
+    var t = document.getElementById('undoToast'); if (!t) return;
+    document.getElementById('undoMsg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(function () { t.classList.remove('show'); }, 8000);
+  }
+  function doUndo() {
+    var u = undoStack.pop();
+    var t = document.getElementById('undoToast');
+    if (!u) { if (t) t.classList.remove('show'); return; }
+    if (u.kind === 'task') {
+      u.item.updated = Date.now();
+      tasksState.deleted = (tasksState.deleted || []).filter(function (d) { return d.id !== u.item.id; });
+      tasksState.tasks.splice(Math.min(u.index, tasksState.tasks.length), 0, u.item);
+      saveTasks(); renderTasks();
+    } else {
+      u.item.updated = Date.now();
+      calState.deleted = calState.deleted.filter(function (d) { return d.id !== u.item.id; });
+      calState.posts.push(u.item);
+      calSave(); renderReminders();
+    }
+    if (undoStack.length) showUndo('Restored. Undo again for the one before?'); else if (t) t.classList.remove('show');
+  }
+  document.addEventListener('click', function (e) { if (e.target && e.target.id === 'undoBtn') doUndo(); });
+  document.addEventListener('keydown', function (e) {
+    if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.key.toLowerCase() !== 'z' || !undoStack.length) return;
+    var a = document.activeElement;
+    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+    e.preventDefault(); doUndo();
+  });
+
   function deleteTask(id) {
+    var idx = tasksState.tasks.findIndex(function (t) { return t.id === id; });
+    if (idx >= 0) { undoStack.push({ kind: 'task', item: tasksState.tasks[idx], index: idx }); if (undoStack.length > 10) undoStack.shift(); showUndo('Task deleted'); }
     tasksState.tasks = tasksState.tasks.filter(function (t) { return t.id !== id; });
     tasksState.deleted = (tasksState.deleted || []).concat([{ id: id, updated: Date.now() }]);
     if (tasksState.focusId === id) tasksState.focusId = null;
