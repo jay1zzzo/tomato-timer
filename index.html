@@ -289,9 +289,21 @@
     padding: 2px 0;
   }
   details.settings summary::-webkit-details-marker { display: none; }
-  details.settings summary > span { line-height: 1; position: relative; margin-right: -0.08em; }
-  details.settings summary .sum-chev { position: absolute; left: calc(100% + 8px); top: 50%; margin-top: -7px; display: block; transition: transform .2s ease; }
+  details.settings summary > span { line-height: 1; }
+  details.settings summary .sum-chev { display: block; transition: transform .2s ease; }
   details.settings[open] summary .sum-chev { transform: rotate(180deg); }
+  details.settings summary .sl-pill { display: none; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; }
+  /* style C: label set into the divider line */
+  body:not([data-lenstyle="pill"]) details.settings { border-top: 0; padding-top: 0; }
+  body:not([data-lenstyle="pill"]) details.settings summary { gap: 14px; }
+  body:not([data-lenstyle="pill"]) details.settings summary::before,
+  body:not([data-lenstyle="pill"]) details.settings summary::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+  /* style D: pill showing the current lengths */
+  body[data-lenstyle="pill"] details.settings { border-top: 0; padding-top: 0; }
+  body[data-lenstyle="pill"] details.settings summary .sl-line { display: none; }
+  body[data-lenstyle="pill"] details.settings summary .sl-pill { display: inline-flex; }
+  body[data-lenstyle="pill"] details.settings .settings-grid { margin-top: 14px; }
+  body:not([data-lenstyle="pill"]) details.settings .settings-grid { margin-top: 14px; }
   details.settings summary:hover { color: var(--ink); }
 
   .settings-grid {
@@ -892,7 +904,7 @@
 
   /* ---- Files (synced pages and files) ---- */
   .cal-handle.fl-handle { top: calc(50% + 72px); transform: none; }
-  body.fl-open .fl-handle, body.fl-open .cal-handle, body.cal-open .fl-handle, body.focusing .fl-handle { opacity: 0; visibility: hidden; pointer-events: none; }
+  body.fl-open .fl-handle, body.fl-open .cal-handle, body.cal-open .fl-handle { opacity: 0; visibility: hidden; pointer-events: none; }
   body.photo-mode .fl-handle { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   body.fl-open .fl-backdrop { opacity: 1; pointer-events: auto; }
   .fl {
@@ -951,7 +963,7 @@
   .cal-handle:hover { color: var(--ink); }
   .cal-handle .handle-count { color: var(--accent, var(--focus)); }
   body.photo-mode .cal-handle { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  body.cal-open .cal-handle, body.focusing .cal-handle { opacity: 0; visibility: hidden; pointer-events: none; }
+  body.cal-open .cal-handle { opacity: 0; visibility: hidden; pointer-events: none; }
   .cal-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(8,7,5,0.38); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
   body.cal-open .cal-backdrop { opacity: 1; pointer-events: auto; }
 
@@ -1099,7 +1111,7 @@
   <div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
 
   <details class="settings">
-    <summary><span>Session lengths<svg class="sum-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
+    <summary><span class="sl-line">Session lengths</span><span class="sl-pill"><span id="slPill">Focus 25 · Break 5 · Long 15</span><svg class="sum-chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
     <div class="settings-grid">
       <div class="field">
         <label for="focusLen">Focus (min)</label>
@@ -1211,6 +1223,8 @@
     <div class="sp-opts" id="optNowFont"></div>
     <div class="sp-row"><span>Lines shown</span></div>
     <div class="sp-opts" id="optNowLines"></div>
+    <div class="sp-row"><span>Session lengths on the main screen</span></div>
+    <div class="sp-opts" id="optLenStyle"></div>
     <div class="sp-row"><span>Buttons under the task</span></div>
     <div class="sp-opts" id="optBtnStyle"></div>
     <div class="sp-row"><span>Button size</span></div>
@@ -1363,7 +1377,7 @@
 
 <script>
 (function () {
-  var APP_VERSION = 35;
+  var APP_VERSION = 37;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1417,6 +1431,7 @@
   els.focusLen.value = state.durations.focus;
   els.shortLen.value = state.durations.short;
   els.longLen.value = state.durations.long;
+  setTimeout(function () { updateSlPill(); }, 0);
   els.roundsLen.value = state.durations.rounds;
 
   function modeMinutes(mode) {
@@ -1449,7 +1464,7 @@
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1469,7 +1484,7 @@
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1601,6 +1616,7 @@
   }
   function applyNow() {
     applyBgPause();
+    document.body.setAttribute('data-lenstyle', cfg.lenStyle === 'pill' ? 'pill' : 'line');
     document.body.setAttribute('data-btnstyle', ['quiet', 'outline', 'bold'].indexOf(cfg.btnStyle) >= 0 ? cfg.btnStyle : 'quiet');
     document.body.setAttribute('data-btnsize', ['s', 'm', 'l'].indexOf(cfg.btnSize) >= 0 ? cfg.btnSize : 'm');
     var root = document.documentElement.style;
@@ -1631,6 +1647,7 @@
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
     buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
+    buildOpts('optLenStyle', 'lenStyle', [['line', 'In the line'], ['pill', 'Pill with times']]);
     buildOpts('optBtnStyle', 'btnStyle', [['quiet', 'Quiet'], ['outline', 'Outlined'], ['bold', 'Bold']]);
     buildOpts('optBtnSize', 'btnSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]);
     buildOpts('optPipTask', 'pipTask', [['on', 'Show'], ['off', 'Hide']]);
@@ -1829,7 +1846,7 @@
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
@@ -4040,7 +4057,12 @@
     });
   });
 
+  function updateSlPill() {
+    var e = document.getElementById('slPill');
+    if (e) e.textContent = 'Focus ' + state.durations.focus + ' · Break ' + state.durations.short + ' · Long ' + state.durations.long;
+  }
   function persistSettings() {
+    updateSlPill();
     try {
       localStorage.setItem('tomato-timer-lab-settings', JSON.stringify(state.durations));
     } catch (e) {}
