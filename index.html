@@ -1104,6 +1104,8 @@
 
   <div class="seeds" id="seeds" aria-label="Completed focus sessions"></div>
 
+  <button class="lod" id="lod" type="button" hidden title="Tap for another line"></button>
+
   <button class="pip-btn" id="pipBtn" type="button">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
     <span>Float on top</span>
@@ -1114,6 +1116,51 @@
 .undo-toast button{font:inherit;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11.5px;color:var(--focus);background:none;border:0;cursor:pointer;padding:4px 8px;border-radius:999px}
 .undo-toast button:hover{background:rgba(255,255,255,.08)}
 </style>
+<style>
+.launch .ln-mot{font:700 18px/1 Georgia,serif;padding-top:5px}
+.lod{display:block;max-width:440px;margin:2px auto 12px;padding:6px 10px;border:0;background:none;color:var(--muted);font:italic 500 14px/1.45 Georgia,serif;text-align:center;cursor:pointer;white-space:pre-wrap;opacity:.9;transition:opacity .2s,color .2s}
+.lod:hover{color:var(--ink)}
+.lod[hidden]{display:none}
+body.timer-running .lod{opacity:0;pointer-events:none}
+.board{position:fixed;inset:0;z-index:55;background:rgba(10,9,8,.97);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.board.show{opacity:1;visibility:visible}
+.bd-bar{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bd-bar button{font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer}
+.bd-bar button:hover{color:var(--ink)}
+.bd-sel{display:inline-flex;gap:6px;margin-left:10px;padding-left:12px;border-left:1px solid var(--line)}
+.bd-sel[hidden]{display:none}
+.bd-sp{flex:1}
+.bd-wall{position:relative;flex:1;overflow:hidden;touch-action:none}
+.bd-hint{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font:italic 16px Georgia,serif;pointer-events:none}
+.bd-it{position:absolute;cursor:grab;user-select:none;-webkit-user-select:none;padding:4px 6px;border:1px dashed transparent;border-radius:4px;max-width:80%}
+.bd-it.sel{border-color:rgba(255,255,255,.35)}
+.bd-it:active{cursor:grabbing}
+.bd-it.t{font-family:Georgia,serif;line-height:1.08;white-space:pre-wrap}
+.bd-it.t.st-bold{font-weight:700;text-transform:uppercase;letter-spacing:.01em}
+.bd-it.t.st-italic{font-style:italic;font-weight:500}
+.bd-it.t.st-sans{font-family:system-ui,sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-.01em}
+.bd-it.i img{display:block;width:100%;height:auto;border-radius:3px;box-shadow:0 8px 22px #0009;pointer-events:none}
+.bd-it.t[contenteditable="true"]{cursor:text;user-select:text;-webkit-user-select:text;outline:0;border-color:var(--focus)}
+</style>
+<div class="board" id="board" role="dialog" aria-label="Motivation board" hidden>
+  <div class="bd-bar">
+    <button type="button" id="bdAddText">+ Line</button>
+    <button type="button" id="bdAddPic">+ Picture</button>
+    <span class="bd-sel" id="bdSel" hidden>
+      <button type="button" data-a="smaller" title="Smaller">A&minus;</button>
+      <button type="button" data-a="bigger" title="Bigger">A+</button>
+      <button type="button" data-a="style" title="Change style">Aa</button>
+      <button type="button" data-a="color" title="Change colour">&#9679;</button>
+      <button type="button" data-a="tilt" title="Tilt">&#8635;</button>
+      <button type="button" data-a="front" title="Bring to front">&#8593;</button>
+      <button type="button" data-a="del" title="Delete">&#10005;</button>
+    </span>
+    <span class="bd-sp"></span>
+    <button type="button" id="bdDone">Done</button>
+  </div>
+  <div class="bd-wall" id="bdWall"></div>
+  <input type="file" id="bdFile" accept="image/*" multiple hidden>
+</div>
 <div class="undo-toast" id="undoToast" role="status" aria-live="polite"><span id="undoMsg">Deleted</span><button type="button" id="undoBtn">Undo</button></div>
 <div class="pip-note" id="pipNote" role="status" aria-live="polite"></div>
 
@@ -1230,6 +1277,8 @@
     <div class="sp-opts" id="optNowFont"></div>
     <div class="sp-row"><span>Lines shown</span></div>
     <div class="sp-opts" id="optNowLines"></div>
+    <div class="sp-row"><span>Line of the day under the timer</span></div>
+    <div class="sp-opts" id="optLineDay"></div>
     <div class="sp-row"><span>Session lengths on the main screen</span></div>
     <div class="sp-opts" id="optLenStyle"></div>
     <div class="sp-row"><span>Buttons under the task</span></div>
@@ -1337,6 +1386,7 @@
   <button type="button" class="ln-claude" data-app="claude://open" data-web="https://claude.ai/new" title="Claude" aria-label="Open Claude">C</button>
   <button type="button" class="ln-gpt" data-app="https://chatgpt.com/" data-web="https://chatgpt.com/" title="ChatGPT" aria-label="Open ChatGPT">GPT</button>
   <button type="button" class="ln-mail" data-app="https://mail.google.com/" data-web="https://mail.google.com/" title="Gmail" aria-label="Open Gmail"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 7 8.5-7"/></svg></button>
+  <button type="button" class="ln-mot" id="motBtn" title="Motivation board" aria-label="Motivation board" aria-expanded="false">&ldquo;</button>
 </div>
 <style>
 .launch{position:fixed;left:14px;bottom:14px;z-index:15;display:flex;gap:6px}
@@ -1384,7 +1434,7 @@
 
 <script>
 (function () {
-  var APP_VERSION = 38;
+  var APP_VERSION = 42;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1471,7 +1521,7 @@
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lineDay: 'on', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1491,7 +1541,7 @@
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'lineDay', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1623,6 +1673,7 @@
   }
   function applyNow() {
     applyBgPause();
+    updateLod();
     document.body.setAttribute('data-lenstyle', cfg.lenStyle === 'pill' ? 'pill' : 'line');
     document.body.setAttribute('data-btnstyle', ['quiet', 'outline', 'bold'].indexOf(cfg.btnStyle) >= 0 ? cfg.btnStyle : 'quiet');
     document.body.setAttribute('data-btnsize', ['s', 'm', 'l'].indexOf(cfg.btnSize) >= 0 ? cfg.btnSize : 'm');
@@ -1654,6 +1705,7 @@
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
     buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
+    buildOpts('optLineDay', 'lineDay', [['on', 'Show'], ['off', 'Hide']]);
     buildOpts('optLenStyle', 'lenStyle', [['line', 'In the line'], ['pill', 'Pill with times']]);
     buildOpts('optBtnStyle', 'btnStyle', [['quiet', 'Quiet'], ['outline', 'Outlined'], ['bold', 'Bold']]);
     buildOpts('optBtnSize', 'btnSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]);
@@ -2978,6 +3030,207 @@
     var h = abNewHtml; abNewHtml = null;
     document.open(); document.write(h); document.close();
   }
+
+  // Motivation board: words and pictures on a blank wall, dragged wherever you like.
+  var BD_KEY = 'tomato-timer-lab-board', bdState = { v: 2, items: [], deleted: [], w: 1200 }, bdSel = null, bdUrls = {};
+  var BD_COLORS = ['#f4efe6', '#e8634a', '#f3d36b', '#8d877c', '#7fd1ae'], BD_STYLES = ['bold', 'italic', 'sans'];
+  function bdLoad() {
+    try { var o = JSON.parse(localStorage.getItem(BD_KEY) || 'null'); if (o && Array.isArray(o.items)) { bdState = o; if (!Array.isArray(bdState.deleted)) bdState.deleted = []; return; } } catch (e) {}
+    // first run: bring over the lines saved by the earlier pop-up version, plus the starter quote
+    var old = [];
+    try { var m = JSON.parse(localStorage.getItem('tomato-timer-lab-motivation') || 'null'); if (m && Array.isArray(m.items)) old = m.items.map(function (z) { return z.text; }); } catch (e) {}
+    if (!old.length) old = ['JUST DO.', 'There are a million ways to win, you just find an excuse not to.', 'Don’t overthink things.'];
+    var y = 0.08;
+    bdState.items = old.map(function (tx, i) {
+      var big = i === 0;
+      var it = { id: 'bseed' + i, type: 't', text: tx, x: 0.06, y: y, rot: 0, size: big ? 64 : 24, color: i === 0 ? BD_COLORS[0] : (i === 1 ? BD_COLORS[1] : BD_COLORS[3]), style: big ? 'bold' : 'italic', updated: 1 };
+      y += big ? 0.2 : 0.12; return it;
+    });
+    bdSave();
+  }
+  var lodPick = -1;
+  function updateLod(next) {
+    var e = document.getElementById('lod'); if (!e) return;
+    var lines = bdState.items.filter(function (z) { return z.type === 't' && z.text && z.text.trim(); }).map(function (z) { return z.text.trim(); });
+    if (cfg.lineDay === 'off' || !lines.length) { e.hidden = true; return; }
+    var d = new Date(), seed = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
+    if (next) { do { lodPick = Math.floor(Math.random() * lines.length); } while (lines.length > 1 && lines[lodPick] === e.textContent); }
+    else if (lodPick < 0 || lodPick >= lines.length) lodPick = seed % lines.length;
+    e.textContent = lines[lodPick]; e.hidden = false;
+  }
+  function bdSaveLocal() { try { localStorage.setItem(BD_KEY, JSON.stringify(bdState)); } catch (e) {} }
+  function bdSave(it) { if (it) it.updated = Date.now(); bdSaveLocal(); if (typeof syncOn === 'function' && syncOn()) scheduleSync(); }
+  function bdPayload() { var by = function (a, b) { return a.id < b.id ? -1 : 1; }; return { v: 2, w: bdState.w, items: bdState.items.slice().sort(by), deleted: bdState.deleted.slice().sort(by) }; }
+  function bdNorm(p) { try { var by = function (a, b) { return a.id < b.id ? -1 : 1; }; return JSON.stringify(p && Array.isArray(p.items) ? { i: p.items.slice().sort(by), d: (p.deleted || []).slice().sort(by) } : null); } catch (e) { return ''; } }
+  function bdMerge(remote) {
+    var ri = remote && Array.isArray(remote.items) ? remote.items : [], rd = remote && Array.isArray(remote.deleted) ? remote.deleted : [];
+    var tombs = {}, map = {}, cutoff = Date.now() - 120 * 86400000;
+    bdState.deleted.concat(rd).forEach(function (d) { if (d && typeof d.id === 'string') tombs[d.id] = Math.max(tombs[d.id] || 0, d.updated || 0); });
+    bdState.items.concat(ri).forEach(function (t) { if (!t || typeof t.id !== 'string') return; if (!map[t.id] || (t.updated || 0) > (map[t.id].updated || 0)) map[t.id] = t; });
+    var out = [];
+    Object.keys(map).forEach(function (id) { if (tombs[id] !== undefined && tombs[id] >= (map[id].updated || 0)) return; out.push(map[id]); });
+    bdState.items = out;
+    bdState.deleted = Object.keys(tombs).filter(function (id) { return tombs[id] > cutoff; }).map(function (id) { return { id: id, updated: tombs[id] }; });
+    if (remote && remote.w && !bdState.items.length) bdState.w = remote.w;
+    bdSaveLocal();
+  }
+  function bdUploadPending() {
+    var chain = Promise.resolve();
+    bdState.items.filter(function (it) { return it.type === 'i' && !it.remote; }).forEach(function (it) {
+      chain = chain.then(function () {
+        return cfGet('f:' + it.fid).then(function (blob) {
+          if (!blob) return;
+          return flReadB64(blob).then(function (b64) {
+            return ghFetch('PUT', JSON.stringify({ message: 'Add board picture', content: b64 }), 'board/' + it.fid).then(function (res) {
+              if (res.status === 401) throw fail('auth');
+              if (res.ok || res.status === 422) { it.remote = true; bdSaveLocal(); }
+              else if (res.status === 403) throw fail('forbidden');
+              else if (res.status === 404) throw fail('norepo');
+            });
+          });
+        });
+      });
+    });
+    return chain;
+  }
+  function bdSyncOnce(attempt) {
+    return ghFetch('GET', null, 'board.json').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (res.status === 401) throw fail('auth');
+      if (res.status === 403) throw fail('forbidden');
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) { var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {} return { sha: j.sha, data: d }; });
+    }).then(function (remote) {
+      bdMerge(remote.data);
+      return bdUploadPending().then(function () {
+        if (remote.sha && bdNorm(remote.data) === bdNorm(bdPayload())) return;
+        if (!remote.sha && !bdState.items.length && !bdState.deleted.length) return;
+        var body = { message: 'Sync board', content: b64enc(JSON.stringify(bdPayload(), null, 1)) };
+        if (remote.sha) body.sha = remote.sha;
+        return ghFetch('PUT', JSON.stringify(body), 'board.json').then(function (res) {
+          if (res.status === 409 || res.status === 422) { if (attempt < 3) return bdSyncOnce(attempt + 1); throw fail('conflict'); }
+          if (res.status === 404) throw fail('norepo');
+          if (res.status === 401) throw fail('auth');
+          if (res.status === 403) throw fail('forbidden');
+          if (!res.ok) throw fail('http');
+        });
+      });
+    }).then(function () { var b = document.getElementById('board'); if (b && b.classList.contains('show') && !(document.activeElement && document.activeElement.isContentEditable)) bdRender(); });
+  }
+  function bdFind(id) { return bdState.items.filter(function (z) { return z.id === id; })[0]; }
+  function bdSelect(id) {
+    bdSel = id;
+    [].forEach.call(document.querySelectorAll('.bd-it'), function (n) { n.classList.toggle('sel', n.dataset.id === id); });
+    document.getElementById('bdSel').hidden = !id;
+  }
+  function bdApply(it, n) {
+    var wall = document.getElementById('bdWall'), W = wall.clientWidth, H = wall.clientHeight;
+    n.style.left = (it.x * W) + 'px'; n.style.top = (it.y * H) + 'px';
+    n.style.transform = 'rotate(' + (it.rot || 0) + 'deg)';
+    n.style.zIndex = it.z || 1;
+    if (it.type === 't') { n.style.fontSize = it.size + 'px'; n.style.color = it.color; n.className = 'bd-it t st-' + it.style + (bdSel === it.id ? ' sel' : ''); }
+    else n.style.width = it.size + 'px';
+  }
+  function bdRender() {
+    var wall = document.getElementById('bdWall'); wall.innerHTML = '';
+    if (wall.clientWidth > 300 && bdState.w !== wall.clientWidth) { bdState.w = wall.clientWidth; bdSaveLocal(); }
+    if (!bdState.items.length) { var h = document.createElement('div'); h.className = 'bd-hint'; h.textContent = 'A blank wall. Add a line or a picture.'; wall.appendChild(h); }
+    bdState.items.forEach(function (it) {
+      var n = document.createElement('div'); n.dataset.id = it.id;
+      if (it.type === 't') { n.className = 'bd-it t'; n.textContent = it.text; }
+      else {
+        n.className = 'bd-it i';
+        var im = document.createElement('img'); im.alt = ''; n.appendChild(im);
+        if (bdUrls[it.fid]) im.src = bdUrls[it.fid];
+        else cfGet('f:' + it.fid).then(function (b) {
+          if (b) { bdUrls[it.fid] = URL.createObjectURL(b); im.src = bdUrls[it.fid]; return; }
+          if (!(typeof syncOn === 'function' && syncOn()) || !it.remote) return;
+          return ghFetch('GET', null, 'board/' + it.fid, 'application/vnd.github.raw+json').then(function (res) { return res.ok ? res.blob() : null; }).then(function (bl) {
+            if (!bl) return; return cfPut('f:' + it.fid, bl).then(function () { bdUrls[it.fid] = URL.createObjectURL(bl); im.src = bdUrls[it.fid]; });
+          }).catch(function () {});
+        });
+      }
+      bdApply(it, n); wall.appendChild(n);
+      n.addEventListener('pointerdown', function (e) {
+        if (n.isContentEditable) return;
+        e.preventDefault(); bdSelect(it.id);
+        var sx = e.clientX, sy = e.clientY, ox = it.x, oy = it.y, moved = false;
+        n.setPointerCapture(e.pointerId);
+        function mv(ev) { var W = wall.clientWidth, H = wall.clientHeight; if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) moved = true;
+          it.x = Math.min(0.98, Math.max(-0.05, ox + (ev.clientX - sx) / W)); it.y = Math.min(0.96, Math.max(-0.02, oy + (ev.clientY - sy) / H)); bdApply(it, n); }
+        function up() { n.removeEventListener('pointermove', mv); n.removeEventListener('pointerup', up); if (moved) bdSave(it); }
+        n.addEventListener('pointermove', mv); n.addEventListener('pointerup', up);
+      });
+      if (it.type === 't') n.addEventListener('dblclick', function () {
+        n.contentEditable = 'true'; n.focus();
+        var r = document.createRange(); r.selectNodeContents(n); var sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(r);
+        function done() { n.contentEditable = 'false'; var v = n.textContent.trim(); if (v) { it.text = v; } else { bdDelete(it.id); return; } bdSave(it); }
+        n.addEventListener('blur', done, { once: true });
+        n.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); n.blur(); } });
+      });
+    });
+    bdSelect(bdSel && bdFind(bdSel) ? bdSel : null);
+  }
+  function bdDelete(id) {
+    var i = bdState.items.findIndex(function (z) { return z.id === id; }); if (i < 0) return;
+    undoStack.push({ kind: 'board', item: bdState.items[i], index: i }); if (undoStack.length > 10) undoStack.shift(); showUndo('Removed from board');
+    bdState.items.splice(i, 1); bdState.deleted.push({ id: undoStack[undoStack.length - 1].item.id, updated: Date.now() }); bdSel = null; bdSave(); bdRender();
+  }
+  function bdAddText() {
+    var it = { id: 'b' + newId(), type: 't', text: 'New line', x: 0.3 + Math.random() * 0.2, y: 0.2 + Math.random() * 0.3, rot: 0, size: 40, color: BD_COLORS[0], style: 'bold', z: 5 };
+    bdState.items.push(it); bdSave(it); bdSel = it.id; bdRender();
+    var n = document.querySelector('.bd-it[data-id="' + it.id + '"]'); if (n) n.dispatchEvent(new MouseEvent('dblclick'));
+  }
+  function bdAddFiles(files) {
+    [].slice.call(files).filter(function (f) { return /^image\//.test(f.type); }).forEach(function (f) {
+      flPrepImage(f).then(function (blob) {
+        var fid = 'bd' + newId(), typed = blob.type ? blob : new Blob([blob], { type: 'image/png' });
+        return cfPut('f:' + fid, typed).then(function () {
+          var it = { id: 'b' + newId(), type: 'i', fid: fid, x: 0.25 + Math.random() * 0.3, y: 0.15 + Math.random() * 0.3, rot: Math.round((Math.random() - 0.5) * 8), size: 240, z: 3 };
+          bdState.items.push(it); bdSel = it.id; bdSave(it); bdRender();
+        });
+      });
+    });
+  }
+  function bdAction(a) {
+    var it = bdFind(bdSel); if (!it) return;
+    if (a === 'del') return bdDelete(it.id);
+    var step = it.type === 't' ? 1.25 : 1.2;
+    if (a === 'bigger') it.size = Math.min(it.type === 't' ? 220 : 900, Math.round(it.size * step));
+    else if (a === 'smaller') it.size = Math.max(it.type === 't' ? 12 : 60, Math.round(it.size / step));
+    else if (a === 'style' && it.type === 't') it.style = BD_STYLES[(BD_STYLES.indexOf(it.style) + 1) % BD_STYLES.length];
+    else if (a === 'color' && it.type === 't') it.color = BD_COLORS[(BD_COLORS.indexOf(it.color) + 1) % BD_COLORS.length];
+    else if (a === 'tilt') { var r = [0, -4, 4, -8, 8]; it.rot = r[(r.indexOf(it.rot || 0) + 1) % r.length]; }
+    else if (a === 'front') { it.z = Math.max.apply(null, bdState.items.map(function (z) { return z.z || 1; })) + 1; }
+    bdSave(it);
+    var n = document.querySelector('.bd-it[data-id="' + it.id + '"]'); if (n) bdApply(it, n);
+  }
+  function initMotivation() {
+    bdLoad();
+    var board = document.getElementById('board'), btn = document.getElementById('motBtn');
+    function open() { board.hidden = false; void board.offsetWidth; board.classList.add('show'); bdSel = null; bdRender(); btn.setAttribute('aria-expanded', 'true'); }
+    function close() { board.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); setTimeout(function () { if (!board.classList.contains('show')) board.hidden = true; }, 250); }
+    btn.addEventListener('click', open);
+    document.getElementById('bdDone').addEventListener('click', function () { close(); lodPick = -1; updateLod(); });
+    document.getElementById('lod').addEventListener('click', function () { updateLod(true); });
+    updateLod();
+    document.getElementById('bdAddText').addEventListener('click', bdAddText);
+    document.getElementById('bdAddPic').addEventListener('click', function () { document.getElementById('bdFile').click(); });
+    document.getElementById('bdFile').addEventListener('change', function (e) { bdAddFiles(e.target.files); e.target.value = ''; });
+    document.getElementById('bdSel').addEventListener('click', function (e) { var b = e.target.closest('button[data-a]'); if (b) bdAction(b.dataset.a); });
+    document.getElementById('bdWall').addEventListener('pointerdown', function (e) { if (e.target.id === 'bdWall' || e.target.className === 'bd-hint') bdSelect(null); });
+    document.addEventListener('keydown', function (e) {
+      if (board.hidden || !board.classList.contains('show')) return;
+      var ed = document.activeElement && document.activeElement.isContentEditable;
+      if (e.key === 'Escape' && !ed) close();
+      if ((e.key === 'Delete' || e.key === 'Backspace') && bdSel && !ed) { e.preventDefault(); bdDelete(bdSel); }
+    });
+    document.addEventListener('paste', function (e) {
+      if (board.hidden || !board.classList.contains('show') || (document.activeElement && document.activeElement.isContentEditable)) return;
+      var fl = e.clipboardData && e.clipboardData.files; if (fl && fl.length) { e.preventDefault(); bdAddFiles(fl); }
+    });
+    window.addEventListener('resize', function () { if (board.classList.contains('show')) bdRender(); });
+  }
   function initAbout() {
     var v = $('abVer'); if (v) v.textContent = 'Version ' + APP_VERSION;
     $('abCheck').addEventListener('click', abCheck);
@@ -3134,6 +3387,7 @@
     var s = state.secondsLeft % 60;
     els.time.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     els.status.textContent = statusText(state.mode, state.running);
+    document.body.classList.toggle('timer-running', !!state.running);
 
     var total = modeMinutes(state.mode) * 60;
     var pct = total > 0 ? (state.secondsLeft / total) * 100 : 0;
@@ -3410,6 +3664,8 @@
       tasksState.deleted = (tasksState.deleted || []).filter(function (d) { return d.id !== u.item.id; });
       tasksState.tasks.splice(Math.min(u.index, tasksState.tasks.length), 0, u.item);
       saveTasks(); renderTasks();
+    } else if (u.kind === 'board') {
+      bdState.deleted = bdState.deleted.filter(function (d) { return d.id !== u.item.id; }); bdState.items.splice(Math.min(u.index, bdState.items.length), 0, u.item); bdSave(u.item); bdRender();
     } else {
       u.item.updated = Date.now();
       calState.deleted = calState.deleted.filter(function (d) { return d.id !== u.item.id; });
@@ -3626,7 +3882,7 @@
     if (syncBusy) { syncAgain = true; return Promise.resolve(); }
     syncBusy = true;
     setSyncStatus('Syncing…');
-    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () {
+    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () { return bdSyncOnce(1); }).then(function () {
       sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
     }).catch(function (e) {
       var c = e && e.code;
@@ -4140,6 +4396,7 @@
   initReminders();
   initFiles();
   (function(){var l=document.getElementById('launch');if(l)l.addEventListener('click',function(e){var b=e.target.closest('button[data-app]');if(!b)return;if(hostBridge)hostPost('link|'+b.dataset.app);else openLink(b.dataset.web);});})();
+  initMotivation();
   initAbout();
   initSync();
   initHistory();
