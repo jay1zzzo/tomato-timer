@@ -307,6 +307,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             saveFile(name: p[1], base64: p[2])
         } else if kind == "openfile", p.count >= 3 {
             openFile(name: p[1], base64: p[2])
+        } else if kind == "autostart", p.count >= 2 {
+            setAutostart(p[1] == "on")
         } else if kind == "link", p.count >= 2 {
             // Web addresses only: Meta Business Suite, Drive links and the like open in the normal browser.
             if let url = URL(string: p[1]), let scheme = url.scheme?.lowercased() {
@@ -326,6 +328,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     // Opens a file from the Files tab in whatever program the Mac uses for it (Pages, Preview, Word...).
     // Programs and scripts are never launched this way; those go through the Save box instead.
+    // Open at login: a small LaunchAgent that opens this app when you log in (removed again when switched off).
+    func setAutostart(_ on: Bool) {
+        let fm = FileManager.default
+        let dir = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/LaunchAgents", isDirectory: true)
+        let file = dir.appendingPathComponent("app.tomatotimer.lab.autostart.plist")
+        if on {
+            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            let plist: [String: Any] = ["Label": "app.tomatotimer.lab.autostart",
+                                        "ProgramArguments": ["/usr/bin/open", "-a", Bundle.main.bundlePath],
+                                        "RunAtLoad": true]
+            if let d = try? PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0) {
+                try? d.write(to: file, options: .atomic)
+            }
+        } else {
+            try? fm.removeItem(at: file)
+        }
+    }
+
     func openFile(name: String, base64: String) {
         guard let data = Data(base64Encoded: base64) else { return }
         var clean = (name as NSString).lastPathComponent.replacingOccurrences(of: "/", with: "-")
@@ -425,7 +445,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 1
+    let nativeVersion = 2
 
     func askRestart() {
         if restartAsked { return }

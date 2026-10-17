@@ -1277,6 +1277,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-opts" id="optNowFont"></div>
     <div class="sp-row"><span>Lines shown</span></div>
     <div class="sp-opts" id="optNowLines"></div>
+    <div class="sp-row" id="startupRow"><span>Open Tomato Timer when I log in</span></div>
+    <div class="sp-opts" id="optStartup"></div>
     <div class="sp-row"><span>Line of the day under the timer</span></div>
     <div class="sp-opts" id="optLineDay"></div>
     <div class="sp-row"><span>Session lengths on the main screen</span></div>
@@ -1434,7 +1436,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 43;
+  var APP_VERSION = 44;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1521,7 +1523,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lineDay: 'on', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', startup: 'off', lineDay: 'on', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1541,7 +1543,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'lineDay', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'startup', 'lineDay', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1674,6 +1676,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function applyNow() {
     applyBgPause();
     updateLod();
+    syncStartup();
     document.body.setAttribute('data-lenstyle', cfg.lenStyle === 'pill' ? 'pill' : 'line');
     document.body.setAttribute('data-btnstyle', ['quiet', 'outline', 'bold'].indexOf(cfg.btnStyle) >= 0 ? cfg.btnStyle : 'quiet');
     document.body.setAttribute('data-btnsize', ['s', 'm', 'l'].indexOf(cfg.btnSize) >= 0 ? cfg.btnSize : 'm');
@@ -1705,6 +1708,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
     buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
+    buildOpts('optStartup', 'startup', [['on', 'On'], ['off', 'Off']]);
     buildOpts('optLineDay', 'lineDay', [['on', 'Show'], ['off', 'Hide']]);
     buildOpts('optLenStyle', 'lenStyle', [['line', 'In the line'], ['pill', 'Pill with times']]);
     buildOpts('optBtnStyle', 'btnStyle', [['quiet', 'Quiet'], ['outline', 'Outlined'], ['bold', 'Bold']]);
@@ -3047,6 +3051,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       y += big ? 0.2 : 0.12; return it;
     });
     bdSave();
+  }
+  var lastStartup = null;
+  function syncStartup() {
+    var v = cfg.startup === 'on' ? 'on' : 'off';
+    var show = !!(typeof hostBridge !== 'undefined' && hostBridge);
+    ['startupRow', 'optStartup'].forEach(function (id) { var n = document.getElementById(id); if (n) n.style.display = show ? '' : 'none'; });
+    if (show && lastStartup !== v) { lastStartup = v; hostPost('autostart|' + v); }
   }
   var lodPick = -1;
   function updateLod(next) {
