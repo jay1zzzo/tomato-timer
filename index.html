@@ -1434,7 +1434,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 42;
+  var APP_VERSION = 43;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -3058,6 +3058,21 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     else if (lodPick < 0 || lodPick >= lines.length) lodPick = seed % lines.length;
     e.textContent = lines[lodPick]; e.hidden = false;
   }
+  // Starter lines added in later versions: added once, never re-added if you delete them.
+  function bdAddStarters() {
+    if ((bdState.seedV || 1) >= 2) return;
+    bdState.seedV = 2;
+    var y = bdState.items.reduce(function (m, z) { return Math.max(m, z.y || 0); }, 0.1) + 0.12;
+    [
+      { id: 'bseed10', text: 'Do it scared, tired, messy.\nJust do it.', size: 38, color: '#f4efe6', style: 'bold' },
+      { id: 'bseed11', text: 'If a thing is worth doing, it is worth doing badly.\n\u2014 G. K. Chesterton', size: 24, color: '#f3d36b', style: 'italic' },
+      { id: 'bseed12', text: 'Done is better than perfect.', size: 34, color: '#e8634a', style: 'bold' }
+    ].forEach(function (z) {
+      if (bdState.deleted.some(function (d) { return d.id === z.id; }) || bdState.items.some(function (i) { return i.id === z.id; })) return;
+      z.type = 't'; z.x = 0.06; z.y = Math.min(y, 0.9); z.rot = 0; z.updated = 1; y += 0.14; bdState.items.push(z);
+    });
+    bdSaveLocal();
+  }
   function bdSaveLocal() { try { localStorage.setItem(BD_KEY, JSON.stringify(bdState)); } catch (e) {} }
   function bdSave(it) { if (it) it.updated = Date.now(); bdSaveLocal(); if (typeof syncOn === 'function' && syncOn()) scheduleSync(); }
   function bdPayload() { var by = function (a, b) { return a.id < b.id ? -1 : 1; }; return { v: 2, w: bdState.w, items: bdState.items.slice().sort(by), deleted: bdState.deleted.slice().sort(by) }; }
@@ -3207,6 +3222,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   function initMotivation() {
     bdLoad();
+    bdAddStarters();
     var board = document.getElementById('board'), btn = document.getElementById('motBtn');
     function open() { board.hidden = false; void board.offsetWidth; board.classList.add('show'); bdSel = null; bdRender(); btn.setAttribute('aria-expanded', 'true'); }
     function close() { board.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); setTimeout(function () { if (!board.classList.contains('show')) board.hidden = true; }, 250); }
