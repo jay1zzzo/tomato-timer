@@ -84,6 +84,7 @@ final class MiniPanel: NSPanel {
     let iconView = NSImageView(frame: NSRect(x: 10, y: 12, width: 32, height: 32))
     let box = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 56))
     let tagLabel = NSTextField(labelWithString: "")
+    let mailButton = NSButton(frame: NSRect(x: 166, y: 8, width: 18, height: 16))
 
     init() {
         super.init(contentRect: NSRect(x: 0, y: 0, width: 190, height: 56),
@@ -147,10 +148,28 @@ final class MiniPanel: NSPanel {
         closeButton.action = #selector(closeTapped)
         box.addSubview(closeButton)
 
+        // Small envelope: opens Gmail in the browser.
+        mailButton.isBordered = false
+        if #available(macOS 11.0, *), let img = NSImage(systemSymbolName: "envelope", accessibilityDescription: "Gmail") {
+            mailButton.image = img
+            mailButton.imageScaling = .scaleProportionallyDown
+        } else {
+            mailButton.title = "\u{2709}"
+        }
+        mailButton.contentTintColor = NSColor(calibratedWhite: 0.6, alpha: 1)
+        mailButton.toolTip = "Open Gmail"
+        mailButton.target = self
+        mailButton.action = #selector(mailTapped)
+        box.addSubview(mailButton)
+
         if let screen = NSScreen.main {
             let f = screen.visibleFrame
             setFrameOrigin(NSPoint(x: f.maxX - 190 - 24, y: f.minY + 24))
         }
+    }
+
+    @objc func mailTapped() {
+        if let u = URL(string: "https://mail.google.com/") { NSWorkspace.shared.open(u) }
     }
 
     override var canBecomeKey: Bool { return false }
@@ -445,7 +464,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 2
+    let nativeVersion = 3
 
     func askRestart() {
         if restartAsked { return }
