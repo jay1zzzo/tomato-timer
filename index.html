@@ -1442,7 +1442,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 47;
+  var APP_VERSION = 48;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -3294,7 +3294,11 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function hostSendState() {
     var ft = focusedTask();
     var tag = (state.mode === 'focus' && ft && cfg.pipTask !== 'off') ? ft.title : pipModeLabel(state.mode);
-    hostPost('state|' + els.time.textContent + '|' + (state.running ? '1' : '0') + '|' + accentHex(state.mode) + '|' + tag.replace(/\|/g, '/'));
+    hostPost('state|' + els.time.textContent + '|' + (state.running ? '1' : '0') + '|' + accentHex(state.mode) + '|' + tag.replace(/\|/g, '/') + '|' + hostProgress());
+  }
+  function hostProgress() {
+    var total = modeMinutes(state.mode) * 60;
+    return total > 0 ? Math.max(0, Math.min(100, Math.round((1 - state.secondsLeft / total) * 100))) : 0;
   }
   if (hostBridge) {
     window.chrome.webview.addEventListener('message', function (e) {

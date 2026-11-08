@@ -80,15 +80,18 @@ final class MiniPanel: NSPanel {
     var onClosed: (() -> Void)?
     var onShowMain: (() -> Void)?
     let timeLabel = NSTextField(labelWithString: "25:00")
-    let button = NSButton(frame: NSRect(x: 128, y: 11, width: 34, height: 34))
-    let closeButton = NSButton(frame: NSRect(x: 168, y: 33, width: 16, height: 16))
-    let iconView = NSImageView(frame: NSRect(x: 10, y: 12, width: 32, height: 32))
-    let box = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 56))
+    let button = NSButton(frame: NSRect(x: 160, y: 36, width: 24, height: 22))
+    let closeButton = NSButton(frame: NSRect(x: 138, y: 38, width: 16, height: 16))
+    let box = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 62))
     let tagLabel = NSTextField(labelWithString: "")
-    let mailButton = NSButton(frame: NSRect(x: 160, y: 5, width: 28, height: 24))
+    let mailButton = NSButton(frame: NSRect(x: 156, y: 8, width: 32, height: 26))
+    let barBack = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 3))
+    let barFill = NSView(frame: NSRect(x: 0, y: 0, width: 0, height: 3))
+    var panelH: CGFloat = 62
+    var progress: CGFloat = 0
 
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 190, height: 56),
+        super.init(contentRect: NSRect(x: 0, y: 0, width: 190, height: 62),
                    styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
         level = .statusBar
@@ -109,21 +112,24 @@ final class MiniPanel: NSPanel {
         box.layer?.borderColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
         contentView = box
 
-        iconView.image = NSApp.applicationIconImage
-        iconView.imageScaling = .scaleProportionallyUpOrDown
-        box.addSubview(iconView)
+        barBack.wantsLayer = true
+        barBack.layer?.backgroundColor = NSColor(calibratedWhite: 1, alpha: 0.12).cgColor
+        barFill.wantsLayer = true
+        barFill.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
+        box.addSubview(barBack)
+        box.addSubview(barFill)
 
         timeLabel.font = NSFont.monospacedSystemFont(ofSize: 24, weight: .bold)
         timeLabel.textColor = NSColor(calibratedWhite: 0.96, alpha: 1)
-        timeLabel.frame = NSRect(x: 48, y: 12, width: 78, height: 32)
+        timeLabel.frame = NSRect(x: 10, y: 24, width: 126, height: 32)
         box.addSubview(timeLabel)
 
         button.isBordered = false
         button.wantsLayer = true
-        button.layer?.cornerRadius = 3
+        button.layer?.cornerRadius = 2
         button.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
         button.title = "\u{25B6}"
-        button.font = NSFont.systemFont(ofSize: 14, weight: .bold)
+        button.font = NSFont.systemFont(ofSize: 10, weight: .bold)
         button.contentTintColor = NSColor(calibratedWhite: 0.1, alpha: 1)
         button.target = self
         button.action = #selector(tapped)
@@ -132,12 +138,12 @@ final class MiniPanel: NSPanel {
         // The task you are working on, in small text above the timer. Hidden when the page sends only a mode name.
         tagLabel.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
         tagLabel.textColor = NSColor(calibratedWhite: 0.86, alpha: 1)
-        tagLabel.alignment = .center
+        tagLabel.alignment = .left
         tagLabel.lineBreakMode = .byWordWrapping
         tagLabel.maximumNumberOfLines = 3
         tagLabel.cell?.wraps = true
         tagLabel.cell?.isScrollable = false
-        tagLabel.frame = NSRect(x: 12, y: 58, width: 166, height: 16)
+        tagLabel.frame = NSRect(x: 12, y: 6, width: 138, height: 16)
         tagLabel.isHidden = true
         box.addSubview(tagLabel)
 
@@ -157,7 +163,7 @@ final class MiniPanel: NSPanel {
         } else {
             mailButton.title = "\u{2709}"
         }
-        mailButton.contentTintColor = NSColor(calibratedWhite: 0.6, alpha: 1)
+        mailButton.contentTintColor = NSColor(calibratedWhite: 0.78, alpha: 1)
         mailButton.toolTip = "Open Gmail"
         mailButton.target = self
         mailButton.action = #selector(mailTapped)
@@ -195,31 +201,40 @@ final class MiniPanel: NSPanel {
         onClosed?()
     }
 
-    func update(time: String, running: Bool, accent: String, tag: String) {
+    func update(time: String, running: Bool, accent: String, tag: String, progress pct: Int = 0) {
         timeLabel.stringValue = time
         box.toolTip = tag
         let modeNames = ["focus", "short break", "long break"]
         let showTask = !tag.isEmpty && !modeNames.contains(tag.lowercased())
         tagLabel.stringValue = showTask ? tag : ""
         tagLabel.isHidden = !showTask
-        var wantH: CGFloat = 56
+        var textH: CGFloat = 0
         if showTask {
-            // Wrap the task over up to 3 lines so all of it shows; the panel grows upward to fit.
+            // Task wraps under the time (up to 3 lines); the panel grows upward to fit.
             let font = tagLabel.font ?? NSFont.systemFont(ofSize: 11, weight: .semibold)
-            let r = (tag as NSString).boundingRect(with: NSSize(width: 166, height: 1000),
+            let r = (tag as NSString).boundingRect(with: NSSize(width: 138, height: 1000),
                                                     options: [.usesLineFragmentOrigin, .usesFontLeading],
                                                     attributes: [.font: font])
-            let textH = min(ceil(r.height) + 2, 48)
-            tagLabel.frame = NSRect(x: 12, y: 58, width: 166, height: textH)
-            wantH = 58 + textH + 8
+            textH = min(ceil(r.height) + 2, 48)
         }
+        let wantH = max(62, 6 + textH + 4 + 32 + 6)
         if abs(frame.size.height - wantH) > 1 {
             setFrame(NSRect(x: frame.origin.x, y: frame.origin.y, width: 190, height: wantH), display: true)
         }
+        panelH = wantH
+        box.frame = NSRect(x: 0, y: 0, width: 190, height: wantH)
+        timeLabel.frame = NSRect(x: 10, y: wantH - 38, width: 126, height: 32)
+        tagLabel.frame = NSRect(x: 12, y: 6, width: 138, height: textH > 0 ? textH : 16)
+        button.frame = NSRect(x: 160, y: wantH - 28, width: 24, height: 22)
+        closeButton.frame = NSRect(x: 138, y: wantH - 25, width: 16, height: 16)
+        mailButton.frame = NSRect(x: 156, y: wantH - 62 + 8, width: 32, height: 26)
         button.title = running ? "\u{275A}\u{275A}" : "\u{25B6}"
         let c = hexColor(accent, fallback: NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1))
         button.layer?.backgroundColor = c.cgColor
         box.layer?.borderColor = c.cgColor
+        barFill.layer?.backgroundColor = c.cgColor
+        let f = CGFloat(max(0, min(100, pct))) / 100
+        barFill.frame = NSRect(x: 0, y: 0, width: 190 * f, height: 3)
     }
 }
 
@@ -325,12 +340,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let msg = message.body as? String else { return }
-        let p = msg.split(separator: "|", maxSplits: 4, omittingEmptySubsequences: false).map(String.init)
+        let p = msg.split(separator: "|", maxSplits: 5, omittingEmptySubsequences: false).map(String.init)
         guard let kind = p.first else { return }
         if kind == "pip", p.count > 1 {
             if p[1] == "open" { openMini() } else { mini?.close() }
         } else if kind == "state", p.count >= 5 {
-            mini?.update(time: p[1], running: p[2] == "1", accent: p[3], tag: p[4])
+            mini?.update(time: p[1], running: p[2] == "1", accent: p[3], tag: p[4], progress: p.count > 5 ? (Int(p[5]) ?? 0) : 0)
         } else if kind == "notify", p.count >= 3 {
             notice(title: p[1], body: p[2])
         } else if kind == "save", p.count >= 3 {
@@ -481,7 +496,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 4
+    let nativeVersion = 5
 
     func askRestart() {
         if restartAsked { return }
