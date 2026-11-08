@@ -82,6 +82,8 @@
   .hacts button.pri { background: var(--accent); border-color: transparent; color: #1c1510; }
   .hnote { color: var(--accent); font-size: 13px; min-height: 18px; margin: 10px 0 0; text-align: center; }
   .hempty { color: var(--muted); text-align: center; padding: 30px 8px; line-height: 1.5; }
+  .pstar { flex: none; width: 52px; border: 2px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 14px; font-size: 24px; line-height: 1; padding: 0; }
+  .pstar.on { color: #ffc83d; border-color: #ffc83d; background: rgba(255,200,61,0.12); }
   [hidden] { display: none !important; }
   .bdlink { margin-top: 4px; } .bdlink .link { color: var(--accent); }
   .bdp { position: fixed; inset: 0; z-index: 12; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; padding: calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 30px); }
@@ -116,6 +118,7 @@
 <div class="tabs" role="tablist"><button class="tab on" id="tabToday" type="button" role="tab">Today<span class="n" id="nToday"></span></button><button class="tab" id="tabLater" type="button" role="tab">Later<span class="n" id="nLater"></span></button></div>
 <form id="form" autocomplete="off">
   <input type="text" id="input" maxlength="600" placeholder="Add a task for today" aria-label="New task" enterkeyhint="done">
+  <button class="pstar" id="pstar" type="button" aria-pressed="false" aria-label="Favourite this task">&#9734;</button>
   <button class="add" type="submit">Add</button>
 </form>
 <ul id="list"></ul>
@@ -250,7 +253,9 @@
 
   function changed() { saveLocal(); render(); schedule(); }
 
-  function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: tab === 'later' }); changed(); }
+  var newStar = false;
+  function setStar(v) { newStar = !!v; var b = $('pstar'); b.className = 'pstar' + (newStar ? ' on' : ''); b.innerHTML = newStar ? '&#9733;' : '&#9734;'; b.setAttribute('aria-pressed', newStar ? 'true' : 'false'); }
+  function add(title) { state.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: tab === 'later', starred: newStar }); setStar(false); changed(); }
   function move(t, later) { t.later = later; t.updated = Date.now(); changed(); }
   function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.completedAt = t.done ? Date.now() : null; t.updated = Date.now(); changed(); }
   function remove(t) {
@@ -527,6 +532,7 @@
   loadLocal();
   $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   render(); idleStatus();
+  $('pstar').addEventListener('click', function () { setStar(!newStar); $('input').focus(); });
   $('form').addEventListener('submit', function (e) {
     e.preventDefault();
     var v = $('input').value.trim(); if (!v) return;

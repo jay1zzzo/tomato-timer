@@ -653,6 +653,9 @@
     padding: 10px 12px;
   }
   .task-add input::placeholder { color: var(--muted); }
+  .task-add .add-star { flex: none; width: 42px; padding: 0; font-size: 20px; line-height: 1; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+  .task-add .add-star:hover { color: var(--ink); }
+  .task-add .add-star.on { color: #ffc83d; border-color: #ffc83d; background: rgba(255,200,61,.1); }
   .task-add button {
     appearance: none;
     border: none;
@@ -1208,6 +1211,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   <form class="task-add" id="taskForm" autocomplete="off">
     <label class="sr-only" for="taskInput">New task</label>
     <input type="text" id="taskInput" maxlength="600" placeholder="What needs doing today?">
+    <button type="button" class="add-star" id="addStar" aria-pressed="false" title="Favourite this task" aria-label="Favourite this task">&#9734;</button>
     <button type="submit">Add</button>
   </form>
   <ul class="task-list" id="taskList"></ul>
@@ -1438,7 +1442,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 46;
+  var APP_VERSION = 47;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -3665,8 +3669,11 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     }
   }
 
+  var newStar = false;
+  function setNewStar(v) { newStar = !!v; var b = document.getElementById('addStar'); if (b) { b.classList.toggle('on', newStar); b.setAttribute('aria-pressed', newStar ? 'true' : 'false'); b.innerHTML = newStar ? '&#9733;' : '&#9734;'; } }
   function addTask(title) {
-    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: drawerTab === 'later' });
+    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: drawerTab === 'later', starred: newStar });
+    setNewStar(false);
     saveTasks();
     renderTasks();
   }
@@ -4352,6 +4359,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     syncPip();
   }
 
+  document.getElementById('addStar').addEventListener('click', function () { setNewStar(!newStar); els.taskInput.focus(); });
   els.taskForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var title = els.taskInput.value.trim();

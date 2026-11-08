@@ -78,13 +78,14 @@ final class SiteHandler: NSObject, WKURLSchemeHandler {
 final class MiniPanel: NSPanel {
     var onToggle: (() -> Void)?
     var onClosed: (() -> Void)?
+    var onShowMain: (() -> Void)?
     let timeLabel = NSTextField(labelWithString: "25:00")
     let button = NSButton(frame: NSRect(x: 128, y: 11, width: 34, height: 34))
     let closeButton = NSButton(frame: NSRect(x: 168, y: 33, width: 16, height: 16))
     let iconView = NSImageView(frame: NSRect(x: 10, y: 12, width: 32, height: 32))
     let box = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 56))
     let tagLabel = NSTextField(labelWithString: "")
-    let mailButton = NSButton(frame: NSRect(x: 166, y: 8, width: 18, height: 16))
+    let mailButton = NSButton(frame: NSRect(x: 160, y: 5, width: 28, height: 24))
 
     init() {
         super.init(contentRect: NSRect(x: 0, y: 0, width: 190, height: 56),
@@ -101,7 +102,7 @@ final class MiniPanel: NSPanel {
         hasShadow = true
 
         box.wantsLayer = true
-        box.layer?.cornerRadius = 16
+        box.layer?.cornerRadius = 2
         box.layer?.masksToBounds = true
         box.layer?.backgroundColor = NSColor(calibratedRed: 0.082, green: 0.075, blue: 0.059, alpha: 0.96).cgColor
         box.layer?.borderWidth = 2
@@ -119,7 +120,7 @@ final class MiniPanel: NSPanel {
 
         button.isBordered = false
         button.wantsLayer = true
-        button.layer?.cornerRadius = 17
+        button.layer?.cornerRadius = 3
         button.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
         button.title = "\u{25B6}"
         button.font = NSFont.systemFont(ofSize: 14, weight: .bold)
@@ -176,6 +177,16 @@ final class MiniPanel: NSPanel {
     override var canBecomeMain: Bool { return false }
 
     @objc func tapped() { onToggle?() }
+
+    // Double-click the floating timer (not its buttons) to jump back to the main window.
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown, event.clickCount == 2,
+           let hit = contentView?.hitTest(event.locationInWindow), !(hit is NSButton) {
+            onShowMain?()
+            return
+        }
+        super.sendEvent(event)
+    }
 
     @objc func closeTapped() { close() }
 
@@ -407,6 +418,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         if mini != nil { return }
         let m = MiniPanel()
         m.onToggle = { [weak self] in self?.send("toggle") }
+        m.onShowMain = { [weak self] in
+            guard let w = self?.window else { return }
+            if w.isMiniaturized { w.deminiaturize(nil) }
+            NSApp.activate(ignoringOtherApps: true)
+            w.makeKeyAndOrderFront(nil)
+        }
         m.onClosed = { [weak self] in self?.mini = nil; self?.send("pipclosed") }
         mini = m
         m.orderFrontRegardless()
@@ -464,7 +481,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 3
+    let nativeVersion = 4
 
     func askRestart() {
         if restartAsked { return }
