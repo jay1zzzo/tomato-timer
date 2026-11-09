@@ -461,6 +461,7 @@
     color: var(--muted);
   }
   .now-pick { border-style: dashed; padding: 9px 18px; }
+  .now-music { display: inline-flex; align-items: center; padding-left: 9px !important; padding-right: 9px !important; }
   .now-btn.quiet:hover, .now-pick:hover { color: var(--ink); border-color: var(--muted); border-style: solid; }
   body.photo-mode .now-title,
   body.photo-mode .now-eyebrow { text-shadow: 0 2px 18px rgba(0,0,0,0.6); }
@@ -1287,6 +1288,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-opts" id="optStartup"></div>
     <div class="sp-row"><span>Line of the day under the timer</span></div>
     <div class="sp-opts" id="optLineDay"></div>
+    <div class="sp-row"><span>Focus music link (button next to Done; clear it to hide)</span></div>
+    <input class="sp-input" type="text" id="musicUrl" spellcheck="false" autocomplete="off" placeholder="Paste a Spotify (or any) link">
     <div class="sp-row"><span>Session lengths on the main screen</span></div>
     <div class="sp-opts" id="optLenStyle"></div>
     <div class="sp-row"><span>Buttons under the task</span></div>
@@ -1442,7 +1445,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 48;
+  var APP_VERSION = 49;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1529,7 +1532,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1549,7 +1552,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1717,6 +1720,17 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
     buildOpts('optAutoFloat', 'autoFloat', [['on', 'On'], ['off', 'Off']]);
     buildOpts('optStartup', 'startup', [['on', 'On'], ['off', 'Off']]);
+    var mi = document.getElementById('musicUrl');
+    if (mi && document.activeElement !== mi) mi.value = cfg.musicUrl || '';
+    if (mi && !mi._bound) {
+      mi._bound = true;
+      mi.addEventListener('change', function () {
+        var v = mi.value.trim();
+        cfg.musicUrl = v ? cleanUrl(v) : '';
+        mi.value = cfg.musicUrl;
+        saveCfg(); renderNow();
+      });
+    }
     buildOpts('optLineDay', 'lineDay', [['on', 'Show'], ['off', 'Hide']]);
     buildOpts('optLenStyle', 'lenStyle', [['line', 'In the line'], ['pill', 'Pill with times']]);
     buildOpts('optBtnStyle', 'btnStyle', [['quiet', 'Quiet'], ['outline', 'Outlined'], ['bold', 'Bold']]);
@@ -4337,6 +4351,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       actions.appendChild(done);
       actions.appendChild(sw);
       actions.appendChild(uf);
+      if (cfg.musicUrl) {
+        var mu = el('button', 'now-btn quiet now-music');
+        mu.type = 'button'; mu.title = 'Play focus music'; mu.setAttribute('aria-label', 'Play focus music');
+        mu.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
+        mu.addEventListener('click', function () { openLink(cfg.musicUrl); });
+        actions.appendChild(mu);
+      }
       els.now.appendChild(actions);
       return;
     }
