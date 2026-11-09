@@ -1393,6 +1393,64 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   <div class="cal-view-bar"><span id="calViewName"></span><button class="cal-act" id="calViewClose" type="button" style="color:#f6f2e8">Close</button></div>
   <div class="cal-view-body" id="calViewBody"></div>
 </div>
+<div class="learn" id="learn" aria-label="Learning shortcuts">
+  <button type="button" class="learn-tog" id="learnTog" aria-expanded="false" aria-controls="learnBody">Learning<i class="learn-dot" id="learnDot" hidden></i></button>
+  <div class="learn-body" id="learnBody">
+    <div class="learn-h">Learning</div>
+    <div class="learn-links">
+      <a href="https://www.freecodecamp.org/learn/" target="_blank" rel="noopener noreferrer">HTML &amp; CSS</a>
+      <a href="https://academy.hubspot.com/courses/email-marketing-certification-en" target="_blank" rel="noopener noreferrer">Email Marketing</a>
+      <a href="https://academy.hubspot.com/lessons/setting-up-your-crm" target="_blank" rel="noopener noreferrer">CRM Practice</a>
+      <a href="https://academy.klaviyo.com/en-us/courses/getting-started-with-flows" target="_blank" rel="noopener noreferrer">Email Automation</a>
+    </div>
+    <div class="learn-note" id="learnNote">
+      <span>Make time for 25 minutes of learning today.</span>
+      <button type="button" id="learnDone">Done today &#10003;</button>
+    </div>
+  </div>
+</div>
+<style>
+.learn{position:fixed;left:14px;top:74px;z-index:14;width:230px;font:500 11px/1.35 system-ui,-apple-system,sans-serif;color:inherit}
+.learn-tog{display:none}
+.learn-h{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.5;margin:0 0 5px 1px}
+.learn-links{display:flex;flex-wrap:wrap;gap:5px}
+.learn-links a{font-size:10.5px;font-weight:600;color:inherit;text-decoration:none;padding:4px 9px;border-radius:999px;border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.08);opacity:.62;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .15s,border-color .15s;white-space:nowrap}
+.learn-links a:hover,.learn-links a:focus-visible{opacity:1;border-color:var(--accent,var(--focus,#ff6b4a))}
+.learn-note{margin-top:8px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;opacity:.7}
+.learn-note[hidden]{display:none}
+.learn-note button{font:600 10px/1 system-ui,sans-serif;color:inherit;background:transparent;border:1px solid rgba(128,128,128,.35);border-radius:999px;padding:4px 9px;cursor:pointer;opacity:.85}
+.learn-note button:hover,.learn-note button:focus-visible{opacity:1;border-color:var(--accent,var(--focus,#ff6b4a))}
+@media (max-width:900px){
+  .learn{top:118px;left:12px;width:auto}
+  .learn-tog{display:inline-flex;align-items:center;gap:6px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;color:inherit;padding:6px 10px;border-radius:999px;border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.10);opacity:.7;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .learn-dot{width:6px;height:6px;border-radius:50%;background:var(--accent,var(--focus,#ff6b4a));display:inline-block}
+  .learn-dot[hidden]{display:none}
+  .learn-body{display:none;position:absolute;top:30px;left:0;width:min(250px,calc(100vw - 24px));padding:10px;border-radius:12px;border:1px solid rgba(128,128,128,.3);background:rgba(18,16,14,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .learn.is-open .learn-body{display:block}
+  .learn-h{display:none}
+}
+</style>
+<script>
+(function () {
+  var box = document.getElementById('learn'); if (!box) return;
+  var tog = document.getElementById('learnTog'), note = document.getElementById('learnNote'), dot = document.getElementById('learnDot');
+  function refresh() {
+    var pending = cfgLearnPending();
+    note.hidden = !pending; dot.hidden = !pending;
+  }
+  function cfgLearnPending() { return window.__learnApi ? window.__learnApi.pending() : true; }
+  box.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a');
+    if (a) { e.preventDefault(); if (window.__learnApi) window.__learnApi.open(a.href); else window.open(a.href, '_blank', 'noopener'); }
+  });
+  tog.addEventListener('click', function (e) { e.stopPropagation(); var o = box.classList.toggle('is-open'); tog.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  document.addEventListener('click', function (e) { if (!box.contains(e.target)) { box.classList.remove('is-open'); tog.setAttribute('aria-expanded', 'false'); } });
+  document.getElementById('learnDone').addEventListener('click', function () { if (window.__learnApi) window.__learnApi.done(); refresh(); });
+  window.__learnRefresh = refresh;
+  setInterval(refresh, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+})();
+</script>
 <div class="launch" id="launch" aria-label="Quick launch">
   <button type="button" class="ln-claude" data-app="claude://open" data-web="https://claude.ai/new" title="Claude" aria-label="Open Claude">C</button>
   <button type="button" class="ln-gpt" data-app="https://chatgpt.com/" data-web="https://chatgpt.com/" title="ChatGPT" aria-label="Open ChatGPT">GPT</button>
@@ -1445,7 +1503,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 50;
+  var APP_VERSION = 51;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1532,7 +1590,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1552,7 +1610,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2118,6 +2176,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (hostBridge) hostPost('link|' + u);
     else window.open(u, '_blank', 'noopener');
   }
+
+  window.__learnApi = {
+    pending: function () { return cfg.learnDone !== dayKey(); },
+    done: function () { cfg.learnDone = dayKey(); saveCfg(); },
+    open: function (u) { openLink(u); }
+  };
+  if (window.__learnRefresh) window.__learnRefresh();
 
   function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
 
