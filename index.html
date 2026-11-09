@@ -1401,12 +1401,20 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       <a href="https://www.freecodecamp.org/learn/" target="_blank" rel="noopener noreferrer">HTML &amp; CSS</a>
       <a href="https://academy.hubspot.com/courses/email-marketing-certification-en" target="_blank" rel="noopener noreferrer">Email Marketing</a>
       <a href="https://academy.hubspot.com/lessons/setting-up-your-crm" target="_blank" rel="noopener noreferrer">CRM Practice</a>
-      <a href="https://academy.klaviyo.com/en-us/courses/getting-started-with-flows" target="_blank" rel="noopener noreferrer">Email Automation</a>
+      <a href="https://academy.klaviyo.com/en-us/courses/getting-started-with-flows" target="_blank" rel="noopener noreferrer">Klaviyo Flows</a>
+      <a href="https://www.figma.com/make/R5SGddQnVzm5hvXXLsXvsh/Personal-Portfolio-Website?p=f&amp;t=BlozdoClLEge4Kpr-0&amp;preview-route=%2F%23about" target="_blank" rel="noopener noreferrer">Portfolio</a>
     </div>
     <div class="learn-note" id="learnNote">
       <span>Make time for 25 minutes of learning today.</span>
       <button type="button" id="learnDone">Done today &#10003;</button>
     </div>
+    <details class="learn-pb" id="learnPb">
+      <summary>Practise &amp; build</summary>
+      <details class="learn-task" id="learnTask">
+        <summary><span>Build and test a 3-email welcome flow in Klaviyo.</span><em id="learnCount">0/5</em></summary>
+        <div class="learn-steps" id="learnSteps"><label><input type="checkbox" data-i="0"><span>Complete the introductory flows lesson.</span></label><label><input type="checkbox" data-i="1"><span>Create three emails for a personal concept brand.</span></label><label><input type="checkbox" data-i="2"><span>Set up the subscription trigger and delays.</span></label><label><input type="checkbox" data-i="3"><span>Test with my own email address.</span></label><label><input type="checkbox" data-i="4"><span>Save screenshots and test results for my <a class="learn-inl" href="https://www.figma.com/make/R5SGddQnVzm5hvXXLsXvsh/Personal-Portfolio-Website?p=f&amp;t=BlozdoClLEge4Kpr-0&amp;preview-route=%2F%23about" target="_blank" rel="noopener noreferrer">portfolio</a>.</span></label></div>
+      </details>
+    </details>
   </div>
 </div>
 <style>
@@ -1420,6 +1428,21 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 .learn-note[hidden]{display:none}
 .learn-note button{font:600 10px/1 system-ui,sans-serif;color:inherit;background:transparent;border:1px solid rgba(128,128,128,.35);border-radius:999px;padding:4px 9px;cursor:pointer;opacity:.85}
 .learn-note button:hover,.learn-note button:focus-visible{opacity:1;border-color:var(--accent,var(--focus,#ff6b4a))}
+.learn-pb{margin-top:9px}
+.learn-pb>summary,.learn-task>summary{cursor:pointer;list-style:none;opacity:.7}
+.learn-pb>summary::-webkit-details-marker,.learn-task>summary::-webkit-details-marker{display:none}
+.learn-pb>summary{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.learn-pb>summary::before,.learn-task>summary::before{content:"\25B8";display:inline-block;margin-right:5px;transition:transform .15s}
+.learn-pb[open]>summary::before,.learn-task[open]>summary::before{transform:rotate(90deg)}
+.learn-pb>summary:hover,.learn-task>summary:hover{opacity:1}
+.learn-task{margin-top:6px}
+.learn-task>summary{display:flex;gap:6px;align-items:baseline;font-size:11px;line-height:1.35}
+.learn-task>summary em{font-style:normal;opacity:.6;font-size:10px;white-space:nowrap;margin-left:auto}
+.learn-steps{margin:6px 0 0 12px;max-height:90px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+.learn-steps label{display:flex;gap:7px;align-items:flex-start;font-size:10.5px;line-height:1.35;opacity:.8;cursor:pointer}
+.learn-inl{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.learn-steps input{margin:2px 0 0;flex:none;accent-color:var(--accent,var(--focus,#ff6b4a))}
+.learn-steps input:checked+span{opacity:.55;text-decoration:line-through}
 @media (max-width:900px){
   .learn{top:118px;left:12px;width:auto}
   .learn-tog{display:inline-flex;align-items:center;gap:6px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;color:inherit;padding:6px 10px;border-radius:999px;border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.10);opacity:.7;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -1445,6 +1468,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   });
   tog.addEventListener('click', function (e) { e.stopPropagation(); var o = box.classList.toggle('is-open'); tog.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   document.addEventListener('click', function (e) { if (!box.contains(e.target)) { box.classList.remove('is-open'); tog.setAttribute('aria-expanded', 'false'); } });
+  var boxes = box.querySelectorAll('#learnSteps input'), cnt = document.getElementById('learnCount');
+  function paintSteps() {
+    var st = window.__learnApi ? window.__learnApi.steps() : [], n = 0;
+    boxes.forEach(function (b) { var on = !!st[+b.dataset.i]; b.checked = on; if (on) n++; });
+    cnt.textContent = n + '/5';
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', function () { if (window.__learnApi) window.__learnApi.setStep(+b.dataset.i, b.checked); paintSteps(); }); });
+  window.__learnPaint = paintSteps;
   document.getElementById('learnDone').addEventListener('click', function () { if (window.__learnApi) window.__learnApi.done(); refresh(); });
   window.__learnRefresh = refresh;
   setInterval(refresh, 60000);
@@ -1503,7 +1534,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 51;
+  var APP_VERSION = 53;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1590,7 +1621,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1610,7 +1641,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2180,9 +2211,12 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   window.__learnApi = {
     pending: function () { return cfg.learnDone !== dayKey(); },
     done: function () { cfg.learnDone = dayKey(); saveCfg(); },
+    steps: function () { var v = String(cfg.learnSteps || ''); return [0, 1, 2, 3, 4].map(function (i) { return v.charAt(i) === '1'; }); },
+    setStep: function (i, on) { var a = this.steps(); a[i] = !!on; cfg.learnSteps = a.map(function (x) { return x ? '1' : '0'; }).join(''); saveCfg(); },
     open: function (u) { openLink(u); }
   };
   if (window.__learnRefresh) window.__learnRefresh();
+  if (window.__learnPaint) window.__learnPaint();
 
   function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
 
