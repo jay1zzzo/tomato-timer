@@ -359,6 +359,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             if let url = URL(string: p[1]), let scheme = url.scheme?.lowercased() {
                 if scheme == "https" || scheme == "http" {
                     NSWorkspace.shared.open(url)
+                } else if scheme == "spotify" {
+                    // spotify:playlist:ID opens the Spotify app straight to it; no app installed -> the web player.
+                    if NSWorkspace.shared.urlForApplication(toOpen: url) != nil {
+                        NSWorkspace.shared.open(url)
+                    } else {
+                        let parts = p[1].split(separator: ":").map(String.init)
+                        if parts.count >= 3, let web = URL(string: "https://open.spotify.com/\(parts[1])/\(parts[2])") {
+                            NSWorkspace.shared.open(web)
+                        }
+                    }
                 } else if scheme == "claude" || scheme == "chatgpt" {
                     // Launch the installed desktop app; if it isn't installed, fall back to the website.
                     if NSWorkspace.shared.urlForApplication(toOpen: url) != nil {
@@ -496,7 +506,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 5
+    let nativeVersion = 6
 
     func askRestart() {
         if restartAsked { return }

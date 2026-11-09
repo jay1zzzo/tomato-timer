@@ -1445,7 +1445,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 49;
+  var APP_VERSION = 50;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -4355,7 +4355,12 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         var mu = el('button', 'now-btn quiet now-music');
         mu.type = 'button'; mu.title = 'Play focus music'; mu.setAttribute('aria-label', 'Play focus music');
         mu.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
-        mu.addEventListener('click', function () { openLink(cfg.musicUrl); });
+        mu.addEventListener('click', function () {
+          // On the Mac app, a Spotify link opens the Spotify app itself, straight to the playlist.
+          var m = window.__tomatoMac && /^https?:\/\/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]+)/i.exec(cfg.musicUrl);
+          if (m) hostPost('link|spotify:' + m[1].toLowerCase() + ':' + m[2]);
+          else openLink(cfg.musicUrl);
+        });
         actions.appendChild(mu);
       }
       els.now.appendChild(actions);
