@@ -1544,7 +1544,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 56;
+  var APP_VERSION = 57;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -4310,6 +4310,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (changed) { saveTasks(); }
     renderTasks();
   }
+  var taskDragging = false;
   function buildGrip(li, t) {
     var g = el('button', 'task-grip');
     g.type = 'button'; g.title = 'Drag to reorder'; g.setAttribute('aria-label', 'Reorder: ' + t.title + '. Use the up and down arrow keys.');
@@ -4318,7 +4319,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     g.addEventListener('pointerdown', function (e) {
       if (e.button !== undefined && e.button !== 0) return;
       e.preventDefault();
-      try { g.setPointerCapture(e.pointerId); } catch (x) {}
+      taskDragging = true;
       var list = li.parentNode, lr = li.getBoundingClientRect(), grab = e.clientY - lr.top;
       // A lifted copy follows the pointer; the original stays behind as a dashed slot showing where it will land.
       var ghost = li.cloneNode(true);
@@ -4345,13 +4346,18 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         while ((n = li.nextElementSibling) && same(n)) { var r2 = n.getBoundingClientRect(); if (y > r2.top + r2.height / 2) { li.parentNode.insertBefore(n, li); moved = true; } else break; }
       };
       var up = function () {
-        g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up);
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+        window.removeEventListener('blur', up); window.removeEventListener('keydown', esc, true);
+        taskDragging = false;
         li.classList.remove('is-dragging');
         document.body.classList.remove('task-dragging');
         if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
-        if (moved) commitOrder(li);
+        if (moved) commitOrder(li); else renderTasks();
       };
-      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+      var esc = function (ev) { if (ev.key === 'Escape') { ev.stopPropagation(); moved = false; up(); } };
+      // Listen on the window, not the handle: moving the row in the list would otherwise drop the drag.
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+      window.addEventListener('blur', up); window.addEventListener('keydown', esc, true);
     });
     g.addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
@@ -4451,6 +4457,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
 
   function renderList() {
+    if (taskDragging) return;
     els.taskList.innerHTML = '';
     var pool = drawerTab === 'later' ? laterTasks() : todayTasks();
     var open = pool.filter(function (t) { return !t.done; });
