@@ -711,6 +711,13 @@
   .task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .task-check { flex: none; align-self: flex-start; margin-top: 2px; }
   .task-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .task { align-items: flex-start; position: relative; }
+  .task-grip { flex: none; width: 14px; margin: 3px -4px 0 -6px; padding: 4px 2px; border: 0; background: transparent; color: var(--muted); cursor: grab; opacity: 0; touch-action: none; transition: opacity .12s; }
+  .task:hover .task-grip, .task-grip:focus-visible { opacity: .6; }
+  .task-grip:hover { opacity: 1 !important; }
+  @media (hover: none) { .task-grip { opacity: .35; } }
+  .task.is-dragging { background: color-mix(in srgb, var(--ink) 8%, transparent); box-shadow: 0 6px 18px rgba(0,0,0,.35); border-radius: 8px; z-index: 2; }
+  .task.is-dragging .task-grip { cursor: grabbing; opacity: 1; }
   .task { align-items: flex-start; }
   .task-edit, .task-del { align-self: flex-start; }
   .task-focus, .task-later, .task-del, .task-edit { flex: none; }
@@ -1534,7 +1541,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 54;
+  var APP_VERSION = 55;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -4289,8 +4296,55 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>';
 
+  // Drag a task up or down (or use the arrow keys on the handle) to reorder it. Starred tasks stay above the rest.
+  function commitOrder(li) {
+    var grp = li.dataset.grp, ids = [].slice.call(els.taskList.children).filter(function (x) { return x.dataset.grp === grp; }).map(function (x) { return x.dataset.id; });
+    var now = Date.now(), changed = false;
+    ids.forEach(function (id, i) {
+      var t = findTask(id);
+      if (t && t.ord !== (i + 1) * 10) { t.ord = (i + 1) * 10; t.updated = now; changed = true; }
+    });
+    if (changed) { saveTasks(); }
+    renderTasks();
+  }
+  function buildGrip(li, t) {
+    var g = el('button', 'task-grip');
+    g.type = 'button'; g.title = 'Drag to reorder'; g.setAttribute('aria-label', 'Reorder: ' + t.title + '. Use the up and down arrow keys.');
+    g.innerHTML = '<svg viewBox="0 0 10 16" width="9" height="14" fill="currentColor" aria-hidden="true"><circle cx="2.5" cy="3" r="1.3"/><circle cx="7.5" cy="3" r="1.3"/><circle cx="2.5" cy="8" r="1.3"/><circle cx="7.5" cy="8" r="1.3"/><circle cx="2.5" cy="13" r="1.3"/><circle cx="7.5" cy="13" r="1.3"/></svg>';
+    var same = function (n) { return n && n.dataset && n.dataset.grp === li.dataset.grp; };
+    g.addEventListener('pointerdown', function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      try { g.setPointerCapture(e.pointerId); } catch (x) {}
+      li.classList.add('is-dragging');
+      var moved = false;
+      var move = function (ev) {
+        var y = ev.clientY, p, n;
+        while ((p = li.previousElementSibling) && same(p)) { var r = p.getBoundingClientRect(); if (y < r.top + r.height / 2) { li.parentNode.insertBefore(li, p); moved = true; } else break; }
+        while ((n = li.nextElementSibling) && same(n)) { var r2 = n.getBoundingClientRect(); if (y > r2.top + r2.height / 2) { li.parentNode.insertBefore(n, li); moved = true; } else break; }
+      };
+      var up = function () {
+        g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up);
+        li.classList.remove('is-dragging');
+        if (moved) commitOrder(li);
+      };
+      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    });
+    g.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      var sib = e.key === 'ArrowUp' ? li.previousElementSibling : li.nextElementSibling;
+      if (!same(sib)) return;
+      if (e.key === 'ArrowUp') li.parentNode.insertBefore(li, sib); else li.parentNode.insertBefore(sib, li);
+      var id = t.id; commitOrder(li);
+      var again = els.taskList.querySelector('li[data-id="' + id + '"] .task-grip'); if (again) again.focus();
+    });
+    return g;
+  }
+
   function buildTaskRow(t) {
     var li = el('li', 'task' + (t.done ? ' is-done' : '') + (t.starred && !t.done ? ' is-starred' : ''));
+    li.dataset.id = t.id; li.dataset.grp = t.done ? 'd' : (t.starred ? 's' : 'n');
 
     var check = el('button', 'task-check');
     check.type = 'button';
@@ -4359,6 +4413,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     del.innerHTML = TRASH_SVG;
     del.addEventListener('click', function () { deleteTask(t.id); });
 
+    if (!t.done && !editing) li.appendChild(buildGrip(li, t));
     li.appendChild(check);
     li.appendChild(main);
     if (!editing) {
@@ -4376,7 +4431,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     els.taskList.innerHTML = '';
     var pool = drawerTab === 'later' ? laterTasks() : todayTasks();
     var open = pool.filter(function (t) { return !t.done; });
-    open = open.filter(function (t) { return t.starred; }).concat(open.filter(function (t) { return !t.starred; }));
+    var byOrd = function (a, b) { return (a.ord === undefined ? 1e12 : a.ord) - (b.ord === undefined ? 1e12 : b.ord); };
+    var stable = function (arr) { return arr.map(function (t, i) { return { t: t, i: i }; }).sort(function (x, y) { return byOrd(x.t, y.t) || x.i - y.i; }).map(function (x) { return x.t; }); };
+    open = stable(open.filter(function (t) { return t.starred; })).concat(stable(open.filter(function (t) { return !t.starred; })));
     var done = pool.filter(function (t) { return t.done; });
     open.concat(done).forEach(function (t) { els.taskList.appendChild(buildTaskRow(t)); });
     els.taskEmpty.hidden = pool.length > 0;
