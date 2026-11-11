@@ -716,8 +716,11 @@
   .task:hover .task-grip, .task-grip:focus-visible { opacity: .6; }
   .task-grip:hover { opacity: 1 !important; }
   @media (hover: none) { .task-grip { opacity: .35; } }
-  .task.is-dragging { background: color-mix(in srgb, var(--ink) 8%, transparent); box-shadow: 0 6px 18px rgba(0,0,0,.35); border-radius: 8px; z-index: 2; }
-  .task.is-dragging .task-grip { cursor: grabbing; opacity: 1; }
+  .task.is-dragging { opacity: .45; outline: 2px dashed var(--accent, var(--focus)); outline-offset: -2px; border-radius: 8px; background: color-mix(in srgb, var(--accent, var(--focus)) 10%, transparent); }
+  .task.is-dragging > * { visibility: hidden; }
+  .task-ghost { position: absolute; z-index: 60; pointer-events: none; margin: 0; padding-left: 8px; padding-right: 8px; box-sizing: border-box; background: var(--drawer, #f7f8f4); border: 2px solid var(--accent, var(--focus)); border-radius: 10px; box-shadow: 0 14px 32px rgba(0,0,0,.38), 0 3px 8px rgba(0,0,0,.25); transform: scale(1.03) rotate(-.6deg); transform-origin: center; list-style: none; }
+  .task-ghost .task-grip { opacity: 1; cursor: grabbing; color: var(--accent, var(--focus)); }
+  body.task-dragging, body.task-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
   .task { align-items: flex-start; }
   .task-edit, .task-del { align-self: flex-start; }
   .task-focus, .task-later, .task-del, .task-edit { flex: none; }
@@ -1541,7 +1544,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 55;
+  var APP_VERSION = 56;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -4316,16 +4319,36 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       if (e.button !== undefined && e.button !== 0) return;
       e.preventDefault();
       try { g.setPointerCapture(e.pointerId); } catch (x) {}
+      var list = li.parentNode, lr = li.getBoundingClientRect(), grab = e.clientY - lr.top;
+      // A lifted copy follows the pointer; the original stays behind as a dashed slot showing where it will land.
+      var ghost = li.cloneNode(true);
+      ghost.className += ' task-ghost';
+      ghost.removeAttribute('data-id'); ghost.removeAttribute('data-grp');
+      ghost.style.width = lr.width + 'px';
+      var dc = (getComputedStyle(document.getElementById('drawer')).backgroundColor.match(/[\d.]+/g) || []).slice(0, 3);
+      if (dc.length === 3) ghost.style.background = 'rgb(' + dc.join(',') + ')';
+      list.style.position = 'relative';
+      list.appendChild(ghost);
       li.classList.add('is-dragging');
+      document.body.classList.add('task-dragging');
+      var place = function (y) {
+        var br = list.getBoundingClientRect();
+        ghost.style.top = (y - grab - br.top + list.scrollTop) + 'px';
+        ghost.style.left = (lr.left - br.left) + 'px';
+      };
+      place(e.clientY);
       var moved = false;
       var move = function (ev) {
         var y = ev.clientY, p, n;
+        place(y);
         while ((p = li.previousElementSibling) && same(p)) { var r = p.getBoundingClientRect(); if (y < r.top + r.height / 2) { li.parentNode.insertBefore(li, p); moved = true; } else break; }
         while ((n = li.nextElementSibling) && same(n)) { var r2 = n.getBoundingClientRect(); if (y > r2.top + r2.height / 2) { li.parentNode.insertBefore(n, li); moved = true; } else break; }
       };
       var up = function () {
         g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up);
         li.classList.remove('is-dragging');
+        document.body.classList.remove('task-dragging');
+        if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
         if (moved) commitOrder(li);
       };
       g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
