@@ -851,6 +851,10 @@
   .sp-btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
   .sp-btn.ghost:hover { color: var(--ink); border-color: var(--muted); }
   .sp-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .sp-feat summary { cursor: pointer; font-size: 13.5px; padding: 4px 0; }
+  .sp-featlist { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .sp-featlist li { padding: 3px 0; }
+  .sp-featlist b { color: var(--ink); font-weight: 600; }
   .sp-hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.45; }
 
   .ph-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -1335,6 +1339,31 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     </div>
     <p class="sp-hint sync-status" id="syncStatus" role="status"></p>
 
+    <div class="sp-sec">What&rsquo;s in here</div>
+    <details class="sp-feat">
+      <summary>See everything built so far</summary>
+      <ul class="sp-featlist">
+        <li><b>Timer:</b> focus, short and long breaks, sessions per set, all adjustable</li>
+        <li><b>Floating mini timer:</b> a small always-on-top window (Chrome or Edge)</li>
+        <li><b>Today and Later:</b> two task lists, with counts on the tabs</li>
+        <li><b>Star:</b> pins a task to the top of its list</li>
+        <li><b>Reorder:</b> drag the dots, or use the up and down arrow keys</li>
+        <li><b>Shortcuts:</b> hover a task, then T = top, B = bottom, L = later or today, S = star</li>
+        <li><b>Focus:</b> pick the task you are working on and it shows under the timer</li>
+        <li><b>Undo:</b> brings back a deleted task (Ctrl or Cmd + Z)</li>
+        <li><b>Past tasks:</b> history of what you finished</li>
+        <li><b>Reminders:</b> the corner button</li>
+        <li><b>Content calendar:</b> Instagram and Facebook ideas, campaign brief, and a ready tick</li>
+        <li><b>Files:</b> keep documents inside the app</li>
+        <li><b>Motivation board:</b> words and pictures on a wall, dragged anywhere</li>
+        <li><b>Photo slideshow:</b> backgrounds with timing, fade and darkness controls</li>
+        <li><b>Looks:</b> colours, fonts, sizes and button styles</li>
+        <li><b>Sync:</b> tasks, calendar, board and files stay the same on every computer via a private GitHub repo</li>
+        <li><b>Phone page:</b> quick add for today&rsquo;s tasks from your iPhone</li>
+        <li><b>Updates:</b> checks for a new version when it opens, one click to update</li>
+      </ul>
+    </details>
+
     <div class="sp-sec">About</div>
     <div class="sp-row"><span id="abVer">Version</span></div>
     <div class="sp-actions"><button class="sp-btn ghost" id="abCheck" type="button">Check for updates</button><button class="sp-btn" id="abGo" type="button" hidden>Update now</button></div>
@@ -1544,7 +1573,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 57;
+  var APP_VERSION = 58;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -3886,6 +3915,42 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     renderTasks();
   }
 
+  // Quick ordering: hover a task in the list, then T = top, B = bottom, L = later/today, S = star.
+  // "Top" and "bottom" are within the task's own group, so starred tasks still stay above the rest.
+  function sortByOrd(arr) {
+    var o = function (t) { return t.ord === undefined ? 1e12 : t.ord; };
+    return arr.map(function (t, i) { return { t: t, i: i }; }).sort(function (x, y) { return (o(x.t) - o(y.t)) || (x.i - y.i); }).map(function (x) { return x.t; });
+  }
+  function sendTask(id, where) {
+    var t = findTask(id);
+    if (!t || t.done) return;
+    var pool = isLater(t) ? laterTasks() : todayTasks();
+    var grp = sortByOrd(pool.filter(function (x) { return !x.done && !!x.starred === !!t.starred && x.id !== id; }));
+    if (where === 'top') grp.unshift(t); else grp.push(t);
+    var now = Date.now();
+    grp.forEach(function (x, i) { if (x.ord !== (i + 1) * 10) { x.ord = (i + 1) * 10; x.updated = now; } });
+    saveTasks();
+    renderTasks();
+    var row = els.taskList.querySelector('li[data-id="' + id + '"]');
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+  }
+  var hoverTaskId = null;
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if (!document.body.classList.contains('drawer-open') || !hoverTaskId) return;
+    var a = document.activeElement;
+    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+    var t = findTask(hoverTaskId);
+    if (!t || t.done) return;
+    var k = e.key.toLowerCase();
+    if (k === 't') sendTask(t.id, 'top');
+    else if (k === 'b') sendTask(t.id, 'bottom');
+    else if (k === 'l') moveTask(t.id, !isLater(t));
+    else if (k === 's') toggleStar(t.id);
+    else return;
+    e.preventDefault();
+  });
+
   function setTab(tab) {
     drawerTab = tab;
     renderTasks();
@@ -4313,7 +4378,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var taskDragging = false;
   function buildGrip(li, t) {
     var g = el('button', 'task-grip');
-    g.type = 'button'; g.title = 'Drag to reorder'; g.setAttribute('aria-label', 'Reorder: ' + t.title + '. Use the up and down arrow keys.');
+    g.type = 'button'; g.title = 'Drag to reorder. Hover a task: T top, B bottom, L later, S star'; g.setAttribute('aria-label', 'Reorder: ' + t.title + '. Use the up and down arrow keys.');
     g.innerHTML = '<svg viewBox="0 0 10 16" width="9" height="14" fill="currentColor" aria-hidden="true"><circle cx="2.5" cy="3" r="1.3"/><circle cx="7.5" cy="3" r="1.3"/><circle cx="2.5" cy="8" r="1.3"/><circle cx="7.5" cy="8" r="1.3"/><circle cx="2.5" cy="13" r="1.3"/><circle cx="7.5" cy="13" r="1.3"/></svg>';
     var same = function (n) { return n && n.dataset && n.dataset.grp === li.dataset.grp; };
     g.addEventListener('pointerdown', function (e) {
@@ -4374,6 +4439,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function buildTaskRow(t) {
     var li = el('li', 'task' + (t.done ? ' is-done' : '') + (t.starred && !t.done ? ' is-starred' : ''));
     li.dataset.id = t.id; li.dataset.grp = t.done ? 'd' : (t.starred ? 's' : 'n');
+    li.addEventListener('mouseenter', function () {
+      hoverTaskId = t.id;
+      // The add box grabs focus when the list opens; free it (only if empty) so the shortcut keys work.
+      var a = document.activeElement;
+      if (a && a === els.taskInput && !a.value) a.blur();
+    });
+    li.addEventListener('mouseleave', function () { if (hoverTaskId === t.id) hoverTaskId = null; });
+    li.addEventListener('focusin', function () { hoverTaskId = t.id; });
 
     var check = el('button', 'task-check');
     check.type = 'button';
