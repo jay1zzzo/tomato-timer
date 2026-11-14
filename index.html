@@ -792,6 +792,8 @@
   .task-empty, .drawer-hint { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
   .task-empty { flex: 1; }
   .drawer-hint { font-size: 11.5px; }
+  .key-tip { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; margin-left: 4px; border: 1px solid var(--muted); border-radius: 50%; font-size: 9px; font-style: italic; font-family: Georgia, serif; line-height: 1; cursor: help; vertical-align: 1px; opacity: .7; }
+  .key-tip:hover, .key-tip:focus { opacity: 1; color: var(--ink); border-color: var(--ink); outline: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .drawer, .drawer-backdrop { transition: none; }
@@ -1231,7 +1233,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   </form>
   <ul class="task-list" id="taskList"></ul>
   <p class="task-empty" id="taskEmpty">Nothing on today&rsquo;s list yet. Add the few things that would make today a good one.</p>
-  <p class="drawer-hint">Pick one with Focus. The rest stay out of sight until you switch.</p>
+  <p class="drawer-hint">Pick one with Focus. The rest stay out of sight until you switch. <span class="key-tip" tabindex="0" role="img" aria-label="Shortcuts: hover a task, then T top, B bottom, L later or today, S star" title="Hover a task, then press:&#10;T  send to top&#10;B  send to bottom&#10;L  move to Later / Today&#10;S  star">i</span></p>
   <button type="button" class="hist-link" id="histOpen">Past tasks <span class="hn" id="histN"></span></button>
   <section class="hist" id="hist" aria-label="Past tasks">
     <div class="hist-head">
@@ -1573,7 +1575,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 58;
+  var APP_VERSION = 59;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
