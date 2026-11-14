@@ -115,14 +115,14 @@
     html[data-layout=hud] .mode-row{background:none;border:0;border-radius:0;gap:22px;padding:0}
     html[data-layout=hud] .mode-btn{background:none!important;border-radius:0;border-bottom:2px solid transparent;padding:6px 0;letter-spacing:.1em}
     html[data-layout=hud] .mode-btn[aria-pressed="true"]{border-bottom-color:var(--accent,var(--focus))}
-    html[data-layout=hud] details.settings{display:none}
+    html[data-layout=hud] :is(details.settings,.board-credit){display:none}
     html[data-layout=hud] .pip-btn{position:fixed;top:14px;right:170px;z-index:25}
-    html[data-layout=hud] .drawer{top:auto;left:90px;right:40px;bottom:20px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;align-items:stretch;gap:12px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
-    html[data-layout=hud] :is(.drawer-handle,.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty){display:none!important}
-    html[data-layout=hud] .task-add{flex:0 0 100%;max-width:520px;margin:0 auto}
-    html[data-layout=hud] .task-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1 1 100%;margin:0;padding:0;list-style:none}
-    html[data-layout=hud] .task-list>:nth-child(n+4){display:none}
-    html[data-layout=hud] .task-list>li{border:1px solid var(--line);background:var(--surface);padding:12px 14px}
+    html[data-layout=hud] body:not(.drawer-open) .drawer{top:auto;left:90px;right:40px;bottom:20px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;align-items:stretch;gap:12px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
+    html[data-layout=hud] body:not(.drawer-open) :is(.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty){display:none!important}
+    html[data-layout=hud] body:not(.drawer-open) .task-add{flex:0 0 100%;max-width:520px;margin:0 auto}
+    html[data-layout=hud] body:not(.drawer-open) .task-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1 1 100%;margin:0;padding:0;list-style:none}
+    html[data-layout=hud] body:not(.drawer-open) .task-list>:nth-child(n+4){display:none}
+    html[data-layout=hud] body:not(.drawer-open) .task-list>li{border:1px solid var(--line);background:var(--surface);padding:12px 14px}
   }
 
   /* Narrower windows: Rail slims down; below 700px it becomes a bottom tab bar. HUD works at any width. */
@@ -153,17 +153,17 @@
     html[data-layout=hud] .mode-row{background:none;border:0;border-radius:0;gap:18px;padding:0}
     html[data-layout=hud] .mode-btn{background:none!important;border-radius:0;border-bottom:2px solid transparent;padding:6px 0}
     html[data-layout=hud] .mode-btn[aria-pressed="true"]{border-bottom-color:var(--accent,var(--focus))}
-    html[data-layout=hud] .drawer{top:auto;left:16px;right:16px;bottom:12px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;gap:10px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
-    html[data-layout=hud] :is(.drawer-handle,.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty,details.settings,.learn){display:none!important}
-    html[data-layout=hud] .task-add{flex:0 0 100%}
-    html[data-layout=hud] .task-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;flex:1 1 100%;margin:0;padding:0;list-style:none}
-    html[data-layout=hud] .task-list>:nth-child(n+4){display:none}
-    html[data-layout=hud] .task-list>li{border:1px solid var(--line);background:var(--surface);padding:10px 12px}
+    html[data-layout=hud] body:not(.drawer-open) .drawer{top:auto;left:16px;right:16px;bottom:12px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;gap:10px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
+    html[data-layout=hud] body:not(.drawer-open) :is(.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty,details.settings,.learn){display:none!important}
+    html[data-layout=hud] body:not(.drawer-open) .task-add{flex:0 0 100%}
+    html[data-layout=hud] body:not(.drawer-open) .task-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;flex:1 1 100%;margin:0;padding:0;list-style:none}
+    html[data-layout=hud] body:not(.drawer-open) .task-list>:nth-child(n+4){display:none}
+    html[data-layout=hud] body:not(.drawer-open) .task-list>li{border:1px solid var(--line);background:var(--surface);padding:10px 12px}
     html[data-layout=hud] .pip-btn{display:none}
   }
   @media (max-width: 699px) {
-    html[data-layout=hud] .task-list{grid-template-columns:1fr}
-    html[data-layout=hud] .task-list>:nth-child(n+3){display:none}
+    html[data-layout=hud] body:not(.drawer-open) .task-list{grid-template-columns:1fr}
+    html[data-layout=hud] body:not(.drawer-open) .task-list>:nth-child(n+3){display:none}
     html[data-layout=hud] .launch{display:none}
     html[data-layout=hud] body{padding-bottom:210px}
   }
@@ -1721,7 +1721,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 66;
+  var APP_VERSION = 67;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
