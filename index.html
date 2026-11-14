@@ -831,7 +831,7 @@
 
   .spanel {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 45;
-    width: min(360px, 100vw);
+    width: min(420px, 100vw);
     background: var(--drawer); color: var(--ink);
     border-right: 1px solid var(--line);
     box-shadow: 0 0 40px rgba(0,0,0,0.45);
@@ -846,6 +846,11 @@
   .sp-close:hover { color: var(--ink); border-color: var(--muted); }
   .sp-body { overflow-y: auto; padding: 4px 18px 28px; flex: 1; }
   .sp-sec { margin: 18px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent, var(--focus)); }
+  .sp-grp > .sp-sec { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .sp-grp > .sp-sec::after { content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 4px 0 0; transition: transform .18s ease; opacity: .8; }
+  .sp-grp.closed > .sp-sec::after { transform: rotate(-45deg); margin-top: 0; }
+  .sp-grp.closed > .sp-grp-body { display: none; }
+  .sp-grp > .sp-sec:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 3px; border-radius: 4px; }
   .sp-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0 4px; font-size: 13.5px; }
   .sp-row output { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--muted); min-width: 44px; text-align: right; }
   .sp-body input[type=range] { width: 100%; accent-color: var(--accent, var(--focus)); }
@@ -1575,7 +1580,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 59;
+  var APP_VERSION = 60;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -3430,6 +3435,30 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     });
     window.addEventListener('resize', function () { if (board.classList.contains('show')) bdRender(); });
   }
+
+  // --- Settings: every section folds away, and the app remembers which are open ---
+  var SPSEC_KEY = 'tomato-timer-lab-spsec';
+  function initSettingsFold() {
+    var body = document.querySelector('#spanel .sp-body'); if (!body) return;
+    var state = {};
+    try { state = JSON.parse(localStorage.getItem(SPSEC_KEY) || '{}') || {}; } catch (e) {}
+    var heads = Array.prototype.slice.call(body.querySelectorAll(':scope > .sp-sec'));
+    heads.forEach(function (h) {
+      var key = h.textContent.trim();
+      var grp = document.createElement('div'); grp.className = 'sp-grp';
+      var inner = document.createElement('div'); inner.className = 'sp-grp-body';
+      body.insertBefore(grp, h);
+      var n = h.nextSibling;
+      grp.appendChild(h); grp.appendChild(inner);
+      while (n && !(n.nodeType === 1 && n.classList.contains('sp-sec'))) { var nx = n.nextSibling; inner.appendChild(n); n = nx; }
+      var closed = Object.prototype.hasOwnProperty.call(state, key) ? !!state[key] : (key === 'Photos' || key === 'Timing');
+      function apply() { grp.classList.toggle('closed', closed); h.setAttribute('aria-expanded', closed ? 'false' : 'true'); }
+      h.setAttribute('role', 'button'); h.tabIndex = 0; apply();
+      function toggle() { closed = !closed; apply(); state[key] = closed; try { localStorage.setItem(SPSEC_KEY, JSON.stringify(state)); } catch (e) {} }
+      h.addEventListener('click', toggle);
+      h.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    });
+  }
   function initAbout() {
     var v = $('abVer'); if (v) v.textContent = 'Version ' + APP_VERSION;
     $('abCheck').addEventListener('click', abCheck);
@@ -4739,6 +4768,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   initMotivation();
   initAutoFloat();
   initAbout();
+  initSettingsFold();
   initSync();
   initHistory();
 })();
