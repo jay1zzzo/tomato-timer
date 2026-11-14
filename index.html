@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -73,6 +73,23 @@
   :root[data-skin=atelier]{--bg:#eee5d6;--surface:#faf5eb;--ink:#3c362e;--muted:#6d6255;--line:#d6cbb9;--focus:#b0674a;--break:#6f7f55;--focus-dim:color-mix(in srgb,#b0674a 16%,transparent);--break-dim:color-mix(in srgb,#6f7f55 16%,transparent);--seed-off:color-mix(in srgb,#d6cbb9 90%,#3c362e 10%);--drawer:#faf5eb;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
   :root[data-skin=midnight]{--bg:#202a36;--surface:#293542;--ink:#e9eee9;--muted:#a9b5c0;--line:#3d4b5c;--focus:#bdc0ef;--break:#8fc0b0;--focus-dim:color-mix(in srgb,#bdc0ef 16%,transparent);--break-dim:color-mix(in srgb,#8fc0b0 16%,transparent);--seed-off:color-mix(in srgb,#3d4b5c 90%,#e9eee9 10%);--drawer:#293542;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
   :root[data-skin=editorial] .time,:root[data-skin=editorial] h1,:root[data-skin=editorial] .sp-hd{font-family:Georgia,'Iowan Old Style',serif}
+  :root[data-skin=obsidian]{--bg:#0b0c0f;--surface:#14161b;--ink:#f2f4f8;--muted:#8b93a3;--line:#23262e;--focus:#5ef2c0;--break:#7aa2ff;--focus-dim:color-mix(in srgb,#5ef2c0 16%,transparent);--break-dim:color-mix(in srgb,#7aa2ff 16%,transparent);--seed-off:color-mix(in srgb,#23262e 90%,#f2f4f8 10%);--drawer:#14161b;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.55);color-scheme:dark}
+  :root[data-skin=mono]{--bg:#f3f3f1;--surface:#ffffff;--ink:#0d0d0d;--muted:#6a6a68;--line:#d8d8d4;--focus:#0d0d0d;--break:#6a6a68;--focus-dim:color-mix(in srgb,#0d0d0d 16%,transparent);--break-dim:color-mix(in srgb,#6a6a68 16%,transparent);--seed-off:color-mix(in srgb,#d8d8d4 90%,#0d0d0d 10%);--drawer:#ffffff;--shadow:none;--drawer-edge:0 0 40px rgba(20,20,20,0.12);color-scheme:light}
+  :root[data-skin=aurora]{--bg:#120f26;--surface:#1d1838;--ink:#efeaff;--muted:#a59fc4;--line:#322b57;--focus:#a78bfa;--break:#34d399;--focus-dim:color-mix(in srgb,#a78bfa 16%,transparent);--break-dim:color-mix(in srgb,#34d399 16%,transparent);--seed-off:color-mix(in srgb,#322b57 90%,#efeaff 10%);--drawer:#1d1838;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.55);color-scheme:dark}
+  :root[data-skin=ember]{--bg:#14100d;--surface:#1e1814;--ink:#f4ece4;--muted:#a89a8a;--line:#34291f;--focus:#ff8a3d;--break:#8fbf7f;--focus-dim:color-mix(in srgb,#ff8a3d 16%,transparent);--break-dim:color-mix(in srgb,#8fbf7f 16%,transparent);--seed-off:color-mix(in srgb,#34291f 90%,#f4ece4 10%);--drawer:#1e1814;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.55);color-scheme:dark}
+  :root[data-skin=aurora] body{background:radial-gradient(900px 600px at 15% 0%,#2a1f5e55,transparent 60%),radial-gradient(800px 600px at 100% 100%,#0e4a4a44,transparent 60%),var(--bg) fixed}
+  :root[data-skin=obsidian] body{background:radial-gradient(900px 500px at 50% -10%,#1b2a2866,transparent 65%),var(--bg) fixed}
+  :root[data-skin=ember] body{background:radial-gradient(900px 500px at 50% 110%,#3a1f0f66,transparent 65%),var(--bg) fixed}
+  :root[data-skin=mono] .btn-primary,:root[data-skin=mono] .sp-opt.is-on{color:#fff}
+  /* Spacing, text size and type style */
+  html{--uz:1}
+  html[data-density=compact]{--uz:.92}
+  html[data-text=large]{--uz:1.1}
+  html[data-density=compact][data-text=large]{--uz:1.01}
+  body{zoom:var(--uz,1)}
+  html[data-font=humanist] body{font-family:'Segoe UI',ui-rounded,'SF Pro Rounded','Nunito','Trebuchet MS',system-ui,sans-serif}
+  html[data-font=technical] body{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;letter-spacing:-.01em}
+  html[data-font=clean] body{font-family:Inter,'Helvetica Neue',Arial,system-ui,sans-serif}
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
   html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
@@ -1301,6 +1318,12 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-opts" id="optLayout"></div>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
+    <div class="sp-row"><span>Spacing</span></div>
+    <div class="sp-opts" id="optDensity"></div>
+    <div class="sp-row"><span>Text size</span></div>
+    <div class="sp-opts" id="optText"></div>
+    <div class="sp-row"><span>Type style</span></div>
+    <div class="sp-opts" id="optFont"></div>
 
     <div class="sp-sec">Photos</div>
     <div class="sp-actions">
@@ -1617,7 +1640,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 63;
+  var APP_VERSION = 64;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1704,7 +1727,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1724,7 +1747,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1872,12 +1895,16 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     root.setProperty('--time-size', { s: '52px', m: '64px', l: '74px' }[cfg.timeSize] || '64px');
     root.setProperty('--time-weight', { l: '300', r: '500', b: '800' }[cfg.timeWeight] || '500');
     document.documentElement.setAttribute('data-style', cfg.uiStyle === 'sharp' ? 'sharp' : 'round');
-    var SKINS = ['sage','charcoal','slate','editorial','harbour','atelier','midnight'];
+    var de = document.documentElement;
+    if (cfg.density === 'compact') de.setAttribute('data-density', 'compact'); else de.removeAttribute('data-density');
+    if (cfg.text === 'large') de.setAttribute('data-text', 'large'); else de.removeAttribute('data-text');
+    if (cfg.font === 'clean' || cfg.font === 'humanist' || cfg.font === 'technical') de.setAttribute('data-font', cfg.font); else de.removeAttribute('data-font');
+    var SKINS = ['sage','charcoal','slate','editorial','harbour','atelier','midnight','obsidian','mono','aurora','ember'];
     if (SKINS.indexOf(cfg.skin) >= 0) document.documentElement.setAttribute('data-skin', cfg.skin); else document.documentElement.removeAttribute('data-skin');
     if (cfg.layout === 'compact' || cfg.layout === 'minimal') document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
     document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
   }
-  var THEMES = [['tomato','Tomato','Original',['#eef0ea','#e2e5db','#c8432b','#3f7a52'],'round']].concat([['sage', 'Sage desk', 'Soft green, calm', ['#e4e9e1', '#eef2eb', '#536f59', '#8a6f4d'], 'round'], ['charcoal', 'Charcoal focus', 'Dark, sharp', ['#171c19', '#202722', '#abc1db', '#9bc7a8'], 'sharp'], ['slate', 'Slate workspace', 'Cool blue-grey', ['#e2e8ef', '#edf1f5', '#526b88', '#4d8a73'], 'sharp'], ['editorial', 'Editorial', 'Warm paper, clay', ['#e9e3d8', '#f5f1e9', '#976858', '#5d7a4f'], 'round'], ['harbour', 'Harbour', 'Calm teal', ['#dfeaea', '#ecf3f3', '#326e72', '#6a8f5b'], 'round'], ['atelier', 'Atelier', 'Warm creative', ['#eee5d6', '#faf5eb', '#b0674a', '#6f7f55'], 'round'], ['midnight', 'Midnight', 'After-hours blue', ['#202a36', '#293542', '#bdc0ef', '#8fc0b0'], 'sharp']]);
+  var THEMES = [['tomato','Tomato','Original',['#eef0ea','#e2e5db','#c8432b','#3f7a52'],'round','plex']].concat([['sage', 'Sage desk', 'Soft green, calm', ['#e4e9e1', '#eef2eb', '#536f59', '#8a6f4d'], 'round', 'plex'], ['charcoal', 'Charcoal focus', 'Dark, sharp', ['#171c19', '#202722', '#abc1db', '#9bc7a8'], 'sharp', 'technical'], ['slate', 'Slate workspace', 'Cool blue-grey', ['#e2e8ef', '#edf1f5', '#526b88', '#4d8a73'], 'sharp', 'clean'], ['editorial', 'Editorial', 'Warm paper, clay', ['#e9e3d8', '#f5f1e9', '#976858', '#5d7a4f'], 'round', 'humanist'], ['harbour', 'Harbour', 'Calm teal', ['#dfeaea', '#ecf3f3', '#326e72', '#6a8f5b'], 'round', 'humanist'], ['atelier', 'Atelier', 'Warm creative', ['#eee5d6', '#faf5eb', '#b0674a', '#6f7f55'], 'round', 'humanist'], ['midnight', 'Midnight', 'After-hours blue', ['#202a36', '#293542', '#bdc0ef', '#8fc0b0'], 'sharp', 'plex'], ['obsidian', 'Obsidian', 'Near-black, mint neon', ['#0b0c0f', '#14161b', '#5ef2c0', '#7aa2ff'], 'sharp', 'technical'], ['mono', 'Mono', 'Black and white, sharp', ['#f3f3f1', '#ffffff', '#0d0d0d', '#6a6a68'], 'sharp', 'clean'], ['aurora', 'Aurora', 'Violet glow, soft', ['#120f26', '#1d1838', '#a78bfa', '#34d399'], 'round', 'humanist'], ['ember', 'Ember', 'Warm dark, orange', ['#14100d', '#1e1814', '#ff8a3d', '#8fbf7f'], 'sharp', 'clean']]);
   function buildThemes() {
     var g = document.getElementById('themeGrid'); if (!g) return;
     g.innerHTML = '';
@@ -1886,7 +1913,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       b.className = 'theme-card' + ((cfg.skin || 'tomato') === t[0] ? ' is-on' : '');
       b.setAttribute('aria-pressed', (cfg.skin || 'tomato') === t[0] ? 'true' : 'false');
       b.innerHTML = '<span class="theme-sw">' + t[3].map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</span><b>' + t[1] + '</b><small>' + t[2] + '</small>';
-      b.addEventListener('click', function () { cfg.skin = t[0]; cfg.uiStyle = t[4]; cfg.backdrop = t[0] === 'tomato' ? 'photos' : 'colour'; saveCfg(); applyNow(); updatePhotoMode(); buildNowOpts(); });
+      b.addEventListener('click', function () { cfg.skin = t[0]; cfg.uiStyle = t[4]; cfg.font = t[5] || 'plex'; cfg.backdrop = t[0] === 'tomato' ? 'photos' : 'colour'; saveCfg(); applyNow(); updatePhotoMode(); buildNowOpts(); });
       g.appendChild(b);
     });
   }
@@ -1903,6 +1930,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   function buildNowOpts() {
     buildThemes();
+    buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
+    buildOpts('optText', 'text', [['standard', 'Standard'], ['large', 'Larger']]);
+    buildOpts('optFont', 'font', [['plex', 'Plex'], ['clean', 'Clean'], ['humanist', 'Humanist'], ['technical', 'Technical']]);
     buildOpts('optBackdrop', 'backdrop', [['photos', 'Photos'], ['colour', 'Theme colour']]);
     buildOpts('optLayout', 'layout', [['centred', 'Centred'], ['compact', 'Compact'], ['minimal', 'Minimal']]);
     buildOpts('optUiStyle', 'uiStyle', [['round', 'Rounded'], ['sharp', 'Sharp']]);
