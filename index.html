@@ -92,7 +92,7 @@
   html[data-font=clean] body{font-family:Inter,'Helvetica Neue',Arial,system-ui,sans-serif}
 
   /* Layouts: Rail (sidebar + docked Today panel) and HUD (huge time, progress bar, task cards). Wide windows only. */
-  @media (min-width: 1000px) {
+  @media (min-width: 700px) {
     html[data-layout=rail] body{padding:68px 380px 40px 92px}
     html[data-layout=rail] body::before{content:'';position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--ink);z-index:12}
     html[data-layout=rail] .cog-btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent);z-index:26}
@@ -123,6 +123,49 @@
     html[data-layout=hud] .task-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1 1 100%;margin:0;padding:0;list-style:none}
     html[data-layout=hud] .task-list>:nth-child(n+4){display:none}
     html[data-layout=hud] .task-list>li{border:1px solid var(--line);background:var(--surface);padding:12px 14px}
+  }
+
+  /* Narrower windows: Rail slims down; below 700px it becomes a bottom tab bar. HUD works at any width. */
+  @media (min-width: 700px) and (max-width: 999px) {
+    html[data-layout=rail] body{padding-right:320px}
+    html[data-layout=rail] .drawer{width:300px}
+    html[data-layout=rail] :is(.rem-pill,.rem-pop){right:314px}
+    html[data-layout=rail] :is(.learn,.launch){display:none}
+  }
+  @media (max-width: 699px) {
+    html[data-layout=rail] body{padding-bottom:84px}
+    html[data-layout=rail] body::before{content:'';position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:56px;background:var(--ink);z-index:12}
+    html[data-layout=rail] :is(.cog-btn,.cal-handle,.fl-handle,.drawer-handle){position:fixed;top:auto;bottom:0;height:56px;width:25vw;transform:none;writing-mode:horizontal-tb;border:0;border-radius:0;background:transparent;color:color-mix(in srgb,var(--bg) 78%,transparent);display:flex;justify-content:center;align-items:center;flex-direction:row;gap:6px;font-size:11px;padding:0;z-index:26;opacity:1!important;visibility:visible!important;pointer-events:auto!important;backdrop-filter:none}
+    html[data-layout=rail] .cal-handle{left:0}
+    html[data-layout=rail] .fl-handle{left:25vw}
+    html[data-layout=rail] .drawer-handle{left:50vw;right:auto}
+    html[data-layout=rail] .cog-btn{left:75vw}
+    html[data-layout=rail] :is(.learn,.launch){display:none}
+    html[data-layout=rail] :is(.cal-handle,.fl-handle,.drawer-handle):hover{color:var(--bg)}
+  }
+  @media (max-width: 999px) {
+    html[data-layout=hud] body{padding-bottom:170px}
+    html[data-layout=hud] .time{font-size:min(22vw,210px);font-weight:200;letter-spacing:-.05em;line-height:1}
+    html[data-layout=hud] .app{max-width:960px;gap:20px}
+    html[data-layout=hud] .dial svg{display:none}
+    html[data-layout=hud] .dial{width:min(900px,92vw);height:auto;flex-direction:column;gap:18px}
+    html[data-layout=hud] .dial::after{content:'';display:block;width:min(720px,80vw);height:4px;background:linear-gradient(90deg,var(--accent,var(--focus)) var(--pct,0%),var(--line) var(--pct,0%))}
+    html[data-layout=hud] .mode-row{background:none;border:0;border-radius:0;gap:18px;padding:0}
+    html[data-layout=hud] .mode-btn{background:none!important;border-radius:0;border-bottom:2px solid transparent;padding:6px 0}
+    html[data-layout=hud] .mode-btn[aria-pressed="true"]{border-bottom-color:var(--accent,var(--focus))}
+    html[data-layout=hud] .drawer{top:auto;left:16px;right:16px;bottom:12px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;gap:10px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
+    html[data-layout=hud] :is(.drawer-handle,.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty,details.settings,.learn){display:none!important}
+    html[data-layout=hud] .task-add{flex:0 0 100%}
+    html[data-layout=hud] .task-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;flex:1 1 100%;margin:0;padding:0;list-style:none}
+    html[data-layout=hud] .task-list>:nth-child(n+4){display:none}
+    html[data-layout=hud] .task-list>li{border:1px solid var(--line);background:var(--surface);padding:10px 12px}
+    html[data-layout=hud] .pip-btn{display:none}
+  }
+  @media (max-width: 699px) {
+    html[data-layout=hud] .task-list{grid-template-columns:1fr}
+    html[data-layout=hud] .task-list>:nth-child(n+3){display:none}
+    html[data-layout=hud] .launch{display:none}
+    html[data-layout=hud] body{padding-bottom:210px}
   }
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
@@ -1346,11 +1389,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   <div class="sp-body">
     <div class="sp-sec">Theme</div>
     <div class="theme-grid" id="themeGrid"></div>
+    <div class="sp-row"><span>Accent</span></div>
+    <div class="sw-row" id="accentRow"></div>
+    <div class="sp-opts"><input id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#hex" aria-label="Accent colour hex" style="width:96px;padding:7px 9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px"><button type="button" class="sp-opt" id="accentReset">Theme default</button></div>
     <div class="sp-row"><span>Backdrop</span></div>
     <div class="sp-opts" id="optBackdrop"></div>
     <div class="sp-row"><span>Layout</span></div>
     <div class="sp-opts" id="optLayout"></div>
-    <p class="drawer-hint">Rail and HUD need a window wider than about 1000px. Narrower windows use Centred.</p>
+    <p class="drawer-hint">Rail turns into a bottom tab bar in small windows. HUD works at any size.</p>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
     <div class="sp-row"><span>Spacing</span></div>
@@ -1675,7 +1721,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 65;
+  var APP_VERSION = 66;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1965,6 +2011,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   function buildNowOpts() {
     buildThemes();
+    buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
     buildOpts('optText', 'text', [['standard', 'Standard'], ['large', 'Larger']]);
     buildOpts('optFont', 'font', [['plex', 'Plex'], ['clean', 'Clean'], ['humanist', 'Humanist'], ['technical', 'Technical']]);
@@ -2143,6 +2190,37 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     c.addEventListener('input', function () { cfg[key] = c.value.toLowerCase(); saveCfg(); applyColours(); render(); });
     c.addEventListener('change', function () { colourChanged(); });
     row.appendChild(c);
+  }
+
+  var ACCENTS = [['Tomato', '#c8432b', '#ff7a57'], ['Sage', '#536f59', '#b9cfad'], ['Slate', '#526b88', '#abc1db'], ['Clay', '#976858', '#d5b1a1'], ['Plum', '#796681', '#c6b1ce'], ['Teal', '#326e72', '#9dcfd0'], ['Indigo', '#5d61a7', '#bdc0ef'], ['Amber', '#94671e', '#e9c888'], ['Rose', '#9b566b', '#e0b0be'], ['Forest', '#38634d', '#a6cdb6']];
+  function bgIsDark() {
+    var m = (getComputedStyle(document.documentElement).getPropertyValue('--surface') || '').trim();
+    var bg = getComputedStyle(document.body).backgroundColor, n = bg.match(/\d+/g);
+    if (!n || n.length < 3 || (n.length > 3 && +n[3] === 0)) { n = getComputedStyle(document.documentElement).backgroundColor.match(/\d+/g) || [255, 255, 255]; }
+    return (0.2126 * +n[0] + 0.7152 * +n[1] + 0.0722 * +n[2]) < 110;
+  }
+  function buildAccent() {
+    var row = document.getElementById('accentRow'); if (!row) return;
+    var dark = bgIsDark(); row.innerHTML = '';
+    ACCENTS.forEach(function (a) {
+      var hex = dark ? a[2] : a[1];
+      var b = document.createElement('button'); b.type = 'button';
+      b.className = 'sw' + ((cfg.focus || '').toLowerCase() === hex ? ' is-on' : '');
+      b.style.background = hex; b.title = a[0]; b.setAttribute('aria-label', a[0] + ' accent');
+      b.addEventListener('click', function () { cfg.focus = hex; colourChanged(); buildAccent(); });
+      row.appendChild(b);
+    });
+    var hx = document.getElementById('accentHex');
+    if (hx && document.activeElement !== hx) hx.value = validHex(cfg.focus) ? cfg.focus : '';
+    if (hx && !hx._b) {
+      hx._b = 1;
+      hx.addEventListener('input', function () {
+        var v = hx.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+        if (validHex(v)) { cfg.focus = v.toLowerCase(); colourChanged(); }
+      });
+    }
+    var rs = document.getElementById('accentReset');
+    if (rs && !rs._b) { rs._b = 1; rs.addEventListener('click', function () { cfg.focus = ''; colourChanged(); buildAccent(); }); }
   }
   function buildAllSwatches() { buildSwatches('swFocus', 'focus'); buildSwatches('swBreak', 'brk'); buildSwatches('swCal', 'cal'); buildSwatches('swNow', 'now'); buildNowOpts(); }
   function colourChanged() {
