@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -62,6 +62,28 @@
     --drawer: #1b1712;
     --drawer-edge: 0 0 40px rgba(0,0,0,0.5);
   }
+
+
+  /* ---- Themes (pick in Settings > Theme). Default 'Tomato' uses the base palette above. ---- */
+  :root[data-skin=sage]{--bg:#e4e9e1;--surface:#eef2eb;--ink:#263127;--muted:#586557;--line:#c9d3c5;--focus:#536f59;--break:#8a6f4d;--focus-dim:color-mix(in srgb,#536f59 16%,transparent);--break-dim:color-mix(in srgb,#8a6f4d 16%,transparent);--seed-off:color-mix(in srgb,#c9d3c5 90%,#263127 10%);--drawer:#eef2eb;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
+  :root[data-skin=charcoal]{--bg:#171c19;--surface:#202722;--ink:#e9eee9;--muted:#a9b5ac;--line:#354039;--focus:#abc1db;--break:#9bc7a8;--focus-dim:color-mix(in srgb,#abc1db 16%,transparent);--break-dim:color-mix(in srgb,#9bc7a8 16%,transparent);--seed-off:color-mix(in srgb,#354039 90%,#e9eee9 10%);--drawer:#202722;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
+  :root[data-skin=slate]{--bg:#e2e8ef;--surface:#edf1f5;--ink:#263644;--muted:#536675;--line:#c6d1db;--focus:#526b88;--break:#4d8a73;--focus-dim:color-mix(in srgb,#526b88 16%,transparent);--break-dim:color-mix(in srgb,#4d8a73 16%,transparent);--seed-off:color-mix(in srgb,#c6d1db 90%,#263644 10%);--drawer:#edf1f5;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
+  :root[data-skin=editorial]{--bg:#e9e3d8;--surface:#f5f1e9;--ink:#39352d;--muted:#6c6356;--line:#d2c8b8;--focus:#976858;--break:#5d7a4f;--focus-dim:color-mix(in srgb,#976858 16%,transparent);--break-dim:color-mix(in srgb,#5d7a4f 16%,transparent);--seed-off:color-mix(in srgb,#d2c8b8 90%,#39352d 10%);--drawer:#f5f1e9;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
+  :root[data-skin=harbour]{--bg:#dfeaea;--surface:#ecf3f3;--ink:#15343a;--muted:#4f6b70;--line:#bcd2d3;--focus:#326e72;--break:#6a8f5b;--focus-dim:color-mix(in srgb,#326e72 16%,transparent);--break-dim:color-mix(in srgb,#6a8f5b 16%,transparent);--seed-off:color-mix(in srgb,#bcd2d3 90%,#15343a 10%);--drawer:#ecf3f3;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
+  :root[data-skin=atelier]{--bg:#eee5d6;--surface:#faf5eb;--ink:#3c362e;--muted:#6d6255;--line:#d6cbb9;--focus:#b0674a;--break:#6f7f55;--focus-dim:color-mix(in srgb,#b0674a 16%,transparent);--break-dim:color-mix(in srgb,#6f7f55 16%,transparent);--seed-off:color-mix(in srgb,#d6cbb9 90%,#3c362e 10%);--drawer:#faf5eb;--shadow:0 1px 0 rgba(0,0,0,0.04);--drawer-edge:0 0 40px rgba(20,30,25,0.14);color-scheme:light}
+  :root[data-skin=midnight]{--bg:#202a36;--surface:#293542;--ink:#e9eee9;--muted:#a9b5c0;--line:#3d4b5c;--focus:#bdc0ef;--break:#8fc0b0;--focus-dim:color-mix(in srgb,#bdc0ef 16%,transparent);--break-dim:color-mix(in srgb,#8fc0b0 16%,transparent);--seed-off:color-mix(in srgb,#3d4b5c 90%,#e9eee9 10%);--drawer:#293542;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
+  :root[data-skin=editorial] .time,:root[data-skin=editorial] h1,:root[data-skin=editorial] .sp-hd{font-family:Georgia,'Iowan Old Style',serif}
+  /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
+  html[data-layout=compact] .dial{width:200px;height:200px}
+  html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
+  html[data-layout=compact] .app{gap:10px}
+  html[data-layout=compact] :is(.pip-btn,.lod,#learn,.seeds){display:none}
+  html[data-layout=minimal] :is(.learn,#learn,.lod,.pip-btn,.launch,details.settings,.seeds){display:none!important}
+  .theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 6px}
+  .theme-card{appearance:none;font:inherit;text-align:left;cursor:pointer;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r9);background:var(--surface);color:var(--ink);display:flex;flex-direction:column;gap:6px}
+  .theme-card.is-on{border-color:var(--accent,var(--focus));box-shadow:0 0 0 1px var(--accent,var(--focus))}
+  .theme-card b{font-size:12.5px;font-weight:700}.theme-card small{font-size:10.5px;color:var(--muted)}
+  .theme-sw{display:flex;height:16px;border-radius:var(--r4);overflow:hidden;border:1px solid rgba(128,128,128,.3)}.theme-sw i{flex:1}
 
   /* Vision-board mode: while focusing, the garage-wall photos take over
      the scene, so the UI switches to one fixed glass-on-dark look
@@ -1271,7 +1293,12 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 <aside class="spanel" id="spanel" aria-label="Settings" aria-hidden="true">
   <div class="sp-head"><h2>Settings</h2><button class="sp-close" id="spClose" type="button" aria-label="Close settings">&times;</button></div>
   <div class="sp-body">
-    <div class="sp-sec">Style</div>
+    <div class="sp-sec">Theme</div>
+    <div class="theme-grid" id="themeGrid"></div>
+    <div class="sp-row"><span>Backdrop</span></div>
+    <div class="sp-opts" id="optBackdrop"></div>
+    <div class="sp-row"><span>Layout</span></div>
+    <div class="sp-opts" id="optLayout"></div>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
 
@@ -1590,7 +1617,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 61;
+  var APP_VERSION = 63;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1677,7 +1704,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1697,7 +1724,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1784,7 +1811,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
 
   function updatePhotoMode() {
-    var on = state.mode === 'focus' || settingsOpen;
+    var on = (state.mode === 'focus' || settingsOpen) && cfg.backdrop !== 'colour';
     document.body.classList.toggle('photo-mode', on);
     if (on) startBgRotation(); else stopBgRotation();
   }
@@ -1845,7 +1872,23 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     root.setProperty('--time-size', { s: '52px', m: '64px', l: '74px' }[cfg.timeSize] || '64px');
     root.setProperty('--time-weight', { l: '300', r: '500', b: '800' }[cfg.timeWeight] || '500');
     document.documentElement.setAttribute('data-style', cfg.uiStyle === 'sharp' ? 'sharp' : 'round');
+    var SKINS = ['sage','charcoal','slate','editorial','harbour','atelier','midnight'];
+    if (SKINS.indexOf(cfg.skin) >= 0) document.documentElement.setAttribute('data-skin', cfg.skin); else document.documentElement.removeAttribute('data-skin');
+    if (cfg.layout === 'compact' || cfg.layout === 'minimal') document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
     document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
+  }
+  var THEMES = [['tomato','Tomato','Original',['#eef0ea','#e2e5db','#c8432b','#3f7a52'],'round']].concat([['sage', 'Sage desk', 'Soft green, calm', ['#e4e9e1', '#eef2eb', '#536f59', '#8a6f4d'], 'round'], ['charcoal', 'Charcoal focus', 'Dark, sharp', ['#171c19', '#202722', '#abc1db', '#9bc7a8'], 'sharp'], ['slate', 'Slate workspace', 'Cool blue-grey', ['#e2e8ef', '#edf1f5', '#526b88', '#4d8a73'], 'sharp'], ['editorial', 'Editorial', 'Warm paper, clay', ['#e9e3d8', '#f5f1e9', '#976858', '#5d7a4f'], 'round'], ['harbour', 'Harbour', 'Calm teal', ['#dfeaea', '#ecf3f3', '#326e72', '#6a8f5b'], 'round'], ['atelier', 'Atelier', 'Warm creative', ['#eee5d6', '#faf5eb', '#b0674a', '#6f7f55'], 'round'], ['midnight', 'Midnight', 'After-hours blue', ['#202a36', '#293542', '#bdc0ef', '#8fc0b0'], 'sharp']]);
+  function buildThemes() {
+    var g = document.getElementById('themeGrid'); if (!g) return;
+    g.innerHTML = '';
+    THEMES.forEach(function (t) {
+      var b = document.createElement('button'); b.type = 'button';
+      b.className = 'theme-card' + ((cfg.skin || 'tomato') === t[0] ? ' is-on' : '');
+      b.setAttribute('aria-pressed', (cfg.skin || 'tomato') === t[0] ? 'true' : 'false');
+      b.innerHTML = '<span class="theme-sw">' + t[3].map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</span><b>' + t[1] + '</b><small>' + t[2] + '</small>';
+      b.addEventListener('click', function () { cfg.skin = t[0]; cfg.uiStyle = t[4]; cfg.backdrop = t[0] === 'tomato' ? 'photos' : 'colour'; saveCfg(); applyNow(); updatePhotoMode(); buildNowOpts(); });
+      g.appendChild(b);
+    });
   }
   function buildOpts(rowId, key, opts) {
     var row = document.getElementById(rowId);
@@ -1854,11 +1897,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'sp-opt' + (cfg[key] === o[0] ? ' is-on' : ''); b.textContent = o[1];
       b.setAttribute('aria-pressed', cfg[key] === o[0] ? 'true' : 'false');
-      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); if (key === 'bgPause') applyBgPause(); });
+      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); if (key === 'bgPause') applyBgPause(); if (key === 'backdrop') updatePhotoMode(); });
       row.appendChild(b);
     });
   }
   function buildNowOpts() {
+    buildThemes();
+    buildOpts('optBackdrop', 'backdrop', [['photos', 'Photos'], ['colour', 'Theme colour']]);
+    buildOpts('optLayout', 'layout', [['centred', 'Centred'], ['compact', 'Compact'], ['minimal', 'Minimal']]);
     buildOpts('optUiStyle', 'uiStyle', [['round', 'Rounded'], ['sharp', 'Sharp']]);
     buildOpts('optNowStyle', 'nowStyle', [['box', 'Box'], ['plain', 'Plain'], ['glow', 'Big glow'], ['banner', 'Banner']]);
     buildOpts('optNowSize', 'nowSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'Huge']]);
