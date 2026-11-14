@@ -177,9 +177,8 @@
   html[data-layout=hud] .time{font-size:min(20vw,21vh,210px)}
   @media (max-height: 900px) { html[data-layout=hud] .lod{display:none} }
   /* Focus mode (Settings > Focus mode = Clean): while a task is focused, everything except the timer and your task fades away. */
-  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.launch,.cal-handle,.fl-handle,.rem-pill,.rem-pop,.lod,.pip-btn,.board-credit,details.settings,.drawer){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-  html[data-focusclean=on][data-layout=rail] body.focusing:not(.drawer-open)::before{opacity:0}
-  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.launch,.cal-handle,.fl-handle,.rem-pill,.lod,.pip-btn,.drawer){transition:opacity .35s ease}
+  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.rem-pop,.lod,.pip-btn,.board-credit,details.settings,.drawer){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.lod,.pip-btn,.drawer){transition:opacity .35s ease}
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
   html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
@@ -1737,7 +1736,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 69;
+  var APP_VERSION = 70;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
