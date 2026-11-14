@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -179,6 +179,20 @@
   /* Focus mode (Settings > Focus mode = Clean): while a task is focused, everything except the timer and your task fades away. */
   html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.rem-pop,.lod,.pip-btn,.board-credit,details.settings,.drawer){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
   html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.lod,.pip-btn,.drawer){transition:opacity .35s ease}
+  /* Panels: Workspace (Job Desk-style Content and Files panels): wider, serif heading, thin rules, flat rows */
+  html[data-panels=workspace] :is(.cal,.fl){width:min(780px,100vw);border-top:0;border-right:1px solid var(--line);box-shadow:none}
+  html[data-panels=workspace] :is(.cal,.fl) .cal-head{padding:26px 32px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+  html[data-panels=workspace] :is(.cal,.fl) .cal-head h2{font-family:Georgia,'Iowan Old Style',serif;font-size:28px;font-weight:600;letter-spacing:-.015em}
+  html[data-panels=workspace] :is(.cal,.fl) .cal-sub{font-size:12px;letter-spacing:.04em}
+  html[data-panels=workspace] :is(.cal-bar,.fl-bar){padding:0 32px 16px}
+  html[data-panels=workspace] :is(.cal-scroll,.fl-scroll){padding:0 32px 32px}
+  html[data-panels=workspace] .cal-week{border-bottom:1px solid var(--line);padding-bottom:6px;margin:24px 0 12px}
+  html[data-panels=workspace] .cal-brief{border-left-width:3px;border-radius:var(--r4);background:var(--surface)}
+  html[data-panels=workspace] .cal-post{border-radius:var(--r4);border-left:3px solid var(--cal);padding:14px 16px;margin-bottom:8px;background:var(--surface)}
+  html[data-panels=workspace] .cal-post.today{border-width:1px 1px 1px 3px;box-shadow:none;padding:14px 16px;outline:1px solid var(--cal);outline-offset:-1px}
+  html[data-panels=workspace] .fl-row{padding:14px 0}
+  html[data-panels=workspace] .fl-chip{border-radius:var(--r4);text-transform:uppercase}
+  html[data-panels=workspace] .fl-name{font-size:15px;font-weight:500}
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
   html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
@@ -1412,6 +1426,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-row"><span>Focus mode</span></div>
     <div class="sp-opts" id="optFocusClean"></div>
     <p class="drawer-hint">Clean hides everything except the timer and your task while you focus.</p>
+    <div class="sp-row"><span>Content and Files panels</span></div>
+    <div class="sp-opts" id="optPanels"></div>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
     <div class="sp-row"><span>Spacing</span></div>
@@ -1736,7 +1752,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 70;
+  var APP_VERSION = 71;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1823,7 +1839,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1843,7 +1859,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1992,6 +2008,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     root.setProperty('--time-weight', { l: '300', r: '500', b: '800' }[cfg.timeWeight] || '500');
     document.documentElement.setAttribute('data-style', cfg.uiStyle === 'sharp' ? 'sharp' : 'round');
     var de = document.documentElement;
+    if (cfg.panels === 'workspace') de.setAttribute('data-panels', 'workspace'); else de.removeAttribute('data-panels');
     de.setAttribute('data-focusclean', cfg.focusClean === 'off' ? 'off' : 'on');
     if (cfg.density === 'compact') de.setAttribute('data-density', 'compact'); else de.removeAttribute('data-density');
     if (cfg.text === 'large') de.setAttribute('data-text', 'large'); else de.removeAttribute('data-text');
@@ -2027,6 +2044,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   function buildNowOpts() {
     buildThemes();
+    buildOpts('optPanels', 'panels', [['drawer', 'Drawer'], ['workspace', 'Workspace']]);
     buildOpts('optFocusClean', 'focusClean', [['on', 'Clean'], ['off', 'Normal']]);
     buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
