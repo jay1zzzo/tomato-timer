@@ -176,6 +176,10 @@
   html[data-layout=hud] body.focusing{padding-bottom:40px}
   html[data-layout=hud] .time{font-size:min(20vw,21vh,210px)}
   @media (max-height: 900px) { html[data-layout=hud] .lod{display:none} }
+  /* Focus mode (Settings > Focus mode = Clean): while a task is focused, everything except the timer and your task fades away. */
+  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.launch,.cal-handle,.fl-handle,.rem-pill,.rem-pop,.lod,.pip-btn,.board-credit,details.settings,.drawer){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+  html[data-focusclean=on][data-layout=rail] body.focusing:not(.drawer-open)::before{opacity:0}
+  html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.launch,.cal-handle,.fl-handle,.rem-pill,.lod,.pip-btn,.drawer){transition:opacity .35s ease}
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
   html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
@@ -1406,6 +1410,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-row"><span>Layout</span></div>
     <div class="sp-opts" id="optLayout"></div>
     <p class="drawer-hint">Rail turns into a bottom tab bar in small windows. HUD works at any size.</p>
+    <div class="sp-row"><span>Focus mode</span></div>
+    <div class="sp-opts" id="optFocusClean"></div>
+    <p class="drawer-hint">Clean hides everything except the timer and your task while you focus.</p>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
     <div class="sp-row"><span>Spacing</span></div>
@@ -1730,7 +1737,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 68;
+  var APP_VERSION = 69;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1817,7 +1824,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1837,7 +1844,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -1986,6 +1993,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     root.setProperty('--time-weight', { l: '300', r: '500', b: '800' }[cfg.timeWeight] || '500');
     document.documentElement.setAttribute('data-style', cfg.uiStyle === 'sharp' ? 'sharp' : 'round');
     var de = document.documentElement;
+    de.setAttribute('data-focusclean', cfg.focusClean === 'off' ? 'off' : 'on');
     if (cfg.density === 'compact') de.setAttribute('data-density', 'compact'); else de.removeAttribute('data-density');
     if (cfg.text === 'large') de.setAttribute('data-text', 'large'); else de.removeAttribute('data-text');
     if (cfg.font === 'clean' || cfg.font === 'humanist' || cfg.font === 'technical') de.setAttribute('data-font', cfg.font); else de.removeAttribute('data-font');
@@ -2020,6 +2028,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   function buildNowOpts() {
     buildThemes();
+    buildOpts('optFocusClean', 'focusClean', [['on', 'Clean'], ['off', 'Normal']]);
     buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
     buildOpts('optText', 'text', [['standard', 'Standard'], ['large', 'Larger']]);
