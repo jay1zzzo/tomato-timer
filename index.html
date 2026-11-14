@@ -90,6 +90,40 @@
   html[data-font=humanist] body{font-family:'Segoe UI',ui-rounded,'SF Pro Rounded','Nunito','Trebuchet MS',system-ui,sans-serif}
   html[data-font=technical] body{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;letter-spacing:-.01em}
   html[data-font=clean] body{font-family:Inter,'Helvetica Neue',Arial,system-ui,sans-serif}
+
+  /* Layouts: Rail (sidebar + docked Today panel) and HUD (huge time, progress bar, task cards). Wide windows only. */
+  @media (min-width: 1000px) {
+    html[data-layout=rail] body{padding:68px 380px 40px 92px}
+    html[data-layout=rail] body::before{content:'';position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--ink);z-index:12}
+    html[data-layout=rail] .cog-btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent);z-index:26}
+    html[data-layout=rail] :is(.cal-handle,.fl-handle){left:0;top:84px;transform:none;writing-mode:horizontal-tb;width:72px;height:64px;padding:8px 0;border:0;border-left:3px solid transparent;border-radius:0;background:transparent;color:color-mix(in srgb,var(--bg) 70%,transparent);flex-direction:column;justify-content:center;align-items:center;gap:4px;font-size:10.5px;backdrop-filter:none}
+    html[data-layout=rail] .fl-handle{top:152px}
+    html[data-layout=rail] :is(.cal-handle,.fl-handle):hover{color:var(--bg);background:color-mix(in srgb,var(--bg) 12%,transparent)}
+    html[data-layout=rail] .drawer{transform:none!important;visibility:visible!important;width:360px;box-shadow:none;z-index:13;padding-top:28px;backdrop-filter:none}
+    html[data-layout=rail] :is(.drawer-handle,.drawer-backdrop,.drawer-close){display:none!important}
+    html[data-layout=rail] :is(.rem-pill,.rem-pop){right:374px}
+    html[data-layout=rail] .learn{left:88px;top:auto;bottom:14px;width:210px}
+    html[data-layout=rail] .launch{flex-direction:column;left:21px;bottom:14px;color:var(--bg)}
+    html[data-layout=rail] .launch button{border-color:color-mix(in srgb,var(--bg) 40%,transparent);opacity:.75}
+
+    html[data-layout=hud] body{padding-bottom:170px}
+    html[data-layout=hud] .app{max-width:960px;gap:22px}
+    html[data-layout=hud] .dial svg{display:none}
+    html[data-layout=hud] .dial{width:min(900px,92vw);height:auto;flex-direction:column;gap:22px}
+    html[data-layout=hud] .time{font-size:min(20vw,210px);font-weight:200;letter-spacing:-.05em;line-height:1}
+    html[data-layout=hud] .dial::after{content:'';display:block;width:min(720px,80vw);height:4px;background:linear-gradient(90deg,var(--accent,var(--focus)) var(--pct,0%),var(--line) var(--pct,0%))}
+    html[data-layout=hud] .mode-row{background:none;border:0;border-radius:0;gap:22px;padding:0}
+    html[data-layout=hud] .mode-btn{background:none!important;border-radius:0;border-bottom:2px solid transparent;padding:6px 0;letter-spacing:.1em}
+    html[data-layout=hud] .mode-btn[aria-pressed="true"]{border-bottom-color:var(--accent,var(--focus))}
+    html[data-layout=hud] details.settings{display:none}
+    html[data-layout=hud] .pip-btn{position:fixed;top:14px;right:170px;z-index:25}
+    html[data-layout=hud] .drawer{top:auto;left:90px;right:40px;bottom:20px;width:auto;transform:none!important;visibility:visible!important;flex-direction:row;flex-wrap:wrap;align-items:stretch;gap:12px;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;z-index:13}
+    html[data-layout=hud] :is(.drawer-handle,.drawer-backdrop,.drawer-head,.drawer-tabs,.drawer-hint,.hist-link,.task-empty){display:none!important}
+    html[data-layout=hud] .task-add{flex:0 0 100%;max-width:520px;margin:0 auto}
+    html[data-layout=hud] .task-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1 1 100%;margin:0;padding:0;list-style:none}
+    html[data-layout=hud] .task-list>:nth-child(n+4){display:none}
+    html[data-layout=hud] .task-list>li{border:1px solid var(--line);background:var(--surface);padding:12px 14px}
+  }
   /* Layouts: Centred (default), Compact (small windows), Minimal (timer only) */
   html[data-layout=compact] .dial{width:200px;height:200px}
   html[data-layout=compact] .time{font-size:min(var(--time-size,64px),44px)}
@@ -1316,6 +1350,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-opts" id="optBackdrop"></div>
     <div class="sp-row"><span>Layout</span></div>
     <div class="sp-opts" id="optLayout"></div>
+    <p class="drawer-hint">Rail and HUD need a window wider than about 1000px. Narrower windows use Centred.</p>
     <div class="sp-row"><span>Corners</span></div>
     <div class="sp-opts" id="optUiStyle"></div>
     <div class="sp-row"><span>Spacing</span></div>
@@ -1640,7 +1675,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
 <script>
 (function () {
-  var APP_VERSION = 64;
+  var APP_VERSION = 65;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -1901,7 +1936,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (cfg.font === 'clean' || cfg.font === 'humanist' || cfg.font === 'technical') de.setAttribute('data-font', cfg.font); else de.removeAttribute('data-font');
     var SKINS = ['sage','charcoal','slate','editorial','harbour','atelier','midnight','obsidian','mono','aurora','ember'];
     if (SKINS.indexOf(cfg.skin) >= 0) document.documentElement.setAttribute('data-skin', cfg.skin); else document.documentElement.removeAttribute('data-skin');
-    if (cfg.layout === 'compact' || cfg.layout === 'minimal') document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
+    if (['compact', 'minimal', 'rail', 'hud'].indexOf(cfg.layout) >= 0) document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
     document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
   }
   var THEMES = [['tomato','Tomato','Original',['#eef0ea','#e2e5db','#c8432b','#3f7a52'],'round','plex']].concat([['sage', 'Sage desk', 'Soft green, calm', ['#e4e9e1', '#eef2eb', '#536f59', '#8a6f4d'], 'round', 'plex'], ['charcoal', 'Charcoal focus', 'Dark, sharp', ['#171c19', '#202722', '#abc1db', '#9bc7a8'], 'sharp', 'technical'], ['slate', 'Slate workspace', 'Cool blue-grey', ['#e2e8ef', '#edf1f5', '#526b88', '#4d8a73'], 'sharp', 'clean'], ['editorial', 'Editorial', 'Warm paper, clay', ['#e9e3d8', '#f5f1e9', '#976858', '#5d7a4f'], 'round', 'humanist'], ['harbour', 'Harbour', 'Calm teal', ['#dfeaea', '#ecf3f3', '#326e72', '#6a8f5b'], 'round', 'humanist'], ['atelier', 'Atelier', 'Warm creative', ['#eee5d6', '#faf5eb', '#b0674a', '#6f7f55'], 'round', 'humanist'], ['midnight', 'Midnight', 'After-hours blue', ['#202a36', '#293542', '#bdc0ef', '#8fc0b0'], 'sharp', 'plex'], ['obsidian', 'Obsidian', 'Near-black, mint neon', ['#0b0c0f', '#14161b', '#5ef2c0', '#7aa2ff'], 'sharp', 'technical'], ['mono', 'Mono', 'Black and white, sharp', ['#f3f3f1', '#ffffff', '#0d0d0d', '#6a6a68'], 'sharp', 'clean'], ['aurora', 'Aurora', 'Violet glow, soft', ['#120f26', '#1d1838', '#a78bfa', '#34d399'], 'round', 'humanist'], ['ember', 'Ember', 'Warm dark, orange', ['#14100d', '#1e1814', '#ff8a3d', '#8fbf7f'], 'sharp', 'clean']]);
@@ -1934,7 +1969,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     buildOpts('optText', 'text', [['standard', 'Standard'], ['large', 'Larger']]);
     buildOpts('optFont', 'font', [['plex', 'Plex'], ['clean', 'Clean'], ['humanist', 'Humanist'], ['technical', 'Technical']]);
     buildOpts('optBackdrop', 'backdrop', [['photos', 'Photos'], ['colour', 'Theme colour']]);
-    buildOpts('optLayout', 'layout', [['centred', 'Centred'], ['compact', 'Compact'], ['minimal', 'Minimal']]);
+    buildOpts('optLayout', 'layout', [['centred', 'Centred'], ['rail', 'Rail'], ['hud', 'HUD'], ['compact', 'Compact'], ['minimal', 'Minimal']]);
     buildOpts('optUiStyle', 'uiStyle', [['round', 'Rounded'], ['sharp', 'Sharp']]);
     buildOpts('optNowStyle', 'nowStyle', [['box', 'Box'], ['plain', 'Plain'], ['glow', 'Big glow'], ['banner', 'Banner']]);
     buildOpts('optNowSize', 'nowSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'Huge']]);
@@ -3712,6 +3747,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     var total = modeMinutes(state.mode) * 60;
     var pct = total > 0 ? (state.secondsLeft / total) * 100 : 0;
     els.ring.style.strokeDashoffset = String(100 - pct);
+    document.documentElement.style.setProperty('--pct', pct + '%');
     document.documentElement.style.setProperty('--accent', accentVar(state.mode));
     applyColours();
 
