@@ -198,7 +198,7 @@ applyLook();
   .st { width: 44px; height: 44px; font-size: 22px; }
   .chk { width: 28px; height: 28px; }
   body.noscroll { overflow: hidden; }
-  .tsheet { position: fixed; z-index: 21; left: 8px; right: 8px; top: calc(env(safe-area-inset-top) + 10px); max-width: 560px; margin: 0 auto; max-height: calc(100% - env(safe-area-inset-top) - 20px); display: flex; flex-direction: column; background: var(--sheet, var(--surface)); color: var(--ink); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,.45); opacity: 0; visibility: hidden; transform: translateY(-12px); transition: opacity .18s ease, transform .18s ease, visibility .18s; }
+  .tsheet { position: fixed; z-index: 21; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom) + 10px); max-width: 560px; margin: 0 auto; max-height: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 30px); display: flex; flex-direction: column; background: var(--sheet, var(--surface)); color: var(--ink); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,.45); opacity: 0; visibility: hidden; transform: translateY(16px); transition: opacity .18s ease, transform .18s ease, visibility .18s; }
   .tsheet.on { opacity: 1; visibility: visible; transform: none; }
   html:not([data-look])[data-mode=dark] .tsheet { background: #1f1c18; }
   .ts-headpad { width: 56px; }
@@ -527,11 +527,17 @@ applyLook();
     document.body.classList.add('noscroll');
     var x = $('tsText'); x.focus(); if (t) x.setSelectionRange(x.value.length, x.value.length);
   }
+  // The pop-up sits at the bottom of the screen. When the keyboard is up it rests just above it, and it never
+  // goes under the clock and battery bar at the top (it gets shorter and the middle scrolls instead).
   function tsFit() {
     var vv = window.visualViewport, el = $('ts'); if (!el) return;
-    if (!vv) { el.style.maxHeight = ''; el.style.top = ''; return; }
-    el.style.top = (vv.offsetTop + 10) + 'px';
-    el.style.maxHeight = (vv.height - 20) + 'px';
+    if (!vv) { el.style.maxHeight = ''; el.style.bottom = ''; return; }
+    var safeTop = Math.max(0, (parseFloat(getComputedStyle(document.body).paddingTop) || 18) - 18);
+    var hidden = window.innerHeight - (vv.offsetTop + vv.height);   // the part covered by the keyboard
+    if (hidden > 40) {
+      el.style.bottom = (hidden + 8) + 'px';
+      el.style.maxHeight = Math.max(200, vv.height - Math.max(0, safeTop - vv.offsetTop) - 18) + 'px';
+    } else { el.style.bottom = ''; el.style.maxHeight = ''; }
   }
   if (window.visualViewport) { visualViewport.addEventListener('resize', tsFit); visualViewport.addEventListener('scroll', tsFit); }
   function tsClose() { $('ts').className = 'tsheet'; $('tsBg').className = 'sheet-bg'; $('ts').setAttribute('aria-hidden', 'true'); document.body.classList.remove('noscroll'); $('tsText').blur(); ts.task = null; }
