@@ -89,7 +89,7 @@ applyLook();
   .setup .add { width: 100%; padding: 14px; }
 
   .histlink { text-align: center; margin-top: 14px; }
-  .ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; opacity: .8; }
+  .ver { text-align: center; font-size: 11px; color: var(--muted); margin: 14px 0 0; opacity: .45; letter-spacing: .02em; }
   .histlink .link { color: var(--muted); font-weight: 600; font-size: 13px; }
   .hist { position: fixed; inset: 0; z-index: 10; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 28px); display: none; }
   .hist.on { display: block; }
@@ -886,7 +886,20 @@ applyLook();
   });
 
   var PHONE_VERSION = 89;
-  $('ver').textContent = 'Ketchup ' + PHONE_VERSION;
+  $('ver').textContent = 'v' + PHONE_VERSION;
+  // Self-update: an iPhone home-screen app can keep an old copy of this page for a while. On opening (and when you
+  // come back to it) ask GitHub for the newest page, bypassing the saved copy; if it is a newer version, reload into it.
+  var verChecked = 0;
+  function checkNewer() {
+    if (Date.now() - verChecked < 60000) return;
+    verChecked = Date.now();
+    fetch('phone.html?check=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (html) {
+      var m = /var PHONE_VERSION = (\d+);/.exec(html), v = m ? +m[1] : 0;
+      if (v > PHONE_VERSION && !document.querySelector('.tsheet.on')) location.replace('phone.html?v=' + v);
+    }).catch(function () {});
+  }
+  setTimeout(checkNewer, 1500);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) checkNewer(); });
   loadLocal();
   $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   render(); idleStatus();
