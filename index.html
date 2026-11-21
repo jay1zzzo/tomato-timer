@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');if(__l&&['studio','tomato','kitchen','garden','mono'].indexOf(__l.look)>=0){__D.setAttribute('data-look',__l.look);__D.removeAttribute('data-skin');__D.removeAttribute('data-font');__D.removeAttribute('data-style');var __k=__l.mode;if(__k!=='light'&&__k!=='dark')__k='auto';__D.setAttribute('data-theme',(__k==='dark'||(__k==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}else{var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');if(__l&&['studio','tomato','kitchen','garden','mono'].indexOf(__l.look)>=0){__D.setAttribute('data-look',__l.look);__D.removeAttribute('data-layout');__D.removeAttribute('data-skin');__D.removeAttribute('data-font');__D.removeAttribute('data-style');var __k=__l.mode;if(__k!=='light'&&__k!=='dark')__k='auto';__D.setAttribute('data-theme',(__k==='dark'||(__k==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}else{var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -1058,6 +1058,30 @@
   html[data-look=mono] .sx-switch::after{border-radius:0}
   html[data-look=mono] .sx-switch,html[data-look=mono] .spanel,html[data-look=mono] .sx-card,html[data-look=mono] .sx-nav,html[data-look=mono] .sx-look,html[data-look=mono] .sx-modes,html[data-look=mono] .sx-mode,html[data-look=mono] .sp-close{border-radius:0}
 
+  /* Options that only make sense for Classic are hidden while a look is on (their saved values are kept). */
+  html[data-look] [data-classic]{display:none!important}
+  html:not([data-look]) .sx-looknote{display:none}
+  /* The task you are focusing on, drawn in the look's own colours instead of the old dark photo box. */
+  html[data-look] .now.has-task{max-width:520px;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;gap:10px}
+  html[data-look] .now-eyebrow{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);background:none;padding:0}
+  html[data-look] .now-title{color:var(--ink);font-family:inherit;font-weight:600;text-shadow:none}
+  html[data-look] body.photo-mode :is(.now-title,.now-eyebrow){text-shadow:0 2px 18px rgba(0,0,0,.6)}
+  html[data-look] .now-editinput{background:var(--surface);font-family:inherit}
+  html[data-look] :is(.now-btn,.now-pick,.now-done){letter-spacing:0;font-size:12.5px}
+  html[data-look=tomato] .now-title,html[data-look=garden] .now-title{font-weight:700}
+  html[data-look=kitchen] .now-title{font-family:"DIN Condensed","Avenir Next Condensed","Bahnschrift","Arial Narrow",sans-serif;font-weight:700;letter-spacing:.01em;line-height:1.05}
+  html[data-look=mono] .now-title{font-weight:300;letter-spacing:-.02em}
+
+  /* Photos showing behind a look: the photos are dark, so use the look's dark-side accent colours on top of them. */
+  html[data-look] .bg-photos{background:#14120f}
+  html[data-look=studio] body.photo-mode{--focus:#ff6a4d;--break:#6fcf8f;--on-accent:#1b0f0b;--accent:var(--focus);--focus-dim:#ff6a4d26;--break-dim:#6fcf8f26}
+  html[data-look=kitchen] body.photo-mode{--focus:#ff4a3d;--break:#4fb9cd;--on-accent:#150605;--accent:var(--focus);--focus-dim:#ff4a3d26;--break-dim:#4fb9cd26}
+  html[data-look=garden] body.photo-mode{--focus:#86c490;--break:#e2a868;--on-accent:#10210f;--accent:var(--focus);--focus-dim:#86c49026;--break-dim:#e2a86826}
+  html[data-look=mono] body.photo-mode{--focus:#ffffff;--break:#9c9c9c;--on-accent:#000;--accent:var(--focus);--focus-dim:#ffffff1f;--break-dim:#ffffff1f}
+  html[data-look=tomato] body.photo-mode{--on-accent:#b9321f;--accent:var(--focus)}
+  html[data-look][data-timer=break] body.photo-mode{--accent:var(--break)}
+  html[data-look=kitchen] body.photo-mode .mode-btn[aria-pressed="true"]{background:rgba(255,255,255,.9);color:#12161a}
+
   /* ================= Today as a pop-up window (all layouts except Rail and HUD, which dock the list) ================= */
   html:not([data-layout=rail]):not([data-layout=hud]) .drawer{top:50%;left:50%;right:auto;bottom:auto;width:min(600px,calc(100% - 32px));height:min(700px,calc(100% - 48px));border:1px solid var(--line);border-radius:16px;box-shadow:var(--drawer-edge);opacity:0;transform:translate(-50%,-48%) scale(.98);transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s;padding:22px 24px 18px}
   html:not([data-layout=rail]):not([data-layout=hud]) body.drawer-open .drawer{opacity:1;transform:translate(-50%,-50%);transition:opacity .2s ease,transform .2s ease,visibility 0s}
@@ -1674,7 +1698,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
     <section class="sx-page" data-page="advanced" hidden>
       <button type="button" class="sx-back" id="sxAdvBack">&lsaquo; Appearance</button>
-      <details class="sx-grp" open><summary>Theme and colours</summary>
+      <p class="sp-hint sx-looknote" style="margin:0">These work with every look. The extra theme, colour, layout and font options only fit Classic, so they show when Classic is chosen.</p>
+      <details class="sx-grp" data-classic open><summary>Theme and colours</summary>
         <div class="sp-row"><span>All themes</span></div>
         <div class="theme-grid" id="themeGrid"></div>
         <div class="sp-row"><span>Accent</span></div>
@@ -1687,22 +1712,20 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <div class="sp-row"><span>Content calendar colour</span></div>
         <div class="sw-row" id="swCal"></div>
       </details>
-      <details class="sx-grp"><summary>Layout and style</summary>
+      <details class="sx-grp" data-classic><summary>Layout and style</summary>
         <div class="sp-row"><span>Layout</span></div>
         <div class="sp-opts" id="optLayout"></div>
         <p class="sp-hint">Rail turns into a bottom tab bar in small windows. HUD works at any size.</p>
         <div class="sp-row"><span>Corners</span></div>
         <div class="sp-opts" id="optUiStyle"></div>
-        <div class="sp-row"><span>Spacing</span></div>
-        <div class="sp-opts" id="optDensity"></div>
         <div class="sp-row"><span>Type style</span></div>
         <div class="sp-opts" id="optFont"></div>
-        <div class="sp-row"><span>Content and Files panels</span></div>
-        <div class="sp-opts" id="optPanels"></div>
       </details>
-      <details class="sx-grp"><summary>Backdrop and photos</summary>
-        <div class="sp-row"><span>Backdrop</span></div>
-        <div class="sp-opts" id="optBackdrop"></div>
+      <details class="sx-grp"><summary>Photos</summary>
+        <div data-classic>
+          <div class="sp-row"><span>Backdrop</span></div>
+          <div class="sp-opts" id="optBackdrop"></div>
+        </div>
         <div class="sp-actions">
           <button class="sp-btn" id="phAdd" type="button">+ Add photos</button>
           <input type="file" id="phFile" accept="image/*" multiple hidden>
@@ -1719,19 +1742,27 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <div class="sp-row"><label for="tmDark">Darkness over photos</label><output id="tmDarkOut"></output></div>
         <input type="range" id="tmDark" min="0" max="100" step="5">
       </details>
-      <details class="sx-grp"><summary>Task text while focusing</summary>
-        <div class="sp-row"><span>Look</span></div>
-        <div class="sp-opts" id="optNowStyle"></div>
-        <div class="sp-row"><span>Text colour</span></div>
-        <div class="sw-row" id="swNow"></div>
-        <div class="sp-row"><span>Size</span></div>
+      <details class="sx-grp"><summary>Spacing and task text</summary>
+        <div class="sp-row"><span>Spacing</span></div>
+        <div class="sp-opts" id="optDensity"></div>
+        <div class="sp-row"><span>Size of the task you are focusing on</span></div>
         <div class="sp-opts" id="optNowSize"></div>
-        <div class="sp-row"><span>Font</span></div>
-        <div class="sp-opts" id="optNowFont"></div>
-        <div class="sp-row"><span>Lines shown</span></div>
+        <div class="sp-row"><span>Lines of it shown</span></div>
         <div class="sp-opts" id="optNowLines"></div>
+        <div data-classic>
+          <div class="sp-row"><span>Task box style</span></div>
+          <div class="sp-opts" id="optNowStyle"></div>
+          <div class="sp-row"><span>Task text colour</span></div>
+          <div class="sw-row" id="swNow"></div>
+          <div class="sp-row"><span>Task font</span></div>
+          <div class="sp-opts" id="optNowFont"></div>
+        </div>
+        <div id="panelsRow">
+          <div class="sp-row"><span>Content and Files panels</span></div>
+          <div class="sp-opts" id="optPanels"></div>
+        </div>
       </details>
-      <details class="sx-grp"><summary>Timer numbers</summary>
+      <details class="sx-grp" data-classic><summary>Timer numbers</summary>
         <div class="sp-row"><span>Font</span></div>
         <div class="sp-opts" id="optTimeFont"></div>
         <div class="sp-row"><span>Size</span></div>
@@ -2273,8 +2304,12 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (cfg.font === 'clean' || cfg.font === 'humanist' || cfg.font === 'technical') de.setAttribute('data-font', cfg.font); else de.removeAttribute('data-font');
     var SKINS = ['sage','charcoal','slate','editorial','harbour','atelier','midnight','obsidian','mono','aurora','ember'];
     if (SKINS.indexOf(cfg.skin) >= 0) document.documentElement.setAttribute('data-skin', cfg.skin); else document.documentElement.removeAttribute('data-skin');
-    if (['compact', 'minimal', 'rail', 'hud'].indexOf(cfg.layout) >= 0) document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
-    document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
+    // The looks are designed around the standard layout, so Rail, HUD, Compact and Minimal only apply to Classic.
+    var lay = curLayout();
+    if (lay !== 'centred') document.documentElement.setAttribute('data-layout', lay); else document.documentElement.removeAttribute('data-layout');
+    document.body.setAttribute('data-nowstyle', curLook() ? 'look' : ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
+    if (curLook()) { root.removeProperty('--now-color'); root.removeProperty('--now-font'); }
+    var pr = document.getElementById('panelsRow'); if (pr) pr.hidden = cfg.showCal !== 'on' && cfg.showFiles !== 'on';
     // A chosen look replaces the Classic theme, font and corner settings while it is on (their saved values are untouched).
     var look = curLook();
     if (look) {
@@ -2372,6 +2407,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var LIGHT_SKINS = ['sage', 'slate', 'editorial', 'harbour', 'atelier', 'mono'];
   // Saved choice, or for settings saved before this existed: Tomato followed the Mac, the others were always light or dark.
   var LOOKS = [['studio', 'Studio', 'Calm and neutral'], ['tomato', 'Tomato', 'One bold colour'], ['kitchen', 'Kitchen timer', 'A dial of ticks'], ['garden', 'Garden', 'Soft and green'], ['mono', 'Mono', 'Black and white']];
+  function curLayout() { return !curLook() && ['compact', 'minimal', 'rail', 'hud'].indexOf(cfg.layout) >= 0 ? cfg.layout : 'centred'; }
   function curLook() { return LOOKS.some(function (l) { return l[0] === cfg.look; }) ? cfg.look : ''; }
   function lookMode() {
     if (cfg.mode === 'light' || cfg.mode === 'dark' || cfg.mode === 'auto') return cfg.mode;
@@ -2430,7 +2466,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     note.hidden = both;
     if (!both && other) note.textContent = 'Classic is using the ' + other[1] + ' theme, which has its own fixed colours. Pick a look above to choose light or dark.';
     buildSwitch('optPhotos', 'backdrop', 'photos', 'colour');
-    var adv = $('sxAdvHint'); if (adv) adv.textContent = cur ? 'Layout and photos work with every look. The themes, colours, fonts and corners in here belong to Classic.' : 'All themes, accent, photos, layout, fonts, corners, timer numbers';
+    var adv = $('sxAdvHint'); if (adv) adv.textContent = cur ? 'Your photos, spacing and the size of the task text' : 'All themes, accent, photos, layout, fonts, corners, timer numbers';
   }
   if (window.matchMedia) {
     var sysMq = matchMedia('(prefers-color-scheme: dark)'), onSys = function () { if (lookMode() === 'auto') { applyNow(); if (settingsOpen) buildNowOpts(); } };
@@ -3138,7 +3174,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   // In the pop-up Today window the daily reminders live inside it ("Every day"); Rail and HUD keep the corner button.
   function placeReminders() {
     var pop = $('remPop'), box = $('dailyBox'), pill = $('remPill'); if (!pop || !box || !pill) return;
-    var inPopup = ['rail', 'hud'].indexOf(cfg.layout) < 0;
+    var inPopup = ['rail', 'hud'].indexOf(curLayout()) < 0;
     if (inPopup && pop.parentNode !== box) box.appendChild(pop);
     else if (!inPopup && pop.parentNode === box) pill.parentNode.insertBefore(pop, pill.nextSibling);
     box.hidden = !inPopup || drawerTab !== 'today' || cfg.remPill === 'off';
