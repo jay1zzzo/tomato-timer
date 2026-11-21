@@ -1627,7 +1627,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <div class="sx-row" id="startupRow"><div class="sx-txt"><span>Open when I log in</span><small>Starts with your Mac</small></div><span class="sx-ctl" id="optStartup"></span></div>
         <div class="sx-row" id="floatRow"><div class="sx-txt"><span>Float the timer automatically</span><small>Small timer in the bottom-right corner</small></div><span class="sx-ctl" id="optAutoFloat"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Line of the day</span><small>A short line under the timer</small></div><span class="sx-ctl" id="optLineDay"></span></div>
-        <div class="sx-row"><div class="sx-txt"><span>Every day list</span><small>Things you do daily, at the top of Today. Ticks clear each morning</small></div><span class="sx-ctl" id="optRemPill"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Every day list</span><small>The old reminders: daily ticks at the top of Today. Off unless you switch it on; nothing in it is deleted</small></div><span class="sx-ctl" id="optRemPill"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Clean focus mode</span><small>While you focus, everything but the timer and your task fades away</small></div><span class="sx-ctl" id="optFocusClean"></span></div>
       </div>
       <div class="sx-label">Extra panels</div>
@@ -2089,7 +2089,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'off', remGone: '', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -2109,7 +2109,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'remGone', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2118,6 +2118,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       }
     } catch (e) {}
   }
+  // v75: reminders are switched off once for everyone (tasks with dates replace them). Nothing is deleted;
+  // Settings > General > Every day list brings them back, and that choice then sticks.
+  function retireReminders() { if (cfg.remGone !== '1') { cfg.remGone = '1'; cfg.remPill = 'off'; saveCfg(); } }
   function saveCfg() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); } catch (e) {}
   }
@@ -2661,6 +2664,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
   function initVisionBoard() {
     loadCfg();
+    retireReminders();
     applyTiming();
     buildLayers();
     // Bring back photos you added once the browser storage has answered.
@@ -2693,7 +2697,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'on', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'off', remGone: '', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
