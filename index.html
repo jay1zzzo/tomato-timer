@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <title>Ketchup</title>
 <!-- Ketchup was called Tomato Timer. Keep this line: apps already installed only accept an update if the page contains the words "Tomato Timer". -->
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');if(__l&&['studio','tomato','kitchen','garden','mono'].indexOf(__l.look)>=0){__D.setAttribute('data-look',__l.look);__D.removeAttribute('data-layout');__D.removeAttribute('data-skin');__D.removeAttribute('data-font');__D.removeAttribute('data-style');var __k=__l.mode;if(__k!=='light'&&__k!=='dark')__k='auto';__D.setAttribute('data-theme',(__k==='dark'||(__k==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}else{var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');__D.setAttribute('data-showlearn',__l&&__l.showLearn==='off'?'off':'on');if(__l&&['studio','tomato','kitchen','garden','mono'].indexOf(__l.look)>=0){__D.setAttribute('data-look',__l.look);__D.removeAttribute('data-layout');__D.removeAttribute('data-skin');__D.removeAttribute('data-font');__D.removeAttribute('data-style');var __k=__l.mode;if(__k!=='light'&&__k!=='dark')__k='auto';__D.setAttribute('data-theme',(__k==='dark'||(__k==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}else{var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ketchup">
@@ -1656,6 +1656,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <div class="sx-row"><div class="sx-txt"><span>Content calendar</span><small>Hidden keeps everything, still synced</small></div><span class="sx-ctl" id="optShowCal"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Files</span><small>Hidden keeps everything, still synced</small></div><span class="sx-ctl" id="optShowFiles"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Motivation board</span><small>The quote button at the bottom left</small></div><span class="sx-ctl" id="optShowBoard"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Learning</span><small>The small Learning button at the top left</small></div><span class="sx-ctl" id="optShowLearn"></span></div>
       </div>
       <div class="sx-label"><label for="musicUrl">Focus music link</label></div>
       <div class="sx-card sx-pad">
@@ -1915,7 +1916,6 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 </div>
 <style>
 .learn{position:fixed;left:14px;top:74px;z-index:14;width:230px;font:500 11px/1.35 system-ui,-apple-system,sans-serif;color:inherit}
-.learn-tog{display:none}
 .learn-h{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.5;margin:0 0 5px 1px}
 .learn-links{display:flex;flex-wrap:wrap;gap:5px}
 .learn-links a{font-size:10.5px;font-weight:600;color:inherit;text-decoration:none;padding:4px 9px;border-radius:var(--r999);border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.08);opacity:.62;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .15s,border-color .15s;white-space:nowrap}
@@ -1939,15 +1939,19 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 .learn-inl{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .learn-steps input{margin:2px 0 0;flex:none;accent-color:var(--accent,var(--focus,#ff6b4a))}
 .learn-steps input:checked+span{opacity:.55;text-decoration:line-through}
-@media (max-width:900px){
-  .learn{top:118px;left:12px;width:auto}
-  .learn-tog{display:inline-flex;align-items:center;gap:6px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;color:inherit;padding:6px 10px;border-radius:var(--r999);border:1px solid rgba(128,128,128,.35);background:rgba(255,255,255,.10);opacity:.7;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-  .learn-dot{width:6px;height:6px;border-radius:50%;background:var(--accent,var(--focus,#ff6b4a));display:inline-block}
-  .learn-dot[hidden]{display:none}
-  .learn-body{display:none;position:absolute;top:30px;left:0;width:min(250px,calc(100vw - 24px));padding:10px;border-radius:var(--r12);border:1px solid rgba(128,128,128,.3);background:rgba(18,16,14,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
-  .learn.is-open .learn-body{display:block}
-  .learn-h{display:none}
-}
+/* Learning sits behind one small button (with a dot until today's 25 minutes are done); the full section opens on click. */
+.learn{width:auto}
+.learn-tog{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 system-ui,sans-serif;color:inherit;padding:7px 11px;border-radius:var(--r999);border:1px solid var(--line,rgba(128,128,128,.35));background:var(--surface,rgba(255,255,255,.10));opacity:.8;cursor:pointer}
+.learn-tog:hover,.learn-tog:focus-visible,.learn.is-open .learn-tog{opacity:1}
+.learn-tog:focus-visible{outline:2px solid var(--accent,var(--focus,#ff6b4a));outline-offset:2px}
+.learn-dot{width:6px;height:6px;border-radius:50%;background:var(--accent,var(--focus,#ff6b4a));display:inline-block}
+.learn-dot[hidden]{display:none}
+.learn-body{display:none;position:absolute;top:34px;left:0;width:min(260px,calc(100vw - 24px));padding:12px;border-radius:var(--r12);border:1px solid var(--line,rgba(128,128,128,.3));background:var(--drawer,rgba(18,16,14,.95));color:var(--ink,inherit);box-shadow:0 12px 30px rgba(0,0,0,.28)}
+body.photo-mode .learn-body{background:rgba(18,16,14,.92);color:#f6f2e8;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.learn.is-open .learn-body{display:block}
+.learn-h{display:none}
+html[data-showlearn=off] .learn{display:none!important}
+@media (max-width:900px){ .learn{top:118px;left:12px} }
 </style>
 <script>
 (function () {
@@ -2117,7 +2121,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'off', remGone: '', lookAt: '', lookRev: '', lookDirty: '', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', showLearn: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'off', remGone: '', lookAt: '', lookRev: '', lookDirty: '', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -2137,7 +2141,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'lookAt', 'lookRev', 'lookDirty', 'remGone', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'showLearn', 'mode', 'look', 'lookAt', 'lookRev', 'lookDirty', 'remGone', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2297,6 +2301,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (cfg.showCal !== 'on' && typeof closeCal === 'function') closeCal();
     if (cfg.showFiles !== 'on' && typeof closeFl === 'function') closeFl();
     de.setAttribute('data-showboard', cfg.showBoard === 'off' ? 'off' : 'on');
+    de.setAttribute('data-showlearn', cfg.showLearn === 'off' ? 'off' : 'on');
     // Light / Dark / Match Mac: only the four main themes have both sides; the others keep their own fixed colours.
     if (MAIN_THEMES.indexOf(cfg.skin || 'tomato') >= 0) de.setAttribute('data-theme', lookIsDark() ? 'dark' : 'light'); else de.removeAttribute('data-theme');
     de.setAttribute('data-focusclean', cfg.focusClean === 'off' ? 'off' : 'on');
@@ -2363,6 +2368,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     buildSwitch('optShowCal', 'showCal', 'on', 'off');
     buildSwitch('optShowFiles', 'showFiles', 'on', 'off');
     buildSwitch('optShowBoard', 'showBoard', 'on', 'off');
+    buildSwitch('optShowLearn', 'showLearn', 'on', 'off');
     buildSwitch('optFocusClean', 'focusClean', 'on', 'off');
     buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
