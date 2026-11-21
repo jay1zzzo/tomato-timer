@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -81,6 +81,12 @@
   :root[data-skin=obsidian] body{background:radial-gradient(900px 500px at 50% -10%,#1b2a2866,transparent 65%),var(--bg) fixed}
   :root[data-skin=ember] body{background:radial-gradient(900px 500px at 50% 110%,#3a1f0f66,transparent 65%),var(--bg) fixed}
   :root[data-skin=mono] .btn-primary,:root[data-skin=mono] .sp-opt.is-on{color:#fff}
+  /* Light / Dark / Match Mac (Settings > Appearance) for the four main themes. Tomato already had both; these are the dark sides of Sage, Harbour and Mono. */
+  :root[data-skin=sage][data-theme=dark]{--bg:#181d19;--surface:#212822;--ink:#e6ece6;--muted:#a3b0a4;--line:#323d34;--focus:#86b892;--break:#c9a679;--focus-dim:color-mix(in srgb,#86b892 18%,transparent);--break-dim:color-mix(in srgb,#c9a679 18%,transparent);--seed-off:#36423a;--drawer:#1d231e;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
+  :root[data-skin=harbour][data-theme=dark]{--bg:#141d22;--surface:#1c282e;--ink:#e3eef0;--muted:#9db3b8;--line:#2c3c43;--focus:#5fb6b9;--break:#97bf86;--focus-dim:color-mix(in srgb,#5fb6b9 18%,transparent);--break-dim:color-mix(in srgb,#97bf86 18%,transparent);--seed-off:#31434a;--drawer:#182329;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
+  :root[data-skin=mono][data-theme=dark]{--bg:#111112;--surface:#1b1b1d;--ink:#f2f2f0;--muted:#9c9c99;--line:#2f2f32;--focus:#f2f2f0;--break:#9c9c99;--focus-dim:color-mix(in srgb,#f2f2f0 14%,transparent);--break-dim:color-mix(in srgb,#9c9c99 16%,transparent);--seed-off:#333336;--drawer:#18181a;--shadow:none;--drawer-edge:0 0 40px rgba(0,0,0,0.5);color-scheme:dark}
+  :root[data-skin=mono][data-theme=dark] .btn-primary,:root[data-skin=mono][data-theme=dark] .sp-opt.is-on{color:#0d0d0d}
+  html[data-showboard=off] :is(#motBtn,#board){display:none!important}
   /* Spacing, text size and type style */
   html{--uz:1}
   html[data-density=compact]{--uz:.92}
@@ -981,22 +987,79 @@
   body.photo-mode .cog-btn { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   body.settings-open .cog-btn { opacity: 0; visibility: hidden; pointer-events: none; }
 
+  /* Settings: a centred window with sections down the left (Cmd/Ctrl + comma opens it, Esc closes). */
+  .sx-backdrop { position: fixed; inset: 0; z-index: 44; background: rgba(0,0,0,.45); opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s; }
+  body.settings-open .sx-backdrop { opacity: 1; visibility: visible; }
   .spanel {
-    position: fixed; top: 0; left: 0; bottom: 0; z-index: 45;
-    width: min(420px, 100vw);
+    position: fixed; z-index: 45; left: 50%; top: 50%;
+    width: min(820px, calc(100vw - 32px)); height: min(600px, calc(100vh - 48px));
     background: var(--drawer); color: var(--ink);
-    border-right: 1px solid var(--line);
-    box-shadow: 0 0 40px rgba(0,0,0,0.45);
-    transform: translateX(-102%); transition: transform .28s ease;
-    display: flex; flex-direction: column;
+    border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.45);
+    display: flex; overflow: hidden;
+    opacity: 0; visibility: hidden; transform: translate(-50%, -48%) scale(.98);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
   }
-  body.settings-open .spanel { transform: none; }
+  body.settings-open .spanel { opacity: 1; visibility: visible; transform: translate(-50%, -50%); }
   body.photo-mode .spanel { backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); }
-  .sp-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 10px; }
-  .sp-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
-  .sp-close { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--muted); width: 34px; height: 34px; border-radius: var(--r8); cursor: pointer; font-size: 18px; line-height: 1; }
-  .sp-close:hover { color: var(--ink); border-color: var(--muted); }
-  .sp-body { overflow-y: auto; padding: 4px 18px 28px; flex: 1; }
+  .sx-side { width: 200px; flex: none; background: var(--surface); border-right: 1px solid var(--line); padding: 18px 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .sx-side-h { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 10px 10px; }
+  .sx-nav { appearance: none; display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 500; text-align: left; cursor: pointer; }
+  .sx-nav:hover { color: var(--ink); }
+  .sx-nav.is-on { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
+  .sx-nav:focus-visible, .sx-switch:focus-visible, .sx-theme:focus-visible, .sx-mode:focus-visible, .sx-link:focus-visible, .sx-back:focus-visible, .sp-close:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 2px; }
+  .sx-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sp-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 10px; }
+  .sp-head h2 { margin: 0; font-size: 19px; font-weight: 600; }
+  .sp-close { appearance: none; background: color-mix(in srgb, var(--ink) 7%, transparent); border: 0; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .sp-close:hover { color: var(--ink); }
+  .sp-body { overflow-y: auto; padding: 4px 22px 26px; flex: 1; }
+  .sx-page { display: flex; flex-direction: column; gap: 14px; }
+  .sx-page[hidden] { display: none; }
+  .sx-label { font-size: 12px; font-weight: 600; color: var(--muted); margin: 6px 0 -6px; }
+  .sx-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .sx-card.sx-pad { padding: 14px 16px; }
+  .sx-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+  .sx-card > .sx-row:last-child { border-bottom: 0; }
+  .sx-row.sx-stack { flex-direction: column; align-items: stretch; gap: 2px; }
+  .sx-row.sx-stack .sp-opts { margin: 6px 0 0; }
+  .sx-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .sx-txt > span { font-size: 14px; }
+  .sx-txt small { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+  .sx-switch { appearance: none; flex: none; width: 42px; height: 24px; border-radius: 12px; border: 0; padding: 0; position: relative; cursor: pointer; background: color-mix(in srgb, var(--muted) 45%, transparent); transition: background .15s; }
+  .sx-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .15s; }
+  .sx-switch[aria-checked=true] { background: var(--accent, var(--focus)); }
+  .sx-switch[aria-checked=true]::after { left: 21px; }
+  .sx-num { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .sx-num input { width: 64px; font: inherit; font-size: 14px; text-align: center; color: var(--ink); background: var(--drawer); border: 1px solid var(--line); border-radius: 8px; padding: 6px; font-variant-numeric: tabular-nums; }
+  .sx-themes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .sx-theme { appearance: none; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 12px; background: var(--surface); border: 2px solid var(--line); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+  .sx-theme.is-on { border-color: var(--accent, var(--focus)); }
+  .sx-theme i { display: flex; align-items: flex-end; height: 54px; border-radius: 8px; padding: 8px; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+  .sx-theme i::after { content: ""; width: 34px; height: 10px; border-radius: 5px; background: var(--dot); }
+  .sx-theme b { font-size: 13px; font-weight: 500; }
+  .sx-modes { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; align-self: flex-start; }
+  .sx-mode { appearance: none; height: 32px; padding: 0 14px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .sx-mode.is-on { background: color-mix(in srgb, var(--ink) 11%, transparent); color: var(--ink); font-weight: 600; }
+  .sx-mode:disabled { opacity: .45; cursor: default; }
+  .sx-link { appearance: none; width: 100%; background: transparent; border: 0; border-bottom: 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+  .sx-chev { font-size: 20px; color: var(--muted); }
+  .sx-back { appearance: none; align-self: flex-start; background: transparent; border: 0; padding: 0; font: inherit; font-size: 13.5px; color: var(--accent, var(--focus)); cursor: pointer; }
+  .sx-grp { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; }
+  .sx-grp > summary { cursor: pointer; list-style: none; padding: 13px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .sx-grp > summary::-webkit-details-marker { display: none; }
+  .sx-grp > summary::after { content: "\203A"; font-size: 20px; color: var(--muted); transition: transform .15s; }
+  .sx-grp[open] > summary::after { transform: rotate(90deg); }
+  .sx-grp[open] { padding-bottom: 14px; }
+  .sx-keys { margin: 0; line-height: 1.9; }
+  .sx-keys kbd { font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--drawer); color: var(--ink); }
+  @media (max-width: 640px) {
+    .spanel { flex-direction: column; height: calc(100vh - 32px); }
+    .sx-side { width: auto; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; overflow-x: auto; }
+    .sx-side-h { display: none; }
+    .sx-nav { flex: none; }
+    .sx-themes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   .sp-sec { margin: 18px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent, var(--focus)); }
   .sp-grp > .sp-sec { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
   .sp-grp > .sp-sec::after { content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 4px 0 0; transition: transform .18s ease; opacity: .8; }
@@ -1442,120 +1505,168 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 <button class="cog-btn" id="cogBtn" type="button" aria-label="Open settings" title="Settings">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
 </button>
-<aside class="spanel" id="spanel" aria-label="Settings" aria-hidden="true">
-  <div class="sp-head"><h2>Settings</h2><button class="sp-close" id="spClose" type="button" aria-label="Close settings">&times;</button></div>
-  <div class="sp-body">
-    <div class="sp-sec">Theme</div>
-    <div class="theme-grid" id="themeGrid"></div>
-    <div class="sp-row"><span>Accent</span></div>
-    <div class="sw-row" id="accentRow"></div>
-    <div class="sp-opts"><input id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#hex" aria-label="Accent colour hex" style="width:96px;padding:7px 9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px"><button type="button" class="sp-opt" id="accentReset">Theme default</button></div>
-    <div class="sp-row"><span>Backdrop</span></div>
-    <div class="sp-opts" id="optBackdrop"></div>
-    <div class="sp-row"><span>Layout</span></div>
-    <div class="sp-opts" id="optLayout"></div>
-    <p class="drawer-hint">Rail turns into a bottom tab bar in small windows. HUD works at any size.</p>
-    <div class="sp-row"><span>Focus mode</span></div>
-    <div class="sp-opts" id="optFocusClean"></div>
-    <p class="drawer-hint">Clean hides everything except the timer and your task while you focus.</p>
-    <div class="sp-row"><span>Content calendar</span></div>
-    <div class="sp-opts" id="optShowCal"></div>
-    <div class="sp-row"><span>Files</span></div>
-    <div class="sp-opts" id="optShowFiles"></div>
-    <p class="drawer-hint">Hidden keeps everything in them, still synced. Switch back on any time.</p>
-    <div class="sp-row"><span>Content and Files panels</span></div>
-    <div class="sp-opts" id="optPanels"></div>
-    <div class="sp-row"><span>Corners</span></div>
-    <div class="sp-opts" id="optUiStyle"></div>
-    <div class="sp-row"><span>Spacing</span></div>
-    <div class="sp-opts" id="optDensity"></div>
-    <div class="sp-row"><span>Text size</span></div>
-    <div class="sp-opts" id="optText"></div>
-    <div class="sp-row"><span>Type style</span></div>
-    <div class="sp-opts" id="optFont"></div>
+<div class="sx-backdrop" id="spBackdrop" aria-hidden="true"></div>
+<aside class="spanel" id="spanel" role="dialog" aria-modal="true" aria-label="Settings" aria-hidden="true">
+  <nav class="sx-side" aria-label="Settings sections">
+    <span class="sx-side-h">Settings</span>
+      <button type="button" class="sx-nav" data-sec="general" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>General</button>
+      <button type="button" class="sx-nav" data-sec="timer" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 0.01 0"/></svg>Timer</button>
+      <button type="button" class="sx-nav" data-sec="tasks" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l2 2 3-3M11 7h9M4 12l2 2 3-3M11 13h9M4 18h5M11 18h9"/></svg>Tasks</button>
+      <button type="button" class="sx-nav" data-sec="look" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-.6-1.6-.6-2.4c0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/></svg>Appearance</button>
+      <button type="button" class="sx-nav" data-sec="sync" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>Sync</button>
+      <button type="button" class="sx-nav" data-sec="about" role="tab" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0.01 0M12 11v5M12 8h.01"/></svg>About</button>
+  </nav>
+  <div class="sx-main">
+    <div class="sp-head"><h2 id="spTitle">General</h2><button class="sp-close" id="spClose" type="button" aria-label="Close settings" title="Close (Esc)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sp-body" id="spBody">
 
-    <div class="sp-sec">Photos</div>
-    <div class="sp-actions">
-      <button class="sp-btn" id="phAdd" type="button">+ Add photos</button>
-      <input type="file" id="phFile" accept="image/*" multiple hidden>
-    </div>
-    <div class="sp-row"><span>Slideshow</span></div>
-    <div class="sp-opts" id="optBgPause"></div>
-    <p class="sp-hint">Tick the photos you want in the slideshow. Tick just one to keep it fixed. Tap a photo to preview it.</p>
-    <div class="sp-actions"><button class="sp-btn" id="phAll" type="button">Use all photos</button></div>
-    <ul class="ph-list" id="phList"></ul>
+    <section class="sx-page" data-page="general">
+      <div class="sx-card">
+        <div class="sx-row" id="startupRow"><div class="sx-txt"><span>Open when I log in</span><small>Starts with your Mac</small></div><span class="sx-ctl" id="optStartup"></span></div>
+        <div class="sx-row" id="floatRow"><div class="sx-txt"><span>Float the timer automatically</span><small>Small timer in the bottom-right corner</small></div><span class="sx-ctl" id="optAutoFloat"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Line of the day</span><small>A short line under the timer</small></div><span class="sx-ctl" id="optLineDay"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Reminders button</span><small>Top-right corner; add, tick and delete reminders there</small></div><span class="sx-ctl" id="optRemPill"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Clean focus mode</span><small>While you focus, everything but the timer and your task fades away</small></div><span class="sx-ctl" id="optFocusClean"></span></div>
+      </div>
+      <div class="sx-label">Extra panels</div>
+      <div class="sx-card">
+        <div class="sx-row"><div class="sx-txt"><span>Content calendar</span><small>Hidden keeps everything, still synced</small></div><span class="sx-ctl" id="optShowCal"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Files</span><small>Hidden keeps everything, still synced</small></div><span class="sx-ctl" id="optShowFiles"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Motivation board</span><small>The quote button at the bottom left</small></div><span class="sx-ctl" id="optShowBoard"></span></div>
+      </div>
+      <div class="sx-label"><label for="musicUrl">Focus music link</label></div>
+      <div class="sx-card sx-pad">
+        <input class="sp-input" type="text" id="musicUrl" spellcheck="false" autocomplete="off" placeholder="Paste a Spotify (or any) link">
+        <p class="sp-hint">A button next to Done opens it. Clear it to hide the button.</p>
+      </div>
+    </section>
 
-    <div class="sp-sec">Timing</div>
-    <div class="sp-row"><label for="tmInterval">Time on each photo</label><output id="tmIntervalOut"></output></div>
-    <input type="range" id="tmInterval" min="3" max="60" step="1">
-    <div class="sp-row"><label for="tmFade">Fade between photos</label><output id="tmFadeOut"></output></div>
-    <input type="range" id="tmFade" min="0.3" max="5" step="0.1">
-    <div class="sp-row"><label for="tmDark">Darkness over photos</label><output id="tmDarkOut"></output></div>
-    <input type="range" id="tmDark" min="0" max="100" step="5">
+    <section class="sx-page" data-page="timer" hidden>
+      <div class="sx-card">
+        <div class="sx-row"><label class="sx-txt" for="sxFocus"><span>Focus</span></label><span class="sx-num"><input type="number" id="sxFocus" data-mirror="focusLen" min="1" max="90"> min</span></div>
+        <div class="sx-row"><label class="sx-txt" for="sxShort"><span>Short break</span></label><span class="sx-num"><input type="number" id="sxShort" data-mirror="shortLen" min="1" max="30"> min</span></div>
+        <div class="sx-row"><label class="sx-txt" for="sxLong"><span>Long break</span></label><span class="sx-num"><input type="number" id="sxLong" data-mirror="longLen" min="1" max="60"> min</span></div>
+        <div class="sx-row"><label class="sx-txt" for="sxRounds"><span>Focus sessions before a long break</span></label><span class="sx-num"><input type="number" id="sxRounds" data-mirror="roundsLen" min="1" max="12"></span></div>
+      </div>
+      <div class="sx-card">
+        <div class="sx-row"><div class="sx-txt"><span>Task name on the floating timer</span></div><span class="sx-ctl" id="optPipTask"></span></div>
+        <div class="sx-row sx-stack"><div class="sx-txt"><span>Session lengths on the main screen</span></div><div class="sp-opts" id="optLenStyle"></div></div>
+      </div>
+    </section>
 
-    <div class="sp-sec">Colours</div>
-    <div class="sp-row"><span>Focus colour</span></div>
-    <div class="sw-row" id="swFocus"></div>
-    <div class="sp-row"><span>Break colour</span></div>
-    <div class="sw-row" id="swBreak"></div>
-    <div class="sp-row"><span>Content calendar colour</span></div>
-    <div class="sw-row" id="swCal"></div>
+    <section class="sx-page" data-page="tasks" hidden>
+      <div class="sx-card">
+        <div class="sx-row sx-stack"><div class="sx-txt"><span>Buttons under the task you are focusing on</span></div><div class="sp-opts" id="optBtnStyle"></div></div>
+        <div class="sx-row sx-stack"><div class="sx-txt"><span>Button size</span></div><div class="sp-opts" id="optBtnSize"></div></div>
+      </div>
+      <div class="sx-label">Shortcuts</div>
+      <div class="sx-card sx-pad"><p class="sp-hint sx-keys">Hover a task in the list, then press <kbd>T</kbd> top, <kbd>B</kbd> bottom, <kbd>L</kbd> Later or Today, <kbd>S</kbd> star. <kbd>Cmd</kbd> <kbd>Z</kbd> brings back a deleted task. <kbd>Cmd</kbd> <kbd>,</kbd> opens these settings.</p></div>
+    </section>
 
-    <div class="sp-sec">Task text (when focusing)</div>
-    <div class="sp-row"><span>Look</span></div>
-    <div class="sp-opts" id="optNowStyle"></div>
-    <div class="sp-row"><span>Text colour</span></div>
-    <div class="sw-row" id="swNow"></div>
-    <div class="sp-row"><span>Size</span></div>
-    <div class="sp-opts" id="optNowSize"></div>
-    <div class="sp-row"><span>Font</span></div>
-    <div class="sp-opts" id="optNowFont"></div>
-    <div class="sp-row"><span>Lines shown</span></div>
-    <div class="sp-opts" id="optNowLines"></div>
-    <div class="sp-row" id="floatRow"><span>Float the timer automatically (bottom right)</span></div>
-    <div class="sp-opts" id="optAutoFloat"></div>
-    <div class="sp-row" id="startupRow"><span>Open Tomato Timer when I log in</span></div>
-    <div class="sp-opts" id="optStartup"></div>
-    <div class="sp-row"><span>Line of the day under the timer</span></div>
-    <div class="sp-opts" id="optLineDay"></div>
-    <div class="sp-row"><span>Focus music link (button next to Done; clear it to hide)</span></div>
-    <input class="sp-input" type="text" id="musicUrl" spellcheck="false" autocomplete="off" placeholder="Paste a Spotify (or any) link">
-    <div class="sp-row"><span>Session lengths on the main screen</span></div>
-    <div class="sp-opts" id="optLenStyle"></div>
-    <div class="sp-row"><span>Buttons under the task</span></div>
-    <div class="sp-opts" id="optBtnStyle"></div>
-    <div class="sp-row"><span>Button size</span></div>
-    <div class="sp-opts" id="optBtnSize"></div>
-    <div class="sp-row"><span>Task name on the floating timer</span></div>
-    <div class="sp-opts" id="optPipTask"></div>
+    <section class="sx-page" data-page="look" hidden>
+      <div class="sx-label">Theme</div>
+      <div class="sx-themes" id="sxThemes"></div>
+      <div class="sx-label">Appearance</div>
+      <div class="sx-modes" id="sxModes" role="radiogroup" aria-label="Light or dark"></div>
+      <p class="sp-hint" id="sxModeNote" hidden></p>
+      <div class="sx-card">
+        <div class="sx-row sx-stack"><div class="sx-txt"><span>Text size</span></div><div class="sp-opts" id="optText"></div></div>
+        <button type="button" class="sx-row sx-link" id="sxAdvOpen"><span class="sx-txt"><span>Advanced appearance</span><small>More themes, accent, photos, fonts, corners, spacing, timer numbers</small></span><span class="sx-chev" aria-hidden="true">&rsaquo;</span></button>
+      </div>
+    </section>
 
-    <div class="sp-sec">Reminders</div>
-    <div class="sp-row"><span>Corner button</span></div>
-    <div class="sp-opts" id="optRemPill"></div>
-    <p class="sp-hint">Add, tick and delete them from the button in the top-right corner.</p>
+    <section class="sx-page" data-page="advanced" hidden>
+      <button type="button" class="sx-back" id="sxAdvBack">&lsaquo; Appearance</button>
+      <details class="sx-grp" open><summary>Theme and colours</summary>
+        <div class="sp-row"><span>All themes</span></div>
+        <div class="theme-grid" id="themeGrid"></div>
+        <div class="sp-row"><span>Accent</span></div>
+        <div class="sw-row" id="accentRow"></div>
+        <div class="sp-opts"><input id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#hex" aria-label="Accent colour hex" style="width:96px;padding:7px 9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px"><button type="button" class="sp-opt" id="accentReset">Theme default</button></div>
+        <div class="sp-row"><span>Focus colour</span></div>
+        <div class="sw-row" id="swFocus"></div>
+        <div class="sp-row"><span>Break colour</span></div>
+        <div class="sw-row" id="swBreak"></div>
+        <div class="sp-row"><span>Content calendar colour</span></div>
+        <div class="sw-row" id="swCal"></div>
+      </details>
+      <details class="sx-grp"><summary>Layout and style</summary>
+        <div class="sp-row"><span>Layout</span></div>
+        <div class="sp-opts" id="optLayout"></div>
+        <p class="sp-hint">Rail turns into a bottom tab bar in small windows. HUD works at any size.</p>
+        <div class="sp-row"><span>Corners</span></div>
+        <div class="sp-opts" id="optUiStyle"></div>
+        <div class="sp-row"><span>Spacing</span></div>
+        <div class="sp-opts" id="optDensity"></div>
+        <div class="sp-row"><span>Type style</span></div>
+        <div class="sp-opts" id="optFont"></div>
+        <div class="sp-row"><span>Content and Files panels</span></div>
+        <div class="sp-opts" id="optPanels"></div>
+      </details>
+      <details class="sx-grp"><summary>Backdrop and photos</summary>
+        <div class="sp-row"><span>Backdrop</span></div>
+        <div class="sp-opts" id="optBackdrop"></div>
+        <div class="sp-actions">
+          <button class="sp-btn" id="phAdd" type="button">+ Add photos</button>
+          <input type="file" id="phFile" accept="image/*" multiple hidden>
+        </div>
+        <div class="sp-row"><span>Slideshow</span></div>
+        <div class="sp-opts" id="optBgPause"></div>
+        <p class="sp-hint">Tick the photos you want in the slideshow. Tick just one to keep it fixed. Tap a photo to preview it.</p>
+        <div class="sp-actions"><button class="sp-btn" id="phAll" type="button">Use all photos</button></div>
+        <ul class="ph-list" id="phList"></ul>
+        <div class="sp-row"><label for="tmInterval">Time on each photo</label><output id="tmIntervalOut"></output></div>
+        <input type="range" id="tmInterval" min="3" max="60" step="1">
+        <div class="sp-row"><label for="tmFade">Fade between photos</label><output id="tmFadeOut"></output></div>
+        <input type="range" id="tmFade" min="0.3" max="5" step="0.1">
+        <div class="sp-row"><label for="tmDark">Darkness over photos</label><output id="tmDarkOut"></output></div>
+        <input type="range" id="tmDark" min="0" max="100" step="5">
+      </details>
+      <details class="sx-grp"><summary>Task text while focusing</summary>
+        <div class="sp-row"><span>Look</span></div>
+        <div class="sp-opts" id="optNowStyle"></div>
+        <div class="sp-row"><span>Text colour</span></div>
+        <div class="sw-row" id="swNow"></div>
+        <div class="sp-row"><span>Size</span></div>
+        <div class="sp-opts" id="optNowSize"></div>
+        <div class="sp-row"><span>Font</span></div>
+        <div class="sp-opts" id="optNowFont"></div>
+        <div class="sp-row"><span>Lines shown</span></div>
+        <div class="sp-opts" id="optNowLines"></div>
+      </details>
+      <details class="sx-grp"><summary>Timer numbers</summary>
+        <div class="sp-row"><span>Font</span></div>
+        <div class="sp-opts" id="optTimeFont"></div>
+        <div class="sp-row"><span>Size</span></div>
+        <div class="sp-opts" id="optTimeSize"></div>
+        <div class="sp-row"><span>Weight</span></div>
+        <div class="sp-opts" id="optTimeWeight"></div>
+      </details>
+    </section>
 
-    <div class="sp-sec">Timer numbers</div>
-    <div class="sp-row"><span>Font</span></div>
-    <div class="sp-opts" id="optTimeFont"></div>
-    <div class="sp-row"><span>Size</span></div>
-    <div class="sp-opts" id="optTimeSize"></div>
-    <div class="sp-row"><span>Weight</span></div>
-    <div class="sp-opts" id="optTimeWeight"></div>
+    <section class="sx-page" data-page="sync" hidden>
+      <div class="sx-card sx-pad">
+        <p class="sp-hint" style="margin-top:0">Keep your tasks, calendar, board and files the same on every computer and your iPhone, using a private GitHub repo. Make the repo <b>Private</b>, then paste a GitHub token that can read and write only that repo.</p>
+        <div class="sp-row"><label for="syncRepo">Repo</label></div>
+        <input class="sp-input" type="text" id="syncRepo" spellcheck="false" autocomplete="off" placeholder="jay1zzzo/tomato-data">
+        <div class="sp-row"><label for="syncToken">GitHub token</label></div>
+        <input class="sp-input" type="password" id="syncToken" autocomplete="off" placeholder="Paste your GitHub token">
+        <div class="sp-actions">
+          <button class="sp-btn" id="syncConnect" type="button">Connect &amp; sync</button>
+          <button class="sp-btn ghost" id="syncNow" type="button">Sync now</button>
+          <button class="sp-btn ghost" id="syncOff" type="button">Disconnect</button>
+        </div>
+        <p class="sp-hint sync-status" id="syncStatus" role="status"></p>
+      </div>
+    </section>
 
-    <div class="sp-sec">Sync tasks</div>
-    <p class="sp-hint">Keep your task list the same on every computer using a private GitHub repo. Make the repo <b>Private</b>, then paste a GitHub token that can read and write only that repo.</p>
-    <div class="sp-row"><label for="syncRepo">Repo</label></div>
-    <input class="sp-input" type="text" id="syncRepo" spellcheck="false" autocomplete="off" placeholder="jay1zzzo/tomato-data">
-    <div class="sp-row"><label for="syncToken">GitHub token</label></div>
-    <input class="sp-input" type="password" id="syncToken" autocomplete="off" placeholder="Paste your GitHub token">
-    <div class="sp-actions">
-      <button class="sp-btn" id="syncConnect" type="button">Connect &amp; sync</button>
-      <button class="sp-btn ghost" id="syncNow" type="button">Sync now</button>
-      <button class="sp-btn ghost" id="syncOff" type="button">Disconnect</button>
-    </div>
-    <p class="sp-hint sync-status" id="syncStatus" role="status"></p>
-
-    <div class="sp-sec">What&rsquo;s in here</div>
+    <section class="sx-page" data-page="about" hidden>
+      <div class="sx-card sx-pad">
+        <div class="sp-row" style="margin-top:0"><span id="abVer">Version</span></div>
+        <div class="sp-actions"><button class="sp-btn ghost" id="abCheck" type="button">Check for updates</button><button class="sp-btn" id="abGo" type="button" hidden>Update now</button></div>
+        <p class="sp-hint" id="abStatus" role="status"></p>
+      </div>
+      <div class="sx-card sx-pad">
     <details class="sp-feat">
       <summary>See everything built so far</summary>
       <ul class="sp-featlist">
@@ -1574,20 +1685,19 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <li><b>Files:</b> keep documents inside the app</li>
         <li><b>Motivation board:</b> words and pictures on a wall, dragged anywhere</li>
         <li><b>Photo slideshow:</b> backgrounds with timing, fade and darkness controls</li>
-        <li><b>Looks:</b> colours, fonts, sizes and button styles</li>
+        <li><b>Settings window:</b> Cmd + comma opens it; General, Timer, Tasks, Appearance, Sync and About</li>
+        <li><b>Looks:</b> four themes with Light, Dark or Match Mac; more themes, colours, fonts, sizes and button styles under Advanced appearance</li>
         <li><b>Sync:</b> tasks, calendar, board and files stay the same on every computer via a private GitHub repo</li>
         <li><b>Phone page:</b> quick add for today&rsquo;s tasks from your iPhone</li>
         <li><b>Updates:</b> checks for a new version when it opens, one click to update</li>
       </ul>
     </details>
+      </div>
+      <div class="sx-label">Reset</div>
+      <div class="sx-card sx-pad"><div class="sp-actions" style="margin-top:0"><button class="sp-btn ghost" id="spReset" type="button">Reset everything to default</button></div></div>
+    </section>
 
-    <div class="sp-sec">About</div>
-    <div class="sp-row"><span id="abVer">Version</span></div>
-    <div class="sp-actions"><button class="sp-btn ghost" id="abCheck" type="button">Check for updates</button><button class="sp-btn" id="abGo" type="button" hidden>Update now</button></div>
-    <p class="sp-hint" id="abStatus" role="status"></p>
-
-    <div class="sp-sec">Reset</div>
-    <div class="sp-actions"><button class="sp-btn ghost" id="spReset" type="button">Reset everything to default</button></div>
+    </div>
   </div>
 </aside>
 
@@ -1877,7 +1987,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1897,7 +2007,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2052,6 +2162,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     de.setAttribute('data-showfiles', cfg.showFiles === 'on' ? 'on' : 'off');
     if (cfg.showCal !== 'on' && typeof closeCal === 'function') closeCal();
     if (cfg.showFiles !== 'on' && typeof closeFl === 'function') closeFl();
+    de.setAttribute('data-showboard', cfg.showBoard === 'off' ? 'off' : 'on');
+    // Light / Dark / Match Mac: only the four main themes have both sides; the others keep their own fixed colours.
+    if (MAIN_THEMES.indexOf(cfg.skin || 'tomato') >= 0) de.setAttribute('data-theme', lookIsDark() ? 'dark' : 'light'); else de.removeAttribute('data-theme');
     de.setAttribute('data-focusclean', cfg.focusClean === 'off' ? 'off' : 'on');
     if (cfg.density === 'compact') de.setAttribute('data-density', 'compact'); else de.removeAttribute('data-density');
     if (cfg.text === 'large') de.setAttribute('data-text', 'large'); else de.removeAttribute('data-text');
@@ -2074,6 +2187,20 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       g.appendChild(b);
     });
   }
+  function setOpt(key, val) { cfg[key] = val; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); if (key === 'bgPause') applyBgPause(); if (key === 'backdrop') updatePhotoMode(); }
+  // An on/off setting drawn as a switch. It saves the same values as before ('on'/'off'), so old settings keep working.
+  function buildSwitch(id, key, onVal, offVal, label) {
+    var box = document.getElementById(id); if (!box) return;
+    var on = (cfg[key] || offVal) === onVal;
+    box.innerHTML = '';
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'sx-switch'; b.setAttribute('role', 'switch');
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    var row = box.closest('.sx-row'), t = row && row.querySelector('.sx-txt > span');
+    b.setAttribute('aria-label', label || (t ? t.textContent : key));
+    b.addEventListener('click', function () { setOpt(key, on ? offVal : onVal); var again = document.querySelector('#' + id + ' .sx-switch'); if (again) again.focus(); });
+    box.appendChild(b);
+  }
   function buildOpts(rowId, key, opts) {
     var row = document.getElementById(rowId);
     row.innerHTML = '';
@@ -2081,16 +2208,17 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'sp-opt' + (cfg[key] === o[0] ? ' is-on' : ''); b.textContent = o[1];
       b.setAttribute('aria-pressed', cfg[key] === o[0] ? 'true' : 'false');
-      b.addEventListener('click', function () { cfg[key] = o[0]; saveCfg(); applyNow(); buildNowOpts(); if (key === 'pipTask') syncPip(); if (key === 'remPill') renderReminders(); if (key === 'bgPause') applyBgPause(); if (key === 'backdrop') updatePhotoMode(); });
+      b.addEventListener('click', function () { setOpt(key, o[0]); });
       row.appendChild(b);
     });
   }
   function buildNowOpts() {
     buildThemes();
     buildOpts('optPanels', 'panels', [['drawer', 'Drawer'], ['workspace', 'Workspace']]);
-    buildOpts('optShowCal', 'showCal', [['off', 'Hidden'], ['on', 'Shown']]);
-    buildOpts('optShowFiles', 'showFiles', [['off', 'Hidden'], ['on', 'Shown']]);
-    buildOpts('optFocusClean', 'focusClean', [['on', 'Clean'], ['off', 'Normal']]);
+    buildSwitch('optShowCal', 'showCal', 'on', 'off');
+    buildSwitch('optShowFiles', 'showFiles', 'on', 'off');
+    buildSwitch('optShowBoard', 'showBoard', 'on', 'off');
+    buildSwitch('optFocusClean', 'focusClean', 'on', 'off');
     buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
     buildOpts('optText', 'text', [['standard', 'Standard'], ['large', 'Larger']]);
@@ -2103,8 +2231,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     buildOpts('optNowFont', 'nowFont', [['default', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['mono', 'Mono'], ['condensed', 'Bold condensed']]);
     buildOpts('optNowLines', 'nowLines', [['3', '3'], ['5', '5'], ['8', '8'], ['all', 'All']]);
     buildOpts('optBgPause', 'bgPause', [['off', 'Playing'], ['on', 'Paused']]);
-    buildOpts('optAutoFloat', 'autoFloat', [['on', 'On'], ['off', 'Off']]);
-    buildOpts('optStartup', 'startup', [['on', 'On'], ['off', 'Off']]);
+    buildSwitch('optAutoFloat', 'autoFloat', 'on', 'off');
+    buildSwitch('optStartup', 'startup', 'on', 'off');
     var mi = document.getElementById('musicUrl');
     if (mi && document.activeElement !== mi) mi.value = cfg.musicUrl || '';
     if (mi && !mi._bound) {
@@ -2116,12 +2244,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         saveCfg(); renderNow();
       });
     }
-    buildOpts('optLineDay', 'lineDay', [['on', 'Show'], ['off', 'Hide']]);
+    buildSwitch('optLineDay', 'lineDay', 'on', 'off');
     buildOpts('optLenStyle', 'lenStyle', [['line', 'In the line'], ['pill', 'Pill with times']]);
     buildOpts('optBtnStyle', 'btnStyle', [['quiet', 'Quiet'], ['outline', 'Outlined'], ['bold', 'Bold']]);
     buildOpts('optBtnSize', 'btnSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]);
-    buildOpts('optPipTask', 'pipTask', [['on', 'Show'], ['off', 'Hide']]);
-    buildOpts('optRemPill', 'remPill', [['on', 'Show'], ['off', 'Hide']]);
+    buildSwitch('optPipTask', 'pipTask', 'on', 'off');
+    buildSwitch('optRemPill', 'remPill', 'on', 'off');
+    buildLook();
     buildOpts('optTimeFont', 'timeFont', [['mono', 'Mono'], ['sans', 'Standard'], ['rounded', 'Rounded'], ['serif', 'Serif'], ['condensed', 'Bold condensed']]);
     buildOpts('optTimeSize', 'timeSize', [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]);
     buildOpts('optTimeWeight', 'timeWeight', [['l', 'Light'], ['r', 'Regular'], ['b', 'Bold']]);
@@ -2130,18 +2259,103 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   // --- settings panel ---
   function $(id) { return document.getElementById(id); }
 
+  var MAIN_THEMES = ['tomato', 'sage', 'harbour', 'mono'];
+  var LIGHT_SKINS = ['sage', 'slate', 'editorial', 'harbour', 'atelier', 'mono'];
+  // Saved choice, or for settings saved before this existed: Tomato followed the Mac, the others were always light or dark.
+  function lookMode() {
+    if (cfg.mode === 'light' || cfg.mode === 'dark' || cfg.mode === 'auto') return cfg.mode;
+    var sk = cfg.skin || 'tomato';
+    return sk === 'tomato' ? 'auto' : LIGHT_SKINS.indexOf(sk) >= 0 ? 'light' : 'dark';
+  }
+  function systemDark() { return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+  function lookIsDark() { var m = lookMode(); return m === 'dark' || (m === 'auto' && systemDark()); }
+  var LOOK_PREVIEW = { tomato: [['#eef0ea', '#c8432b'], ['#16130f', '#ff7a57']], sage: [['#e4e9e1', '#536f59'], ['#181d19', '#86b892']], harbour: [['#dfeaea', '#326e72'], ['#141d22', '#5fb6b9']], mono: [['#f3f3f1', '#0d0d0d'], ['#111112', '#f2f2f0']] };
+  function buildLook() {
+    var g = $('sxThemes'); if (!g) return;
+    var dark = lookIsDark(), cur = cfg.skin || 'tomato';
+    g.innerHTML = '';
+    MAIN_THEMES.forEach(function (id) {
+      var t = THEMES.filter(function (x) { return x[0] === id; })[0];
+      var b = document.createElement('button'); b.type = 'button';
+      b.className = 'sx-theme' + (cur === id ? ' is-on' : '');
+      b.setAttribute('aria-pressed', cur === id ? 'true' : 'false');
+      var pv = LOOK_PREVIEW[id][dark ? 1 : 0];
+      b.innerHTML = '<i style="background:' + pv[0] + ';--dot:' + pv[1] + '"></i><b>' + (id === 'tomato' ? 'Tomato' : t[1].split(' ')[0]) + '</b>';
+      b.addEventListener('click', function () {
+        if (!cfg.mode) cfg.mode = lookMode();   // keep the current light/dark choice when switching theme
+        cfg.skin = t[0]; cfg.uiStyle = t[4]; cfg.font = t[5] || 'plex'; cfg.backdrop = t[0] === 'tomato' ? 'photos' : 'colour';
+        saveCfg(); applyNow(); updatePhotoMode(); buildNowOpts();
+      });
+      g.appendChild(b);
+    });
+    var m = $('sxModes'), main = MAIN_THEMES.indexOf(cur) >= 0, mode = lookMode();
+    m.innerHTML = '';
+    [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Match Mac']].forEach(function (o) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sx-mode' + (main && mode === o[0] ? ' is-on' : '');
+      b.textContent = o[1]; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', main && mode === o[0] ? 'true' : 'false');
+      b.disabled = !main;
+      b.addEventListener('click', function () { cfg.mode = o[0]; saveCfg(); applyNow(); buildNowOpts(); });
+      m.appendChild(b);
+    });
+    var note = $('sxModeNote'), other = THEMES.filter(function (x) { return x[0] === cur; })[0];
+    note.hidden = main;
+    if (!main && other) note.textContent = 'You are using ' + other[1] + ' (from All themes in Advanced appearance), which has its own fixed colours. Pick one of the four above to choose light or dark.';
+  }
+  if (window.matchMedia) {
+    var sysMq = matchMedia('(prefers-color-scheme: dark)'), onSys = function () { if (lookMode() === 'auto') { applyNow(); if (settingsOpen) buildNowOpts(); } };
+    if (sysMq.addEventListener) sysMq.addEventListener('change', onSys); else if (sysMq.addListener) sysMq.addListener(onSys);
+  }
+
+  var SX_SEC_KEY = 'tomato-timer-lab-settings-sec', SX_TITLES = { general: 'General', timer: 'Timer', tasks: 'Tasks', look: 'Appearance', advanced: 'Advanced appearance', sync: 'Sync', about: 'About' };
+  function showSection(sec) {
+    if (!SX_TITLES[sec]) sec = 'general';
+    Array.prototype.forEach.call(document.querySelectorAll('#spanel .sx-page'), function (p) { p.hidden = p.getAttribute('data-page') !== sec; });
+    var navSec = sec === 'advanced' ? 'look' : sec;
+    Array.prototype.forEach.call(document.querySelectorAll('#spanel .sx-nav'), function (b) {
+      var on = b.getAttribute('data-sec') === navSec; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    $('spTitle').textContent = SX_TITLES[sec];
+    $('spBody').scrollTop = 0;
+    if (sec === 'timer') Array.prototype.forEach.call(document.querySelectorAll('#spanel [data-mirror]'), function (i) { i.value = $(i.getAttribute('data-mirror')).value; });
+    try { localStorage.setItem(SX_SEC_KEY, sec); } catch (e) {}
+  }
+  function initSettingsWindow() {
+    Array.prototype.forEach.call(document.querySelectorAll('#spanel .sx-nav'), function (b) { b.addEventListener('click', function () { showSection(b.getAttribute('data-sec')); }); });
+    $('sxAdvOpen').addEventListener('click', function () { showSection('advanced'); $('sxAdvBack').focus(); });
+    $('sxAdvBack').addEventListener('click', function () { showSection('look'); $('sxAdvOpen').focus(); });
+    $('spBackdrop').addEventListener('click', closeSettings);
+    // The Timer section edits the same session lengths as the main screen, through its own inputs.
+    Array.prototype.forEach.call(document.querySelectorAll('#spanel [data-mirror]'), function (i) {
+      i.addEventListener('change', function () { var o = $(i.getAttribute('data-mirror')); o.value = i.value; o.dispatchEvent(new Event('change')); i.value = o.value; });
+    });
+    // Cmd + comma (Ctrl + comma on Windows) opens settings, like other Mac apps.
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && (e.key === ',' || e.code === 'Comma')) { e.preventDefault(); if (settingsOpen) closeSettings(); else openSettings(); }
+    });
+    var last = 'general'; try { last = localStorage.getItem(SX_SEC_KEY) || 'general'; } catch (e) {}
+    showSection(last === 'advanced' ? 'look' : last);
+  }
+  var spReturnFocus = null;
   function openSettings() {
     closeCal(); closeFl();
     settingsOpen = true;
+    spReturnFocus = document.activeElement;
     document.body.classList.add('settings-open');
     $('spanel').setAttribute('aria-hidden', 'false');
+    $('spBackdrop').setAttribute('aria-hidden', 'false');
+    buildNowOpts();
+    var cur = document.querySelector('#spanel .sx-page:not([hidden])');
+    if (cur && cur.getAttribute('data-page') === 'timer') showSection('timer');
     updatePhotoMode();
+    setTimeout(function () { var n = document.querySelector('#spanel .sx-nav.is-on'); if (n) n.focus(); }, 60);
   }
   function closeSettings() {
     settingsOpen = false;
     document.body.classList.remove('settings-open');
     $('spanel').setAttribute('aria-hidden', 'true');
+    $('spBackdrop').setAttribute('aria-hidden', 'true');
     updatePhotoMode();
+    if (spReturnFocus && spReturnFocus.focus && document.contains(spReturnFocus)) spReturnFocus.focus();
   }
 
   function renderPhotos() {
@@ -2336,6 +2550,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
 
     $('cogBtn').addEventListener('click', openSettings);
     $('spClose').addEventListener('click', closeSettings);
+    initSettingsWindow();
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && settingsOpen) closeSettings(); });
     $('phAdd').addEventListener('click', function () { $('phFile').click(); });
     $('phAll').addEventListener('click', function () { cfg.images.forEach(function (x) { x.on = true; }); saveCfg(); buildLayers(); renderPhotos(); startBgRotationIfOn(); });
