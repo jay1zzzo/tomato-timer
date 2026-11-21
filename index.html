@@ -666,6 +666,16 @@
   .now-edit:hover, .now-edit:focus-visible { opacity: 1; color: var(--ink); border-color: var(--line); }
   .now-edit svg { width: 16px; height: 16px; }
   .now-title { cursor: text; }
+  /* The task you are working on grows a touch when you point at it. */
+  .now-title { transition: transform .25s ease; transform-origin: center; }
+  .now.has-task:hover .now-title { transform: scale(1.04); }
+  body[data-nowstyle="banner"] .now-title { transform-origin: left center; }
+  /* While a focus session is running, everything except the task and the time steps back.
+     Point at anything and it comes back to full strength. */
+  html[data-timer=focus] body.focusing.timer-running :is(.mode-row,.controls,.seeds,.now-eyebrow,.now-actions,.now-edit,.drawer-handle,.pip-btn,.cog-btn,.learn,.launch,.lod,details.settings,.cal-handle,.fl-handle,.board-credit,.dial svg,.label){opacity:.32;transition:opacity .6s ease}
+  html[data-timer=focus] body.focusing.timer-running :is(.mode-row,.controls,.seeds,.now-actions,.now-edit,.drawer-handle,.pip-btn,.cog-btn,.learn,.launch,.lod,details.settings,.cal-handle,.fl-handle):is(:hover,:focus-within){opacity:1;transition-duration:.2s}
+  html[data-timer=focus] body.focusing.timer-running .now.has-task:hover :is(.now-eyebrow,.now-actions,.now-edit){opacity:1;transition-duration:.2s}
+  @media (prefers-reduced-motion: reduce) { .now-title { transition: none; } .now.has-task:hover .now-title { transform: none; } }
   .now-editinput {
     width: 100%; display: block; resize: none; overflow: hidden; text-align: center;
     font-family: var(--now-font, inherit); font-size: var(--now-size, 26px); font-weight: 700; line-height: 1.25;
