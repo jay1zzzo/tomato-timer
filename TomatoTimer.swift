@@ -576,19 +576,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     var lastAsked = ""        // the update the restart question was last shown for (main thread only)
     var builtNative = 0       // native version already rebuilt while this copy is running (update queue only)
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 11
+    let nativeVersion = 12
 
     // Asks once per new update: saying "Later" is remembered until something newer arrives.
+    // Never pulls you over from another app or desktop: if Ketchup isn't the app you're using, its Dock icon
+    // bounces once and the question waits until you next click into Ketchup. Then it shows on Ketchup's own window.
+    var pendingRestart: String?
+    var restartSheetShowing = false
     func askRestart(_ key: String) {
         if key == lastAsked { return }
         lastAsked = key
+        pendingRestart = key
+        if NSApp.isActive { showRestartQuestion() } else { NSApp.requestUserAttention(.informationalRequest) }
+    }
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if pendingRestart != nil { showRestartQuestion() }
+    }
+    func showRestartQuestion() {
+        guard pendingRestart != nil, !restartSheetShowing, let w = window else { return }
+        pendingRestart = nil
+        restartSheetShowing = true
         let alert = NSAlert()
         alert.messageText = "Update ready"
         alert.informativeText = "A new version of Ketchup has been downloaded. Restart now to start using it? (A running timer will reset.)"
         alert.addButton(withTitle: "Restart now")
         alert.addButton(withTitle: "Later")
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertFirstButtonReturn {
+        alert.beginSheetModal(for: w) { [weak self] response in
+            self?.restartSheetShowing = false
+            guard response == .alertFirstButtonReturn else { return }
             let path = Bundle.main.bundlePath
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/bin/sh")
