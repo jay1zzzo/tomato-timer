@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');__D.setAttribute('data-showboard',__l&&__l.showBoard==='off'?'off':'on');if(__l&&['studio','tomato','kitchen','garden','mono'].indexOf(__l.look)>=0){__D.setAttribute('data-look',__l.look);__D.removeAttribute('data-skin');__D.removeAttribute('data-font');__D.removeAttribute('data-style');var __k=__l.mode;if(__k!=='light'&&__k!=='dark')__k='auto';__D.setAttribute('data-theme',(__k==='dark'||(__k==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}else{var __s=(__l&&__l.skin)||'tomato',__m=__l&&__l.mode;if(['tomato','sage','harbour','mono'].indexOf(__s)>=0){if(__m!=='light'&&__m!=='dark'&&__m!=='auto')__m=__s==='tomato'?'auto':'light';__D.setAttribute('data-theme',(__m==='dark'||(__m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'dark':'light');}}}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -987,12 +987,102 @@
   body.photo-mode .cog-btn { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   body.settings-open .cog-btn { opacity: 0; visibility: hidden; pointer-events: none; }
 
+
+  /* ================= Looks (Settings > Appearance) =================
+     Five complete appearances. Each sets colours for light and dark, the timer's shape and the type.
+     data-look is only set when one is chosen; without it the app looks exactly as before ("Classic"). */
+  html[data-look] :is(.mode-btn,.label,.btn-primary,.drawer-handle,.cal-handle,.task-focus,.up-head,.pip-btn,.dtab,.sx-nav){text-transform:none;letter-spacing:0}
+  html[data-look] .task-add button[type=submit]{text-transform:none;letter-spacing:0;font-size:13px}
+  html[data-look] details.settings summary{text-transform:none;letter-spacing:0;font-size:13px}
+  html[data-look] .board-credit{display:none}
+  html[data-look] .label{font-size:13.5px;font-weight:500;margin-top:12px}
+  html[data-look] .mode-btn{font-size:13.5px;font-weight:500;padding:8px 16px}
+  html[data-look] .btn-primary{font-size:15px;font-weight:600;padding:13px 40px}
+  html[data-look] .pip-btn{font-size:13px}
+  html[data-look] body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}
+  html[data-look] .time{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+
+  /* Studio: calm neutral, thin ring, light numerals */
+  html[data-look=studio]{--bg:#f2f3f5;--surface:#ffffff;--ink:#1d2025;--muted:#656b75;--line:#dde0e5;--focus:#e04e34;--break:#23805c;--focus-dim:#e04e341f;--break-dim:#23805c1f;--seed-off:#d3d7dd;--drawer:#ffffff;--shadow:0 1px 2px rgba(20,24,30,.08);--drawer-edge:0 30px 80px rgba(20,24,30,.22);--on-accent:#fff;--pip-focus:#e04e34;--pip-break:#23805c;color-scheme:light}
+  html[data-look=studio][data-theme=dark]{--bg:#17191c;--surface:#1f2226;--ink:#eceef1;--muted:#9aa1ab;--line:#2c3036;--focus:#ff6a4d;--break:#6fcf8f;--focus-dim:#ff6a4d26;--break-dim:#6fcf8f26;--seed-off:#353a41;--drawer:#1a1d21;--shadow:none;--drawer-edge:0 30px 80px rgba(0,0,0,.55);--on-accent:#1b0f0b;--pip-focus:#ff6a4d;--pip-break:#6fcf8f;color-scheme:dark}
+  html[data-look=studio] .time{font-size:78px;font-weight:300;letter-spacing:-.035em}
+  html[data-look=studio] :is(.dial-track,.dial-progress){stroke-width:1.4}
+  html[data-look=studio] .btn-primary{border-radius:999px}
+  html[data-look=studio] .mode-row{background:transparent;border-color:transparent;gap:2px}
+  html[data-look=studio] .mode-btn[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+
+  /* Tomato: the whole window is the colour of the session. No ring; heavy rounded numerals over a bar. */
+  html[data-look=tomato]{--bg:#d8432d;--surface:rgba(255,255,255,.16);--ink:#ffffff;--muted:rgba(255,255,255,.82);--line:rgba(255,255,255,.3);--focus:#ffffff;--break:#ffffff;--focus-dim:rgba(255,255,255,.18);--break-dim:rgba(255,255,255,.18);--seed-off:rgba(255,255,255,.3);--drawer:#fff8f5;--shadow:none;--drawer-edge:0 30px 80px rgba(60,10,0,.4);--on-accent:#b9321f;--pip-focus:#e8503a;--pip-break:#3fa173;color-scheme:light}
+  html[data-look=tomato][data-timer=break]{--bg:#2c7d58;--on-accent:#1f6746}
+  html[data-look=tomato][data-theme=dark]{--bg:#2b1410;--surface:rgba(255,220,210,.08);--ink:#ffe9e3;--muted:#d9a99d;--line:rgba(255,200,185,.2);--focus:#ff6a4d;--break:#6fcf8f;--focus-dim:#ff6a4d26;--break-dim:#6fcf8f26;--seed-off:rgba(255,200,185,.22);--drawer:#221110;--drawer-edge:0 30px 80px rgba(0,0,0,.6);--on-accent:#2b1410;--pip-focus:#ff6a4d;--pip-break:#6fcf8f;color-scheme:dark}
+  html[data-look=tomato][data-theme=dark][data-timer=break]{--bg:#10231a}
+  html[data-look=tomato]{transition:background-color .6s ease}
+  html[data-look=tomato] .dial svg{display:none}
+  html[data-look=tomato] .dial{width:min(420px,88vw);height:auto;flex-direction:column;gap:22px;padding:8px 0}
+  html[data-look=tomato] .dial::after{content:"";display:block;width:100%;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--ink) var(--pct,0%),var(--line) var(--pct,0%))}
+  html[data-look=tomato] .time{font-family:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Nunito",system-ui,sans-serif;font-size:min(27vw,128px);font-weight:800;letter-spacing:-.03em}
+  html[data-look=tomato] .btn-primary{border-radius:14px;font-weight:800;font-size:17px;padding:15px 52px;box-shadow:0 5px 0 rgba(0,0,0,.18)}
+  html[data-look=tomato] .btn-primary:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  html[data-look=tomato] .mode-btn[aria-pressed="true"]{background:rgba(255,255,255,.22);color:var(--ink);box-shadow:none}
+  html[data-look=tomato] .mode-row{border-color:transparent}
+  /* Panels on the red field are plain paper, so lists stay easy to read. */
+  html[data-look=tomato]:not([data-theme=dark]) :is(.drawer,.spanel,.cal,.fl,.rem-pop,.board,.cal-view){--ink:#3a1712;--muted:#8a574c;--surface:#fbeae4;--line:#f0cfc5;--focus:#d8432d;--break:#2c7d58;--accent:#d8432d;--on-accent:#fff;--focus-dim:#d8432d1f;--break-dim:#2c7d581f;--seed-off:#eac6bb;color:var(--ink)}
+  html[data-look=tomato]:not([data-theme=dark])[data-timer=break] :is(.drawer,.spanel,.cal,.fl,.rem-pop,.board,.cal-view){--accent:#2c7d58}
+
+  /* Kitchen timer: a dial of sixty ticks, signal red, condensed numerals */
+  html[data-look=kitchen]{--bg:#e4e8eb;--surface:#f3f5f7;--ink:#12161a;--muted:#56606a;--line:#c7ced5;--focus:#d3241c;--break:#17768a;--focus-dim:#d3241c1f;--break-dim:#17768a1f;--seed-off:#c3cad1;--drawer:#f7f8f9;--shadow:0 1px 0 rgba(0,0,0,.06);--drawer-edge:0 30px 80px rgba(15,25,35,.28);--on-accent:#fff;--pip-focus:#d3241c;--pip-break:#17768a;color-scheme:light;--r3:2px;--r4:2px;--r6:3px;--r7:3px;--r8:4px;--r9:4px;--r10:4px;--r12:5px;--r14:6px;--r18:6px;--r22:6px;--r99:6px;--r999:6px}
+  html[data-look=kitchen][data-theme=dark]{--bg:#13161a;--surface:#1b2025;--ink:#f0f3f5;--muted:#9aa5b0;--line:#323a42;--focus:#ff4a3d;--break:#4fb9cd;--focus-dim:#ff4a3d26;--break-dim:#4fb9cd26;--seed-off:#39424b;--drawer:#181c20;--shadow:none;--drawer-edge:0 30px 80px rgba(0,0,0,.6);--on-accent:#150605;--pip-focus:#ff4a3d;--pip-break:#4fb9cd;color-scheme:dark}
+  html[data-look=kitchen] .dial{width:300px;height:300px}
+  html[data-look=kitchen] .dial-track{stroke:var(--muted);stroke-width:5;stroke-dasharray:.55 4.267;opacity:.75}
+  html[data-look=kitchen] .dial-progress{stroke-width:2.4;stroke-linecap:butt;transform-box:fill-box;transform-origin:center;transform:scale(.87)}
+  html[data-look=kitchen] .time{font-family:"DIN Condensed","Avenir Next Condensed","Bahnschrift","Arial Narrow",sans-serif;font-stretch:condensed;font-size:104px;font-weight:700;letter-spacing:0;line-height:.9;padding-top:10px}
+  html[data-look=kitchen] .btn-primary{font-weight:700}
+  html[data-look=kitchen] .mode-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);box-shadow:none}
+
+  /* Garden: soft greens, a thick rounded ring, rounded type */
+  html[data-look=garden]{--bg:#e7efe3;--surface:#f5f9f2;--ink:#20301e;--muted:#566651;--line:#cbd9c4;--focus:#3a7a49;--break:#b06a2c;--focus-dim:#3a7a491f;--break-dim:#b06a2c1f;--seed-off:#c8d6c1;--drawer:#f8fbf5;--shadow:0 1px 2px rgba(30,50,30,.08);--drawer-edge:0 30px 80px rgba(25,45,25,.25);--on-accent:#fff;--pip-focus:#3a7a49;--pip-break:#b06a2c;color-scheme:light;--r8:12px;--r9:12px;--r10:14px;--r12:16px;--r14:18px}
+  html[data-look=garden][data-theme=dark]{--bg:#151c16;--surface:#1d2620;--ink:#e3ede0;--muted:#9eb09a;--line:#2d3a2f;--focus:#86c490;--break:#e2a868;--focus-dim:#86c49026;--break-dim:#e2a86826;--seed-off:#334236;--drawer:#19211b;--shadow:none;--drawer-edge:0 30px 80px rgba(0,0,0,.55);--on-accent:#10210f;--pip-focus:#86c490;--pip-break:#e2a868;color-scheme:dark}
+  html[data-look=garden] body,html[data-look=garden] .time{font-family:ui-rounded,"SF Pro Rounded","Nunito","Trebuchet MS",system-ui,sans-serif}
+  html[data-look=garden] :is(.dial-track,.dial-progress){stroke-width:8}
+  html[data-look=garden] .dial svg{inset:4px;width:calc(100% - 8px);height:calc(100% - 8px)}
+  html[data-look=garden] .time{font-size:66px;font-weight:600;letter-spacing:-.02em}
+  html[data-look=garden] .btn-primary{border-radius:999px}
+  html[data-look=garden] .mode-btn[aria-pressed="true"]{background:var(--accent,var(--focus));color:var(--on-accent);box-shadow:none}
+
+  /* Mono: black and white, very large thin numerals, a hairline for progress */
+  html[data-look=mono]{--bg:#ffffff;--surface:#f3f3f3;--ink:#000000;--muted:#5f5f5f;--line:#dedede;--focus:#000000;--break:#5f5f5f;--focus-dim:#00000014;--break-dim:#00000014;--seed-off:#d6d6d6;--drawer:#ffffff;--shadow:none;--drawer-edge:0 30px 80px rgba(0,0,0,.25);--on-accent:#fff;--pip-focus:#f2f2f2;--pip-break:#9a9a9a;color-scheme:light;--r3:0px;--r4:0px;--r6:0px;--r7:0px;--r8:0px;--r9:0px;--r10:0px;--r12:0px;--r14:0px;--r18:0px;--r22:0px;--r99:0px;--r999:0px}
+  html[data-look=mono][data-theme=dark]{--bg:#000000;--surface:#121212;--ink:#ffffff;--muted:#9c9c9c;--line:#2a2a2a;--focus:#ffffff;--break:#9c9c9c;--focus-dim:#ffffff1f;--break-dim:#ffffff1f;--seed-off:#333;--drawer:#0c0c0c;--drawer-edge:0 30px 80px rgba(0,0,0,.8);--on-accent:#000;color-scheme:dark}
+  html[data-look=mono] .dial svg{display:none}
+  html[data-look=mono] .dial{width:min(640px,92vw);height:auto;flex-direction:column;gap:26px}
+  html[data-look=mono] .dial::after{content:"";display:block;width:100%;height:2px;background:linear-gradient(90deg,var(--ink) var(--pct,0%),var(--line) var(--pct,0%))}
+  html[data-look=mono] .time{font-size:min(30vw,168px);font-weight:200;letter-spacing:-.05em}
+  html[data-look=mono] .mode-row{background:none;border:0;gap:22px;padding:0}
+  html[data-look=mono] .mode-btn{padding:6px 0;border-bottom:2px solid transparent;background:none!important;box-shadow:none!important}
+  html[data-look=mono] .mode-btn[aria-pressed="true"]{border-bottom-color:var(--ink);color:var(--ink)}
+  html[data-look=mono] .sx-switch::after{border-radius:0}
+  html[data-look=mono] .sx-switch,html[data-look=mono] .spanel,html[data-look=mono] .sx-card,html[data-look=mono] .sx-nav,html[data-look=mono] .sx-look,html[data-look=mono] .sx-modes,html[data-look=mono] .sx-mode,html[data-look=mono] .sp-close{border-radius:0}
+
+  /* ================= Today as a pop-up window (all layouts except Rail and HUD, which dock the list) ================= */
+  html:not([data-layout=rail]):not([data-layout=hud]) .drawer{top:50%;left:50%;right:auto;bottom:auto;width:min(600px,calc(100% - 32px));height:min(700px,calc(100% - 48px));border:1px solid var(--line);border-radius:16px;box-shadow:var(--drawer-edge);opacity:0;transform:translate(-50%,-48%) scale(.98);transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s;padding:22px 24px 18px}
+  html:not([data-layout=rail]):not([data-layout=hud]) body.drawer-open .drawer{opacity:1;transform:translate(-50%,-50%);transition:opacity .2s ease,transform .2s ease,visibility 0s}
+  html:not([data-layout=rail]):not([data-layout=hud]) .drawer-handle{top:14px;right:14px;transform:none;writing-mode:horizontal-tb;padding:8px 14px;gap:8px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink)}
+  html:not([data-layout=rail]):not([data-layout=hud]) .drawer-handle .handle-count{text-combine-upright:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:var(--accent,var(--focus));color:var(--on-accent,#fff)}
+  html:not([data-layout=rail]):not([data-layout=hud]) .drawer-handle .handle-count[hidden]{display:none}
+  html:not([data-layout=rail]):not([data-layout=hud]) body.focusing .drawer-handle{opacity:1;visibility:visible;pointer-events:auto}
+  html:not([data-layout=rail]):not([data-layout=hud]) body.drawer-open .drawer-handle{opacity:0;visibility:hidden;pointer-events:none}
+  html:not([data-layout=rail]):not([data-layout=hud]) .rem-pill{display:none!important}
+  .daily{border:1px solid var(--line);border-radius:var(--r12);background:var(--surface);padding:0 12px;flex:none}
+  .daily>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:13px;font-weight:600}
+  .daily>summary::-webkit-details-marker{display:none}
+  .daily>summary span{font-weight:500;color:var(--muted)}
+  .daily .rem-pop,.daily .rem-pop[hidden]{opacity:1!important;visibility:visible!important;pointer-events:auto!important;display:block;position:static;width:auto;padding:0 0 8px;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;max-height:190px;overflow-y:auto}
+  .daily[hidden]{display:none}
   /* Settings: a centred window with sections down the left (Cmd/Ctrl + comma opens it, Esc closes). */
   .sx-backdrop { position: fixed; inset: 0; z-index: 44; background: rgba(0,0,0,.45); opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s; }
   body.settings-open .sx-backdrop { opacity: 1; visibility: visible; }
   .spanel {
     position: fixed; z-index: 45; left: 50%; top: 50%;
-    width: min(820px, calc(100vw - 32px)); height: min(600px, calc(100vh - 48px));
+    width: min(820px, calc(100% - 32px)); height: min(600px, calc(100% - 48px));
     background: var(--drawer); color: var(--ink);
     border: 1px solid var(--line); border-radius: 16px;
     box-shadow: 0 30px 80px rgba(0,0,0,.45);
@@ -1038,6 +1128,17 @@
   .sx-theme i { display: flex; align-items: flex-end; height: 54px; border-radius: 8px; padding: 8px; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
   .sx-theme i::after { content: ""; width: 34px; height: 10px; border-radius: 5px; background: var(--dot); }
   .sx-theme b { font-size: 13px; font-weight: 500; }
+  .sx-looks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .sx-look { appearance: none; display: flex; flex-direction: column; gap: 2px; padding: 8px 8px 10px; border-radius: 12px; background: var(--surface); border: 2px solid var(--line); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+  .sx-look.is-on { border-color: var(--accent, var(--focus)); }
+  .sx-look > b { font-size: 13.5px; font-weight: 600; margin-top: 6px; }
+  .sx-look > small { font-size: 12px; color: var(--muted); }
+  .sx-face { position: relative; display: flex; align-items: center; justify-content: center; height: 86px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); overflow: hidden; }
+  .sx-face svg { position: absolute; height: 70px; width: 70px; }
+  .sx-face em { font-style: normal; font-variant-numeric: tabular-nums; position: relative; line-height: 1; }
+  .sx-face.sx-face-bar { flex-direction: column; gap: 7px; }
+  .sx-face.sx-face-bar b { display: block; width: 62%; }
+  @media (max-width: 640px) { .sx-looks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .sx-modes { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; align-self: flex-start; }
   .sx-mode { appearance: none; height: 32px; padding: 0 14px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
   .sx-mode.is-on { background: color-mix(in srgb, var(--ink) 11%, transparent); color: var(--ink); font-weight: 600; }
@@ -1054,7 +1155,7 @@
   .sx-keys { margin: 0; line-height: 1.9; }
   .sx-keys kbd { font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--drawer); color: var(--ink); }
   @media (max-width: 640px) {
-    .spanel { flex-direction: column; height: calc(100vh - 32px); }
+    .spanel { flex-direction: column; height: calc(100% - 32px); }
     .sx-side { width: auto; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; overflow-x: auto; }
     .sx-side-h { display: none; }
     .sx-nav { flex: none; }
@@ -1479,6 +1580,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <input type="time" id="addDueTime" aria-label="Time (optional)">
     <button type="button" class="when-clear" id="addDueClear">No date</button>
   </div>
+  <details class="daily" id="dailyBox" open hidden><summary>Every day <span id="dailyN"></span></summary></details>
   <ul class="task-list" id="taskList"></ul>
   <p class="task-empty" id="taskEmpty">Nothing on today&rsquo;s list yet. Add the few things that would make today a good one.</p>
   <p class="drawer-hint">Pick one with Focus. The rest stay out of sight until you switch. <span class="key-tip" tabindex="0" role="img" aria-label="Shortcuts: hover a task, then T top, B bottom, L later or today, S star" title="Hover a task, then press:&#10;T  send to top&#10;B  send to bottom&#10;L  move to Later / Today&#10;S  star">i</span></p>
@@ -1525,7 +1627,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <div class="sx-row" id="startupRow"><div class="sx-txt"><span>Open when I log in</span><small>Starts with your Mac</small></div><span class="sx-ctl" id="optStartup"></span></div>
         <div class="sx-row" id="floatRow"><div class="sx-txt"><span>Float the timer automatically</span><small>Small timer in the bottom-right corner</small></div><span class="sx-ctl" id="optAutoFloat"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Line of the day</span><small>A short line under the timer</small></div><span class="sx-ctl" id="optLineDay"></span></div>
-        <div class="sx-row"><div class="sx-txt"><span>Reminders button</span><small>Top-right corner; add, tick and delete reminders there</small></div><span class="sx-ctl" id="optRemPill"></span></div>
+        <div class="sx-row"><div class="sx-txt"><span>Every day list</span><small>Things you do daily, at the top of Today. Ticks clear each morning</small></div><span class="sx-ctl" id="optRemPill"></span></div>
         <div class="sx-row"><div class="sx-txt"><span>Clean focus mode</span><small>While you focus, everything but the timer and your task fades away</small></div><span class="sx-ctl" id="optFocusClean"></span></div>
       </div>
       <div class="sx-label">Extra panels</div>
@@ -1564,14 +1666,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     </section>
 
     <section class="sx-page" data-page="look" hidden>
-      <div class="sx-label">Theme</div>
-      <div class="sx-themes" id="sxThemes"></div>
-      <div class="sx-label">Appearance</div>
+      <div class="sx-looks" id="sxLooks"></div>
       <div class="sx-modes" id="sxModes" role="radiogroup" aria-label="Light or dark"></div>
       <p class="sp-hint" id="sxModeNote" hidden></p>
       <div class="sx-card">
+        <div class="sx-row"><div class="sx-txt"><span>Photos behind the timer</span><small>Your slideshow fades in while you focus</small></div><span class="sx-ctl" id="optPhotos"></span></div>
         <div class="sx-row sx-stack"><div class="sx-txt"><span>Text size</span></div><div class="sp-opts" id="optText"></div></div>
-        <button type="button" class="sx-row sx-link" id="sxAdvOpen"><span class="sx-txt"><span>Advanced appearance</span><small>More themes, accent, photos, fonts, corners, spacing, timer numbers</small></span><span class="sx-chev" aria-hidden="true">&rsaquo;</span></button>
+        <button type="button" class="sx-row sx-link" id="sxAdvOpen"><span class="sx-txt"><span>More options</span><small id="sxAdvHint"></small></span><span class="sx-chev" aria-hidden="true">&rsaquo;</span></button>
       </div>
     </section>
 
@@ -1686,7 +1787,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <li><b>Motivation board:</b> words and pictures on a wall, dragged anywhere</li>
         <li><b>Photo slideshow:</b> backgrounds with timing, fade and darkness controls</li>
         <li><b>Settings window:</b> Cmd + comma opens it; General, Timer, Tasks, Appearance, Sync and About</li>
-        <li><b>Looks:</b> four themes with Light, Dark or Match Mac; more themes, colours, fonts, sizes and button styles under Advanced appearance</li>
+        <li><b>Looks:</b> five complete appearances (Studio, Tomato, Kitchen timer, Garden, Mono) with Light, Dark or Match Mac, plus Classic with all its old options</li>
+        <li><b>Today window:</b> the Today button (top right) opens your tasks in a window; things you do every day sit at the top</li>
         <li><b>Sync:</b> tasks, calendar, board and files stay the same on every computer via a private GitHub repo</li>
         <li><b>Phone page:</b> quick add for today&rsquo;s tasks from your iPhone</li>
         <li><b>Updates:</b> checks for a new version when it opens, one click to update</li>
@@ -1987,7 +2089,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -2007,7 +2109,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2109,9 +2211,10 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function validHex(h) { return /^#[0-9a-f]{6}$/i.test(h || ''); }
   function applyColours() {
     var root = document.documentElement.style;
-    if (validHex(cfg.focus)) { root.setProperty('--focus', cfg.focus); root.setProperty('--focus-dim', cfg.focus + '26'); }
+    var look = curLook();   // a look owns its colours; your custom colours are kept for the Classic look
+    if (!look && validHex(cfg.focus)) { root.setProperty('--focus', cfg.focus); root.setProperty('--focus-dim', cfg.focus + '26'); }
     else { root.removeProperty('--focus'); root.removeProperty('--focus-dim'); }
-    if (validHex(cfg.brk)) { root.setProperty('--break', cfg.brk); root.setProperty('--break-dim', cfg.brk + '26'); }
+    if (!look && validHex(cfg.brk)) { root.setProperty('--break', cfg.brk); root.setProperty('--break-dim', cfg.brk + '26'); }
     else { root.removeProperty('--break'); root.removeProperty('--break-dim'); }
     if (validHex(cfg.cal)) {
       root.setProperty('--cal-user', cfg.cal); root.setProperty('--cal-user-dim', cfg.cal + '26');
@@ -2119,7 +2222,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     } else { root.removeProperty('--cal-user'); root.removeProperty('--cal-user-dim'); root.removeProperty('--cal-on'); }
     applyNow();
     var cur = state.mode === 'focus' ? cfg.focus : cfg.brk;
-    if (validHex(cur) && lum(cur) > 0.38) root.setProperty('--on-accent', '#1c1510');
+    if (!look && validHex(cur) && lum(cur) > 0.38) root.setProperty('--on-accent', '#1c1510');
     else root.removeProperty('--on-accent');
   }
 
@@ -2173,6 +2276,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     if (SKINS.indexOf(cfg.skin) >= 0) document.documentElement.setAttribute('data-skin', cfg.skin); else document.documentElement.removeAttribute('data-skin');
     if (['compact', 'minimal', 'rail', 'hud'].indexOf(cfg.layout) >= 0) document.documentElement.setAttribute('data-layout', cfg.layout); else document.documentElement.removeAttribute('data-layout');
     document.body.setAttribute('data-nowstyle', ['box', 'plain', 'glow', 'banner'].indexOf(cfg.nowStyle) >= 0 ? cfg.nowStyle : 'box');
+    // A chosen look replaces the Classic theme, font and corner settings while it is on (their saved values are untouched).
+    var look = curLook();
+    if (look) {
+      de.setAttribute('data-look', look); de.removeAttribute('data-skin'); de.removeAttribute('data-font'); de.setAttribute('data-style', 'round');
+      de.setAttribute('data-theme', lookIsDark() ? 'dark' : 'light');
+    } else de.removeAttribute('data-look');
+    placeReminders();
   }
   var THEMES = [['tomato','Tomato','Original',['#eef0ea','#e2e5db','#c8432b','#3f7a52'],'round','plex']].concat([['sage', 'Sage desk', 'Soft green, calm', ['#e4e9e1', '#eef2eb', '#536f59', '#8a6f4d'], 'round', 'plex'], ['charcoal', 'Charcoal focus', 'Dark, sharp', ['#171c19', '#202722', '#abc1db', '#9bc7a8'], 'sharp', 'technical'], ['slate', 'Slate workspace', 'Cool blue-grey', ['#e2e8ef', '#edf1f5', '#526b88', '#4d8a73'], 'sharp', 'clean'], ['editorial', 'Editorial', 'Warm paper, clay', ['#e9e3d8', '#f5f1e9', '#976858', '#5d7a4f'], 'round', 'humanist'], ['harbour', 'Harbour', 'Calm teal', ['#dfeaea', '#ecf3f3', '#326e72', '#6a8f5b'], 'round', 'humanist'], ['atelier', 'Atelier', 'Warm creative', ['#eee5d6', '#faf5eb', '#b0674a', '#6f7f55'], 'round', 'humanist'], ['midnight', 'Midnight', 'After-hours blue', ['#202a36', '#293542', '#bdc0ef', '#8fc0b0'], 'sharp', 'plex'], ['obsidian', 'Obsidian', 'Near-black, mint neon', ['#0b0c0f', '#14161b', '#5ef2c0', '#7aa2ff'], 'sharp', 'technical'], ['mono', 'Mono', 'Black and white, sharp', ['#f3f3f1', '#ffffff', '#0d0d0d', '#6a6a68'], 'sharp', 'clean'], ['aurora', 'Aurora', 'Violet glow, soft', ['#120f26', '#1d1838', '#a78bfa', '#34d399'], 'round', 'humanist'], ['ember', 'Ember', 'Warm dark, orange', ['#14100d', '#1e1814', '#ff8a3d', '#8fbf7f'], 'sharp', 'clean']]);
   function buildThemes() {
@@ -2262,51 +2372,72 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var MAIN_THEMES = ['tomato', 'sage', 'harbour', 'mono'];
   var LIGHT_SKINS = ['sage', 'slate', 'editorial', 'harbour', 'atelier', 'mono'];
   // Saved choice, or for settings saved before this existed: Tomato followed the Mac, the others were always light or dark.
+  var LOOKS = [['studio', 'Studio', 'Calm and neutral'], ['tomato', 'Tomato', 'One bold colour'], ['kitchen', 'Kitchen timer', 'A dial of ticks'], ['garden', 'Garden', 'Soft and green'], ['mono', 'Mono', 'Black and white']];
+  function curLook() { return LOOKS.some(function (l) { return l[0] === cfg.look; }) ? cfg.look : ''; }
   function lookMode() {
     if (cfg.mode === 'light' || cfg.mode === 'dark' || cfg.mode === 'auto') return cfg.mode;
+    if (curLook()) return 'auto';
     var sk = cfg.skin || 'tomato';
     return sk === 'tomato' ? 'auto' : LIGHT_SKINS.indexOf(sk) >= 0 ? 'light' : 'dark';
   }
   function systemDark() { return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
   function lookIsDark() { var m = lookMode(); return m === 'dark' || (m === 'auto' && systemDark()); }
-  var LOOK_PREVIEW = { tomato: [['#eef0ea', '#c8432b'], ['#16130f', '#ff7a57']], sage: [['#e4e9e1', '#536f59'], ['#181d19', '#86b892']], harbour: [['#dfeaea', '#326e72'], ['#141d22', '#5fb6b9']], mono: [['#f3f3f1', '#0d0d0d'], ['#111112', '#f2f2f0']] };
+  // Each card is a small drawing of that look's timer, in the light or dark side you are using.
+  var LOOK_FACE = {
+    studio: [['#f2f3f5', '#1d2025', '#e04e34'], ['#17191c', '#eceef1', '#ff6a4d']],
+    tomato: [['#d8432d', '#ffffff', '#ffffff'], ['#2b1410', '#ffe9e3', '#ff6a4d']],
+    kitchen: [['#e4e8eb', '#12161a', '#d3241c'], ['#13161a', '#f0f3f5', '#ff4a3d']],
+    garden: [['#e7efe3', '#20301e', '#3a7a49'], ['#151c16', '#e3ede0', '#86c490']],
+    mono: [['#ffffff', '#000000', '#000000'], ['#000000', '#ffffff', '#ffffff']]
+  };
+  function lookFace(id, dark) {
+    if (id === 'classic') return '<i class="sx-face" style="background:var(--surface);color:var(--muted)"><em style="font:600 15px ui-monospace,Menlo,monospace">25:00</em></i>';
+    var c = LOOK_FACE[id][dark ? 1 : 0], bg = c[0], ink = c[1], acc = c[2];
+    var ring = function (w, dash) { return '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="' + ink + '" stroke-opacity=".22" stroke-width="' + w + '"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') + '/><circle cx="20" cy="20" r="17" fill="none" stroke="' + acc + '" stroke-width="' + (dash ? 1.2 : w) + '" stroke-dasharray="70 107" stroke-linecap="' + (id === 'garden' ? 'round' : 'butt') + '" transform="rotate(-90 20 20)"/></svg>'; };
+    var num = { studio: 'font:300 13px -apple-system,system-ui,sans-serif', tomato: 'font:800 21px ui-rounded,"SF Pro Rounded",system-ui,sans-serif', kitchen: 'font:700 17px "DIN Condensed","Avenir Next Condensed","Arial Narrow",sans-serif', garden: 'font:600 12px ui-rounded,"SF Pro Rounded",system-ui,sans-serif', mono: 'font:200 25px -apple-system,system-ui,sans-serif;letter-spacing:-.05em' }[id];
+    var art = id === 'studio' ? ring(1.2) : id === 'kitchen' ? ring(3, '.5 1.28') : id === 'garden' ? ring(4) : '';
+    var bar = id === 'tomato' ? '<b style="height:4px;border-radius:2px;background:linear-gradient(90deg,' + ink + ' 62%,rgba(255,255,255,.3) 62%)"></b>' : id === 'mono' ? '<b style="height:1px;background:linear-gradient(90deg,' + ink + ' 62%,' + ink + '33 62%)"></b>' : '';
+    return '<i class="sx-face' + (bar ? ' sx-face-bar' : '') + '" style="background:' + bg + ';color:' + ink + '">' + art + '<em style="' + num + '">25:00</em>' + bar + '</i>';
+  }
   function buildLook() {
-    var g = $('sxThemes'); if (!g) return;
-    var dark = lookIsDark(), cur = cfg.skin || 'tomato';
+    var g = $('sxLooks'); if (!g) return;
+    var dark = lookIsDark(), cur = curLook();
     g.innerHTML = '';
-    MAIN_THEMES.forEach(function (id) {
-      var t = THEMES.filter(function (x) { return x[0] === id; })[0];
-      var b = document.createElement('button'); b.type = 'button';
-      b.className = 'sx-theme' + (cur === id ? ' is-on' : '');
-      b.setAttribute('aria-pressed', cur === id ? 'true' : 'false');
-      var pv = LOOK_PREVIEW[id][dark ? 1 : 0];
-      b.innerHTML = '<i style="background:' + pv[0] + ';--dot:' + pv[1] + '"></i><b>' + (id === 'tomato' ? 'Tomato' : t[1].split(' ')[0]) + '</b>';
+    LOOKS.concat([['classic', 'Classic', 'How it looked before']]).forEach(function (l) {
+      var on = l[0] === (cur || 'classic');
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sx-look' + (on ? ' is-on' : '');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.innerHTML = lookFace(l[0], dark) + '<b>' + l[1] + '</b><small>' + l[2] + '</small>';
       b.addEventListener('click', function () {
-        if (!cfg.mode) cfg.mode = lookMode();   // keep the current light/dark choice when switching theme
-        cfg.skin = t[0]; cfg.uiStyle = t[4]; cfg.font = t[5] || 'plex'; cfg.backdrop = t[0] === 'tomato' ? 'photos' : 'colour';
-        saveCfg(); applyNow(); updatePhotoMode(); buildNowOpts();
+        if (!cfg.mode) cfg.mode = lookMode();   // keep the current light/dark choice when switching
+        cfg.look = l[0] === 'classic' ? '' : l[0];
+        if (cfg.look) cfg.backdrop = 'colour';   // show the look's own colours; the Photos switch below brings the slideshow back
+        saveCfg(); applyColours(); updatePhotoMode(); buildNowOpts(); render();
+        var again = document.querySelector('#sxLooks .sx-look.is-on'); if (again) again.focus();
       });
       g.appendChild(b);
     });
-    var m = $('sxModes'), main = MAIN_THEMES.indexOf(cur) >= 0, mode = lookMode();
+    var m = $('sxModes'), sk = cfg.skin || 'tomato', both = !!cur || MAIN_THEMES.indexOf(sk) >= 0, mode = lookMode();
     m.innerHTML = '';
     [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Match Mac']].forEach(function (o) {
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'sx-mode' + (main && mode === o[0] ? ' is-on' : '');
-      b.textContent = o[1]; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', main && mode === o[0] ? 'true' : 'false');
-      b.disabled = !main;
-      b.addEventListener('click', function () { cfg.mode = o[0]; saveCfg(); applyNow(); buildNowOpts(); });
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sx-mode' + (both && mode === o[0] ? ' is-on' : '');
+      b.textContent = o[1]; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', both && mode === o[0] ? 'true' : 'false');
+      b.disabled = !both;
+      b.addEventListener('click', function () { cfg.mode = o[0]; saveCfg(); applyColours(); buildNowOpts(); });
       m.appendChild(b);
     });
-    var note = $('sxModeNote'), other = THEMES.filter(function (x) { return x[0] === cur; })[0];
-    note.hidden = main;
-    if (!main && other) note.textContent = 'You are using ' + other[1] + ' (from All themes in Advanced appearance), which has its own fixed colours. Pick one of the four above to choose light or dark.';
+    var note = $('sxModeNote'), other = THEMES.filter(function (x) { return x[0] === sk; })[0];
+    note.hidden = both;
+    if (!both && other) note.textContent = 'Classic is using the ' + other[1] + ' theme, which has its own fixed colours. Pick a look above to choose light or dark.';
+    buildSwitch('optPhotos', 'backdrop', 'photos', 'colour');
+    var adv = $('sxAdvHint'); if (adv) adv.textContent = cur ? 'Layout and photos work with every look. The themes, colours, fonts and corners in here belong to Classic.' : 'All themes, accent, photos, layout, fonts, corners, timer numbers';
   }
   if (window.matchMedia) {
     var sysMq = matchMedia('(prefers-color-scheme: dark)'), onSys = function () { if (lookMode() === 'auto') { applyNow(); if (settingsOpen) buildNowOpts(); } };
     if (sysMq.addEventListener) sysMq.addEventListener('change', onSys); else if (sysMq.addListener) sysMq.addListener(onSys);
   }
 
-  var SX_SEC_KEY = 'tomato-timer-lab-settings-sec', SX_TITLES = { general: 'General', timer: 'Timer', tasks: 'Tasks', look: 'Appearance', advanced: 'Advanced appearance', sync: 'Sync', about: 'About' };
+  var SX_SEC_KEY = 'tomato-timer-lab-settings-sec', SX_TITLES = { general: 'General', timer: 'Timer', tasks: 'Tasks', look: 'Appearance', advanced: 'More options', sync: 'Sync', about: 'About' };
   function showSection(sec) {
     if (!SX_TITLES[sec]) sec = 'general';
     Array.prototype.forEach.call(document.querySelectorAll('#spanel .sx-page'), function (p) { p.hidden = p.getAttribute('data-page') !== sec; });
@@ -3003,6 +3134,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     return a.filter(function (p) { return p.doneDay !== today; }).sort(byAge).concat(a.filter(function (p) { return p.doneDay === today; }).sort(byAge));
   }
   function remTouch(p) { p.updated = Date.now(); calSave(); renderReminders(); }
+  // In the pop-up Today window the daily reminders live inside it ("Every day"); Rail and HUD keep the corner button.
+  function placeReminders() {
+    var pop = $('remPop'), box = $('dailyBox'), pill = $('remPill'); if (!pop || !box || !pill) return;
+    var inPopup = ['rail', 'hud'].indexOf(cfg.layout) < 0;
+    if (inPopup && pop.parentNode !== box) box.appendChild(pop);
+    else if (!inPopup && pop.parentNode === box) pill.parentNode.insertBefore(pop, pill.nextSibling);
+    box.hidden = !inPopup || drawerTab !== 'today' || cfg.remPill === 'off';
+  }
   function remClose() { var pop = $('remPop'); if (!pop || pop.hidden) return; pop.hidden = true; $('remPill').setAttribute('aria-expanded', 'false'); }
   function renderReminders() {
     var pill = $('remPill'), pop = $('remPop');
@@ -3012,6 +3151,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     var left = items.filter(function (p) { return p.doneDay !== today; }).length;
     pill.textContent = items.length === 0 ? 'Reminders · add' : left === 0 ? 'Reminders · all done' : 'Reminders · ' + left;
     pill.hidden = cfg.remPill === 'off';
+    var dn = $('dailyN'); if (dn) dn.textContent = items.length === 0 ? 'Add something you do daily' : left === 0 ? 'All done today' : left + ' left today';
+    placeReminders();
     if (pill.hidden) remClose();
     var ul = $('remList'); ul.textContent = '';
     items.forEach(function (p) {
@@ -3996,6 +4137,10 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var pipWindow = null;
 
   function accentHex(mode) {
+    if (curLook()) {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(mode === 'focus' ? '--pip-focus' : '--pip-break').trim();
+      if (validHex(v)) return v;
+    }
     return mode === 'focus' ? (validHex(cfg.focus) ? cfg.focus : '#ff6b4a') : (validHex(cfg.brk) ? cfg.brk : '#7fc08c');
   }
 
@@ -4122,6 +4267,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     els.ring.style.strokeDashoffset = String(100 - pct);
     document.documentElement.style.setProperty('--pct', pct + '%');
     document.documentElement.style.setProperty('--accent', accentVar(state.mode));
+    document.documentElement.setAttribute('data-timer', state.mode === 'focus' ? 'focus' : 'break');
     applyColours();
 
     els.modeBtns.forEach(function (btn) {

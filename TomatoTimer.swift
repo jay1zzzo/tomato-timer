@@ -79,19 +79,22 @@ final class MiniPanel: NSPanel {
     var onToggle: (() -> Void)?
     var onClosed: (() -> Void)?
     var onShowMain: (() -> Void)?
+    static let W: CGFloat = 236
+    static let baseH: CGFloat = 56
     let timeLabel = NSTextField(labelWithString: "25:00")
-    let button = NSButton(frame: NSRect(x: 160, y: 36, width: 24, height: 22))
-    let closeButton = NSButton(frame: NSRect(x: 138, y: 38, width: 16, height: 16))
-    let box = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 62))
+    let button = NSButton(frame: NSRect(x: 11, y: 12, width: 34, height: 34))
+    let closeButton = NSButton(frame: NSRect(x: 210, y: 32, width: 16, height: 16))
+    let mailButton = NSButton(frame: NSRect(x: 184, y: 31, width: 20, height: 18))
+    let box = NSView(frame: NSRect(x: 0, y: 0, width: 236, height: 56))
     let tagLabel = NSTextField(labelWithString: "")
-    let mailButton = NSButton(frame: NSRect(x: 156, y: 8, width: 32, height: 26))
-    let barBack = NSView(frame: NSRect(x: 0, y: 0, width: 190, height: 3))
+    let barBack = NSView(frame: NSRect(x: 0, y: 0, width: 236, height: 3))
     let barFill = NSView(frame: NSRect(x: 0, y: 0, width: 0, height: 3))
-    var panelH: CGFloat = 62
+    var panelH: CGFloat = 56
     var progress: CGFloat = 0
+    var isRunning = false
 
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 190, height: 62),
+        super.init(contentRect: NSRect(x: 0, y: 0, width: MiniPanel.W, height: MiniPanel.baseH),
                    styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
         level = .statusBar
@@ -104,53 +107,64 @@ final class MiniPanel: NSPanel {
         backgroundColor = .clear
         hasShadow = true
 
+        // A quiet rounded card: no coloured outline. The colour lives in the play button and the thin progress line.
         box.wantsLayer = true
-        box.layer?.cornerRadius = 2
+        box.layer?.cornerRadius = 14
         box.layer?.masksToBounds = true
-        box.layer?.backgroundColor = NSColor(calibratedRed: 0.082, green: 0.075, blue: 0.059, alpha: 0.96).cgColor
-        box.layer?.borderWidth = 2
-        box.layer?.borderColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
+        box.layer?.backgroundColor = NSColor(calibratedRed: 0.105, green: 0.11, blue: 0.125, alpha: 0.97).cgColor
+        box.layer?.borderWidth = 1
+        box.layer?.borderColor = NSColor(calibratedWhite: 1, alpha: 0.10).cgColor
         contentView = box
 
         barBack.wantsLayer = true
-        barBack.layer?.backgroundColor = NSColor(calibratedWhite: 1, alpha: 0.12).cgColor
+        barBack.layer?.backgroundColor = NSColor(calibratedWhite: 1, alpha: 0.10).cgColor
         barFill.wantsLayer = true
         barFill.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
         box.addSubview(barBack)
         box.addSubview(barFill)
 
-        timeLabel.font = NSFont.monospacedSystemFont(ofSize: 24, weight: .bold)
-        timeLabel.textColor = NSColor(calibratedWhite: 0.96, alpha: 1)
-        timeLabel.frame = NSRect(x: 10, y: 24, width: 126, height: 32)
-        box.addSubview(timeLabel)
-
         button.isBordered = false
         button.wantsLayer = true
-        button.layer?.cornerRadius = 2
+        button.layer?.cornerRadius = 17
         button.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1).cgColor
-        button.title = "\u{25B6}"
-        button.font = NSFont.systemFont(ofSize: 10, weight: .bold)
-        button.contentTintColor = NSColor(calibratedWhite: 0.1, alpha: 1)
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleNone
+        button.font = NSFont.systemFont(ofSize: 11, weight: .bold)
+        button.contentTintColor = NSColor(calibratedWhite: 0.08, alpha: 1)
+        button.toolTip = "Start or pause"
         button.target = self
         button.action = #selector(tapped)
         box.addSubview(button)
+        setPlayIcon(running: false)
 
-        // The task you are working on, in small text above the timer. Hidden when the page sends only a mode name.
-        tagLabel.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
-        tagLabel.textColor = NSColor(calibratedWhite: 0.86, alpha: 1)
+        timeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 25, weight: .semibold)
+        timeLabel.textColor = NSColor(calibratedWhite: 0.97, alpha: 1)
+        timeLabel.frame = NSRect(x: 56, y: 13, width: 120, height: 30)
+        box.addSubview(timeLabel)
+
+        // The task you are working on, in small text under the time. Hidden when the page sends only a mode name.
+        tagLabel.font = NSFont.systemFont(ofSize: 11.5, weight: .medium)
+        tagLabel.textColor = NSColor(calibratedWhite: 0.72, alpha: 1)
         tagLabel.alignment = .left
         tagLabel.lineBreakMode = .byWordWrapping
-        tagLabel.maximumNumberOfLines = 3
+        tagLabel.maximumNumberOfLines = 2
         tagLabel.cell?.wraps = true
         tagLabel.cell?.isScrollable = false
-        tagLabel.frame = NSRect(x: 12, y: 6, width: 138, height: 16)
+        tagLabel.cell?.truncatesLastVisibleLine = true
+        tagLabel.frame = NSRect(x: 57, y: 9, width: 166, height: 16)
         tagLabel.isHidden = true
         box.addSubview(tagLabel)
 
         closeButton.isBordered = false
-        closeButton.title = "\u{2715}"
-        closeButton.font = NSFont.systemFont(ofSize: 10, weight: .bold)
-        closeButton.contentTintColor = NSColor(calibratedWhite: 0.6, alpha: 1)
+        if #available(macOS 11.0, *), let img = NSImage(systemSymbolName: "xmark", accessibilityDescription: "Close") {
+            closeButton.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold))
+            closeButton.imagePosition = .imageOnly
+        } else {
+            closeButton.title = "\u{2715}"
+            closeButton.font = NSFont.systemFont(ofSize: 10, weight: .bold)
+        }
+        closeButton.contentTintColor = NSColor(calibratedWhite: 0.72, alpha: 1)
+        closeButton.toolTip = "Close the floating timer"
         closeButton.target = self
         closeButton.action = #selector(closeTapped)
         box.addSubview(closeButton)
@@ -158,22 +172,49 @@ final class MiniPanel: NSPanel {
         // Small envelope: opens Gmail in the browser.
         mailButton.isBordered = false
         if #available(macOS 11.0, *), let img = NSImage(systemSymbolName: "envelope", accessibilityDescription: "Gmail") {
-            mailButton.image = img
-            mailButton.imageScaling = .scaleProportionallyDown
+            mailButton.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 12, weight: .regular))
+            mailButton.imagePosition = .imageOnly
         } else {
             mailButton.title = "\u{2709}"
         }
-        mailButton.contentTintColor = NSColor(calibratedWhite: 0.78, alpha: 1)
+        mailButton.contentTintColor = NSColor(calibratedWhite: 0.72, alpha: 1)
         mailButton.toolTip = "Open Gmail"
         mailButton.target = self
         mailButton.action = #selector(mailTapped)
         box.addSubview(mailButton)
 
+        // Close and mail stay out of the way until the pointer is over the timer.
+        closeButton.alphaValue = 0
+        mailButton.alphaValue = 0
+        box.addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self, userInfo: nil))
+
         if let screen = NSScreen.main {
             let f = screen.visibleFrame
-            setFrameOrigin(NSPoint(x: f.maxX - 190 - 24, y: f.minY + 24))
+            setFrameOrigin(NSPoint(x: f.maxX - MiniPanel.W - 24, y: f.minY + 24))
         }
     }
+
+    func setPlayIcon(running: Bool) {
+        isRunning = running
+        if #available(macOS 11.0, *), let img = NSImage(systemSymbolName: running ? "pause.fill" : "play.fill", accessibilityDescription: running ? "Pause" : "Start") {
+            button.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 13, weight: .bold))
+            button.title = ""
+        } else {
+            button.image = nil
+            button.imagePosition = .noImage
+            button.title = running ? "\u{275A}\u{275A}" : "\u{25B6}"
+        }
+    }
+
+    func showExtras(_ show: Bool) {
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.15
+            closeButton.animator().alphaValue = show ? 1 : 0
+            mailButton.animator().alphaValue = show ? 1 : 0
+        }
+    }
+    override func mouseEntered(with event: NSEvent) { showExtras(true) }
+    override func mouseExited(with event: NSEvent) { showExtras(false) }
 
     @objc func mailTapped() {
         if let u = URL(string: "https://mail.google.com/") { NSWorkspace.shared.open(u) }
@@ -202,6 +243,7 @@ final class MiniPanel: NSPanel {
     }
 
     func update(time: String, running: Bool, accent: String, tag: String, progress pct: Int = 0) {
+        let W = MiniPanel.W
         timeLabel.stringValue = time
         box.toolTip = tag
         let modeNames = ["focus", "short break", "long break"]
@@ -210,31 +252,37 @@ final class MiniPanel: NSPanel {
         tagLabel.isHidden = !showTask
         var textH: CGFloat = 0
         if showTask {
-            // Task wraps under the time (up to 3 lines); the panel grows upward to fit.
-            let font = tagLabel.font ?? NSFont.systemFont(ofSize: 11, weight: .semibold)
-            let r = (tag as NSString).boundingRect(with: NSSize(width: 138, height: 1000),
+            // The task sits under the time, up to two lines; the card grows to fit.
+            let font = tagLabel.font ?? NSFont.systemFont(ofSize: 11.5, weight: .medium)
+            let r = (tag as NSString).boundingRect(with: NSSize(width: 166, height: 1000),
                                                     options: [.usesLineFragmentOrigin, .usesFontLeading],
                                                     attributes: [.font: font])
-            textH = min(ceil(r.height) + 2, 48)
+            textH = min(ceil(r.height) + 1, 30)
         }
-        let wantH = max(62, 6 + textH + 4 + 32 + 6)
+        let wantH = showTask ? 9 + textH + 2 + 30 + 7 : MiniPanel.baseH
         if abs(frame.size.height - wantH) > 1 {
-            setFrame(NSRect(x: frame.origin.x, y: frame.origin.y, width: 190, height: wantH), display: true)
+            setFrame(NSRect(x: frame.origin.x, y: frame.origin.y, width: W, height: wantH), display: true)
         }
         panelH = wantH
-        box.frame = NSRect(x: 0, y: 0, width: 190, height: wantH)
-        timeLabel.frame = NSRect(x: 10, y: wantH - 38, width: 126, height: 32)
-        tagLabel.frame = NSRect(x: 12, y: 6, width: 138, height: textH > 0 ? textH : 16)
-        button.frame = NSRect(x: 160, y: wantH - 28, width: 24, height: 22)
-        closeButton.frame = NSRect(x: 138, y: wantH - 25, width: 16, height: 16)
-        mailButton.frame = NSRect(x: 156, y: wantH - 62 + 8, width: 32, height: 26)
-        button.title = running ? "\u{275A}\u{275A}" : "\u{25B6}"
+        box.frame = NSRect(x: 0, y: 0, width: W, height: wantH)
+        timeLabel.frame = showTask ? NSRect(x: 56, y: wantH - 7 - 30, width: 120, height: 30)
+                                   : NSRect(x: 56, y: (wantH - 30) / 2 + 1, width: 120, height: 30)
+        tagLabel.frame = NSRect(x: 57, y: 9, width: 166, height: textH > 0 ? textH : 16)
+        button.frame = NSRect(x: 11, y: (wantH - 34) / 2 + 1, width: 34, height: 34)
+        closeButton.frame = NSRect(x: W - 26, y: wantH - 25, width: 16, height: 16)
+        mailButton.frame = NSRect(x: W - 52, y: wantH - 26, width: 20, height: 18)
+        if running != isRunning || button.image == nil { setPlayIcon(running: running) }
         let c = hexColor(accent, fallback: NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1))
         button.layer?.backgroundColor = c.cgColor
-        box.layer?.borderColor = c.cgColor
+        // Dark symbol on a light accent, white on a dark one.
+        if let rgb = c.usingColorSpace(.deviceRGB) {
+            let lum = 0.2126 * rgb.redComponent + 0.7152 * rgb.greenComponent + 0.0722 * rgb.blueComponent
+            button.contentTintColor = lum > 0.5 ? NSColor(calibratedWhite: 0.08, alpha: 1) : NSColor.white
+        }
         barFill.layer?.backgroundColor = c.cgColor
         let f = CGFloat(max(0, min(100, pct))) / 100
-        barFill.frame = NSRect(x: 0, y: 0, width: 190 * f, height: 3)
+        barBack.frame = NSRect(x: 0, y: 0, width: W, height: 3)
+        barFill.frame = NSRect(x: 0, y: 0, width: W * f, height: 3)
     }
 }
 
@@ -506,7 +554,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 6
+    let nativeVersion = 7
 
     func askRestart() {
         if restartAsked { return }
