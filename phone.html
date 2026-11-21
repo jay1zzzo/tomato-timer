@@ -89,6 +89,7 @@ applyLook();
   .setup .add { width: 100%; padding: 14px; }
 
   .histlink { text-align: center; margin-top: 14px; }
+  .ver { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; opacity: .8; }
   .histlink .link { color: var(--muted); font-weight: 600; font-size: 13px; }
   .hist { position: fixed; inset: 0; z-index: 10; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 28px); display: none; }
   .hist.on { display: block; }
@@ -325,6 +326,7 @@ applyLook();
 
 <div class="histlink"><button class="link" id="histOpen" type="button">Past tasks <span id="histN"></span></button></div>
 <div class="histlink bdlink"><button class="link" id="bdOpen" type="button">Motivation board &rarr;</button></div>
+<p class="ver" id="ver"></p>
 
 <section class="hist" id="hist" aria-label="Past tasks">
   <div class="hist-in">
@@ -525,7 +527,8 @@ applyLook();
     tsSync();
     $('ts').className = 'tsheet on'; $('tsBg').className = 'sheet-bg on'; $('ts').setAttribute('aria-hidden', 'false'); tsFit();
     document.body.classList.add('noscroll');
-    var x = $('tsText'); x.focus(); if (t) x.setSelectionRange(x.value.length, x.value.length);
+    // The keyboard comes up straight away only for a new task; to change an existing one, tap its text.
+    if (!t) $('tsText').focus();
   }
   // The pop-up sits at the bottom of the screen. When the keyboard is up it rests just above it, and it never
   // goes under the clock and battery bar at the top (it gets shorter and the middle scrolls instead).
@@ -536,7 +539,8 @@ applyLook();
     var hidden = window.innerHeight - (vv.offsetTop + vv.height);   // the part covered by the keyboard
     if (hidden > 40) {
       el.style.bottom = (hidden + 8) + 'px';
-      el.style.maxHeight = Math.max(200, vv.height - Math.max(0, safeTop - vv.offsetTop) - 18) + 'px';
+      // On a home-screen app the clock bar sits over the top of what you can see, so always keep clear of it.
+      el.style.maxHeight = Math.max(200, vv.height - safeTop - 22) + 'px';
     } else { el.style.bottom = ''; el.style.maxHeight = ''; }
   }
   if (window.visualViewport) { visualViewport.addEventListener('resize', tsFit); visualViewport.addEventListener('scroll', tsFit); }
@@ -881,6 +885,8 @@ applyLook();
       var it = { id: 'b' + newId(), type: 'i', fid: fid, x: 0.25, y: bdNextY(), rot: 0, size: 240 }; bd.items.push(it); bdChanged(it); }); });
   });
 
+  var PHONE_VERSION = 89;
+  $('ver').textContent = 'Ketchup ' + PHONE_VERSION;
   loadLocal();
   $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   render(); idleStatus();
