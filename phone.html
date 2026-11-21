@@ -293,6 +293,11 @@ applyLook();
 
   /* Look settings sheet */
   .cog { border: none; background: transparent; color: var(--muted); width: 36px; height: 36px; padding: 0; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+  .cog.logo { width: 44px; height: 44px; margin-right: -6px; }
+  .cog.logo svg { transition: transform .15s ease; }
+  .cog.logo:active svg { transform: scale(.9) rotate(-6deg); }
+  /* On the red Tomato look the red tomato needs a light ring to stand out. */
+  html[data-look=tomato]:not([data-mode=dark]) .cog.logo svg { filter: drop-shadow(0 0 0 #fff) drop-shadow(0 0 1.5px #fff8f0) drop-shadow(0 0 1.5px #fff8f0); }
   .hdr-r { display: flex; align-items: center; }
   .sheet-bg { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.45); display: none; }
   .sheet-bg.on { display: block; }
@@ -308,7 +313,7 @@ applyLook();
 </style>
 </head>
 <body>
-<header><h1>Today</h1><div class="hdr-r"><div class="date" id="date"></div><button class="cog" id="lookOpen" type="button" aria-label="Look: colour and light or dark"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button></div></header>
+<header><h1>Today</h1><div class="hdr-r"><div class="date" id="date"></div><button class="cog logo" id="lookOpen" type="button" aria-label="Look: colours and light or dark"><svg viewBox="-34 -42 68 72" width="34" height="34" aria-hidden="true"><g transform="rotate(-10)"><path d="M0-22C11-29 29-21 29 0 28 20 14 27 0 26-15 27-29 19-29 0-30-21-12-28 0-22z" fill="#d8432d"/><path d="M22 8c-3 9-11 15-21 16 12 3 22-5 21-16z" fill="#bf3722"/><path d="M-21-6q2-9 9-12" fill="none" stroke="#f39a84" stroke-width="2.6" stroke-linecap="round"/><path d="M0-24q-2-10 6-13 9-2 9 5-1 5-6 3" fill="none" stroke="#2c7d58" stroke-width="3.2" stroke-linecap="round"/><path d="M0-23l6-7 0 6 9-3-6 6 7 4-9 0-7 5-7-5-9 0 7-4-6-6 9 3 0-6z" fill="#2c7d58"/></g><path d="M0 6q.6-6 0-12M0 6q5 .6 9 0" fill="none" stroke="#fff6ea" stroke-width="3.6" stroke-linecap="round"/><circle cx="0" cy="6" r="2.4" fill="#fff6ea"/></svg></button></div></header>
 
 <section class="setup" id="setup" hidden>
   <h2>Connect to Ketchup</h2>
