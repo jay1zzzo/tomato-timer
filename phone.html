@@ -183,8 +183,15 @@ applyLook();
   .lk.on { border-color: var(--accent); }
 
   /* Add bar, plain rows and the task window */
-  .addbar { width: 100%; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 15px 16px; font-size: 17px; font-weight: 700; text-align: left; color: var(--on-accent); background: var(--accent); border: 0; border-radius: 14px; }
-  .addbar .plus { font-size: 24px; line-height: 1; font-weight: 400; margin-top: -2px; }
+  /* Add: a round button that floats at the bottom left, where a thumb reaches it easily. */
+  .addbar { position: fixed; z-index: 15; left: max(16px, calc(50% - 264px)); bottom: calc(env(safe-area-inset-bottom) + 18px); display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 22px 0 18px; border: 0; border-radius: 28px; font-size: 16px; font-weight: 700; color: var(--on-accent); background: var(--accent); box-shadow: 0 6px 18px rgba(0,0,0,.28); }
+  .addbar .plus { font-size: 26px; line-height: 1; font-weight: 400; margin-top: -2px; }
+  .addbar:active { transform: scale(.96); }
+  body { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+  body.noscroll .addbar, body:has(.hist.on) .addbar, body:has(.bdp.on) .addbar, body:has(.sheet.on) .addbar { visibility: hidden; }
+  html[data-look=tomato]:not([data-mode=dark]) .addbar { box-shadow: 0 5px 0 rgba(0,0,0,.18), 0 8px 20px rgba(80,10,0,.25); }
+  html[data-look=kitchen] .addbar { border-radius: 6px; }
+  html[data-look=mono] .addbar { border-radius: 0; box-shadow: none; outline: 2px solid var(--bg); }
   li { padding: 6px 6px 6px 12px; gap: 6px; align-items: center; }
   li.starred { padding: 5px 5px 5px 11px; }
   .tbody { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 10px 6px; background: none; border: 0; color: inherit; text-align: left; }
@@ -223,23 +230,20 @@ applyLook();
   html[data-look=studio] :is(.tabs, .tab) { border-radius: 999px; }
   html[data-look=studio] .tabs { background: transparent; border-color: transparent; padding: 0; }
   html[data-look=studio] .tab.on { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
-  html[data-look=studio] .addbar { border-radius: 999px; padding-left: 20px; }
   html[data-look=studio] h1 { font-weight: 300; font-size: 34px; letter-spacing: -.03em; }
   html[data-look=tomato] h1 { font-weight: 800; font-size: 34px; }
-  html[data-look=tomato] .addbar { font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.18); }
-  html[data-look=tomato] .addbar:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.18); }
   html[data-look=tomato] li { border-color: transparent; }
   html[data-look=tomato] .tabs { border-color: transparent; }
   html[data-look=tomato] .tab.on { background: rgba(255,255,255,.24); color: var(--ink); }
   html[data-look=tomato][data-mode=dark] .tab.on { background: var(--accent); color: var(--on-accent); }
   html[data-look=tomato]:not([data-mode=dark]) .tsheet { --surface:#fbeae4; --ink:#3a1712; --muted:#8a574c; --line:#f0cfc5; --accent:#d8432d; --on-accent:#fff; --accent-ink:#b9321f; --bad:#b9321f; }
-  html[data-look=kitchen] :is(.addbar, .tsheet, .quick button, .fav, .ts-when input, .ts-head .add) { border-radius: 5px; }
+  html[data-look=kitchen] :is(.tsheet, .quick button, .fav, .ts-when input, .ts-head .add) { border-radius: 5px; }
   html[data-look=kitchen] .tab.on { background: var(--ink); color: var(--bg); }
   html[data-look=kitchen] .chk { border-radius: 4px; }
-  html[data-look=garden] :is(li, .addbar, .tabs) { border-radius: 22px; }
+  html[data-look=garden] :is(li, .tabs) { border-radius: 22px; }
   html[data-look=garden] .tab { border-radius: 18px; }
   html[data-look=garden] .chk { border-width: 3px; }
-  html[data-look=mono] :is(.addbar, .tsheet, .quick button, .fav, .ts-when input, .ts-head .add, .chk) { border-radius: 0; }
+  html[data-look=mono] :is(.tsheet, .quick button, .fav, .ts-when input, .ts-head .add, .chk) { border-radius: 0; }
   html[data-look=mono] h1 { font-weight: 200; font-size: 40px; letter-spacing: -.04em; }
   html[data-look=mono] ul { gap: 0; }
   html[data-look=mono] li { background: none; border-width: 0 0 1px; }
@@ -253,8 +257,6 @@ applyLook();
   .date { font-size: 13px; }
   .tab { font-size: 14px; padding-top: 9px; padding-bottom: 9px; }
   @media (max-width: 380px) { .tab { font-size: 13.5px; } }
-  .addbar { font-size: 15.5px; padding: 12px 14px; margin-bottom: 12px; }
-  .addbar .plus { font-size: 21px; }
   .tabs { margin-bottom: 12px; }
   ul { gap: 6px; }
   .t { font-size: 15.5px; line-height: 1.3; }
@@ -304,7 +306,7 @@ applyLook();
 </section>
 
 <div class="tabs" role="tablist"><button class="tab on" id="tabToday" type="button" role="tab">Today<span class="n" id="nToday"></span></button><button class="tab" id="tabLater" type="button" role="tab">Later<span class="n" id="nLater"></span></button><button class="tab" id="tabUp" type="button" role="tab">Upcoming<span class="n" id="nUp"></span></button></div>
-<button class="addbar" id="addOpen" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLabel">Add a task</span></button>
+<button class="addbar" id="addOpen" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLabel">Add</span></button>
 <ul id="list"></ul>
 <p class="empty" id="empty">Nothing on today&rsquo;s list. When someone gives you a task, type it above.</p>
 
@@ -546,7 +548,8 @@ applyLook();
     var nU = all.filter(function (t) { return dueOf(t) && !t.done; }).length;
     $('nToday').textContent = nT ? ' ' + nT : ''; $('nLater').textContent = nL ? ' ' + nL : ''; $('nUp').textContent = nU ? ' ' + nU : '';
     $('tabToday').className = 'tab' + (tab === 'today' ? ' on' : ''); $('tabLater').className = 'tab' + (tab === 'later' ? ' on' : ''); $('tabUp').className = 'tab' + (tab === 'upcoming' ? ' on' : '');
-    $('addLabel').textContent = tab === 'later' ? 'Park something for later' : tab === 'upcoming' ? 'Add a call or deadline' : 'Add a task';
+    $('addLabel').textContent = 'Add';
+    $('addOpen').setAttribute('aria-label', tab === 'later' ? 'Add something for later' : tab === 'upcoming' ? 'Add a call or deadline' : 'Add a task');
     $('empty').textContent = tab === 'later' ? 'Nothing parked for later. Add anything you don’t want to think about today.' : tab === 'upcoming' ? 'Nothing dated yet. Add one with its date; it moves into Today on the day.' : 'Nothing on today’s list. When someone gives you a task, add it above.';
     var items;
     if (tab === 'upcoming') {
