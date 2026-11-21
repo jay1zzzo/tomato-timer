@@ -248,6 +248,34 @@ applyLook();
   html[data-look=mono] .tab { flex: none; padding: 6px 0; border-bottom: 2px solid transparent; }
   html[data-look=mono] .tab.on { background: none; color: var(--ink); border-bottom-color: var(--ink); }
 
+  /* Calmer sizes: closer to the iPhone's own lists. Fields you type in stay at 16px or more so the page never zooms in. */
+  h1 { font-size: 24px; }
+  .date { font-size: 13px; }
+  .tab { font-size: 14px; padding-top: 9px; padding-bottom: 9px; }
+  @media (max-width: 380px) { .tab { font-size: 13.5px; } }
+  .addbar { font-size: 15.5px; padding: 12px 14px; margin-bottom: 12px; }
+  .addbar .plus { font-size: 21px; }
+  .tabs { margin-bottom: 12px; }
+  ul { gap: 6px; }
+  .t { font-size: 15.5px; line-height: 1.3; }
+  .tbody { padding: 8px 6px; gap: 5px; }
+  .chip { font-size: 12px; padding: 2px 8px; }
+  .chk { width: 24px; height: 24px; font-size: 13px; }
+  .st { font-size: 19px; width: 40px; height: 40px; }
+  .uphead { font-size: 11.5px; }
+  .empty { font-size: 14px; }
+  #tsText { font-size: 17px; min-height: 112px; }
+  .ts-head h2 { font-size: 16px; }
+  .ts-head .add { font-size: 15px; padding: 8px 18px; }
+  .quick button { font-size: 13.5px; padding: 7px 11px; }
+  .fav { font-size: 14px; }
+  .seg button { font-size: 13px; }
+  .lk { font-size: 12.5px; }
+  html[data-look=studio] h1 { font-size: 28px; }
+  html[data-look=tomato] h1 { font-size: 27px; }
+  html[data-look=kitchen] h1 { font-size: 31px; }
+  html[data-look=mono] h1 { font-size: 32px; }
+
   /* Look settings sheet */
   .cog { border: none; background: transparent; color: var(--muted); width: 36px; height: 36px; padding: 0; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
   .hdr-r { display: flex; align-items: center; }
