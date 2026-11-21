@@ -4490,7 +4490,9 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   }
   // A dated task parked in Later shows in Today on its day (and stays there while overdue). Decided here, not saved.
   function pinnedToday(t) { var d = dueOf(t); return !!d && d <= dayKey(); }
-  function isLater(t) { return t.later === true && !pinnedToday(t); }
+  // Where a task shows. A dated task follows its date: today or earlier it is in Today; in the future it waits in
+  // Later (and Upcoming) until its day, unless it is starred, which keeps it in Today. Undated tasks use their list.
+  function isLater(t) { var d = dueOf(t); if (d) return d > dayKey() && !t.starred; return t.later === true; }
   function upcomingTasks() {
     return tasksState.tasks.filter(function (t) { return dueOf(t) && !t.done; })
       .sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : (a.dueTime || '') < (b.dueTime || '') ? -1 : (a.dueTime || '') > (b.dueTime || '') ? 1 : 0; });
@@ -4644,7 +4646,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function moveTask(id, later) {
     var t = findTask(id);
     if (!t) return;
-    if (later && pinnedToday(t)) return; // dated for today or overdue: it stays in Today until the date changes
+    if (dueOf(t)) return; // a dated task's list follows its date (star it to keep a future one in Today)
     t.later = later;
     t.updated = Date.now();
     if (later && tasksState.focusId === id) tasksState.focusId = null;
@@ -5276,10 +5278,11 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     starBtn.innerHTML = STAR_SVG;
     starBtn.addEventListener('click', function () { toggleStar(t.id); });
 
-    var focusBtn = el('button', 'task-focus', isLater(t) ? 'Today' : 'Focus');
+    var focusBtn = el('button', 'task-focus', isLater(t) ? (dueOf(t) ? 'Keep in Today' : 'Today') : 'Focus');
+    if (isLater(t) && dueOf(t)) focusBtn.title = 'Stars it, so it stays in Today before its date';
     focusBtn.type = 'button';
     focusBtn.setAttribute('aria-label', (isLater(t) ? 'Move to today: ' : 'Focus on: ') + t.title);
-    focusBtn.addEventListener('click', function () { if (isLater(t)) moveTask(t.id, false); else focusOn(t.id); });
+    focusBtn.addEventListener('click', function () { if (isLater(t)) { if (dueOf(t)) toggleStar(t.id); else moveTask(t.id, false); } else focusOn(t.id); });
 
     var dateBtn = el('button', 'task-later task-dateb');
     dateBtn.type = 'button';
@@ -5289,7 +5292,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     dateBtn.addEventListener('click', function () { dateEditingId = dateEditingId === t.id ? null : t.id; renderList(); });
 
     var laterBtn = null;
-    if (!isLater(t) && !pinnedToday(t)) {
+    if (!isLater(t) && !dueOf(t)) {
       laterBtn = el('button', 'task-later', 'Later');
       laterBtn.type = 'button';
       laterBtn.setAttribute('aria-label', 'Move to later: ' + t.title);

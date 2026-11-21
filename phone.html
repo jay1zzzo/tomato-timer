@@ -211,9 +211,9 @@ applyLook();
   .ts-when input { font: inherit; font-size: 16px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
   .ts-when input[type=date] { flex: 1 1 150px; } .ts-when input[type=time] { flex: 0 1 120px; }
   .ts-when input:disabled { opacity: .45; }
-  .ts-row { display: flex; gap: 8px; align-items: stretch; }
+  .ts-row { display: flex; gap: 8px; align-items: stretch; margin-top: 10px; }
   .ts-row .seg { flex: 1; margin: 0; }
-  .fav { flex: none; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 15px; font-weight: 600; border-radius: 12px; padding: 0 14px; }
+  .fav { flex: none; min-height: 42px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 15px; font-weight: 600; border-radius: 12px; padding: 0 14px; }
   .fav.on { border-color: #ffc83d; background: rgba(255,200,61,.14); }
   .fav.on span { color: #e0a800; }
   .ts-note { min-height: 18px; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
@@ -341,7 +341,7 @@ applyLook();
     <div class="lbl">When</div>
     <div class="quick" id="tsQuick"><button type="button" data-q="none">No date</button><button type="button" data-q="0">Today</button><button type="button" data-q="1">Tomorrow</button><button type="button" data-q="mon">Next Mon</button></div>
     <div class="ts-when"><input type="date" id="tsDue" aria-label="Date"><input type="time" id="tsTime" aria-label="Time (optional)"></div>
-    <div class="lbl">List</div>
+    <div class="lbl" id="tsListLbl">List</div>
     <div class="ts-row"><div class="seg" id="tsList"><button type="button" data-l="today">Today</button><button type="button" data-l="later">Later</button></div><button class="fav" id="tsStar" type="button" aria-pressed="false"><span aria-hidden="true">&#9734;</span> Favourite</button></div>
     <p class="ts-note" id="tsNote"></p>
     <button class="link danger" id="tsDelete" type="button" hidden>Delete this task</button>
@@ -474,8 +474,10 @@ applyLook();
   function setDue(t, due, time) { if (due) t.due = due; else delete t.due; if (due && time) t.dueTime = time; else delete t.dueTime; }
   // A dated task in Later shows in Today on its day, and stays there while overdue. Worked out here; nothing is rewritten.
   function pinned(t) { var d = dueOf(t); return !!d && d <= dayKey(); }
-  function isLater(t) { return t.later === true && !pinned(t); }
-  function move(t, later) { if (later && pinned(t)) return; t.later = later; t.updated = Date.now(); changed(); }
+  // A dated task follows its date: today or earlier it is in Today; in the future it waits in Later and Upcoming
+  // until its day, unless it is favourited, which keeps it in Today. Undated tasks use their list.
+  function isLater(t) { var d = dueOf(t); if (d) return d > dayKey() && !t.starred; return t.later === true; }
+  function move(t, later) { if (dueOf(t)) return; t.later = later; t.updated = Date.now(); changed(); }
   function toggle(t) { t.done = !t.done; t.doneDay = t.done ? dayKey() : null; t.completedAt = t.done ? Date.now() : null; t.updated = Date.now(); changed(); }
   function remove(t) {
     state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
@@ -492,7 +494,9 @@ applyLook();
     $('tsTime').disabled = !due;
     Array.prototype.forEach.call($('tsList').children, function (b) { b.className = b.getAttribute('data-l') === ts.list ? 'on' : ''; });
     var st = $('tsStar'); st.className = 'fav' + (ts.star ? ' on' : ''); st.setAttribute('aria-pressed', ts.star ? 'true' : 'false'); st.firstChild.textContent = ts.star ? '★' : '☆';
-    $('tsNote').textContent = ts.list === 'later' && due ? (due <= dayKey() ? 'Dated today or earlier, so it shows in Today.' : 'It moves into Today on its day.') : '';
+    // With a date, the list is decided by the date, so the Today / Later choice is hidden.
+    $('tsListLbl').hidden = !!due; $('tsList').style.display = due ? 'none' : '';
+    $('tsNote').textContent = !due ? '' : due <= dayKey() ? 'Dated today or earlier, so it shows in Today.' : ts.star ? 'Favourited, so it stays in Today until its day.' : 'It waits in Upcoming and Later, then moves into Today on its day. Favourite it to keep it in Today now.';
   }
   function tsOpen(t) {
     ts.task = t || null;
