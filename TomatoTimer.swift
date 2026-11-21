@@ -307,9 +307,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     })();
     """
 
+    // The Ketchup icon arrives with updates as app-icon.png and is shown in the Dock while the app is open.
+    // The app file itself is left untouched, so its icon in Finder stays as installed.
+    func applyDockIcon() {
+        let file = supportDir().appendingPathComponent("site/app-icon.png")
+        if let img = NSImage(contentsOf: file), img.size.width > 16 { NSApp.applicationIconImage = img }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         buildMenu()
+        applyDockIcon()
 
         let config = WKWebViewConfiguration()
         config.setURLSchemeHandler(SiteHandler(), forURLScheme: "tomato")
@@ -554,7 +562,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 8
+    let nativeVersion = 9
 
     func askRestart() {
         if restartAsked { return }
@@ -616,6 +624,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         }
 
         defer { rebuildNativeIfNeeded(fetch) }
+        // Fetch the Dock icon once (a small picture); later launches use the saved copy.
+        let iconFile = site.appendingPathComponent("app-icon.png")
+        if !fm.fileExists(atPath: iconFile.path), let pic = fetch("app-icon.png"), pic.count > 1000, NSImage(data: pic) != nil {
+            try? fm.createDirectory(at: site, withIntermediateDirectories: true)
+            try? pic.write(to: iconFile, options: .atomic)
+            DispatchQueue.main.async { [weak self] in self?.applyDockIcon() }
+        }
         guard let vdata = fetch("version.txt"),
               let vtext = String(data: vdata, encoding: .utf8) else { return }
         let vstr = vtext.trimmingCharacters(in: .whitespacesAndNewlines)
