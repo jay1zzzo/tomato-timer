@@ -1786,7 +1786,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <li><b>Looks:</b> five complete appearances (Studio, Tomato, Kitchen timer, Garden, Mono) with Light, Dark or Match Mac, plus Classic with all its old options</li>
         <li><b>Today window:</b> the Today button (top right) opens your tasks in a window; things you do every day sit at the top</li>
         <li><b>Sync:</b> tasks, calendar, board and files stay the same on every computer via a private GitHub repo</li>
-        <li><b>Phone page:</b> quick add for today&rsquo;s tasks from your iPhone</li>
+        <li><b>Phone page:</b> quick add for today&rsquo;s tasks from your iPhone; the look you pick follows you between Mac, PC and phone</li>
         <li><b>Updates:</b> checks for a new version when it opens, one click to update</li>
       </ul>
     </details>
@@ -2085,7 +2085,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'off', remGone: '', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', showBoard: 'on', mode: '', look: '', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'off', remGone: '', lookAt: '', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -2105,7 +2105,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'remGone', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'showBoard', 'mode', 'look', 'lookAt', 'remGone', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2411,6 +2411,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (!cfg.mode) cfg.mode = lookMode();   // keep the current light/dark choice when switching
         cfg.look = l[0] === 'classic' ? '' : l[0];
         if (cfg.look) cfg.backdrop = 'colour';   // show the look's own colours; the Photos switch below brings the slideshow back
+        lookTouched();
         saveCfg(); applyColours(); updatePhotoMode(); buildNowOpts(); render();
         var again = document.querySelector('#sxLooks .sx-look.is-on'); if (again) again.focus();
       });
@@ -2422,7 +2423,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       var b = document.createElement('button'); b.type = 'button'; b.className = 'sx-mode' + (both && mode === o[0] ? ' is-on' : '');
       b.textContent = o[1]; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', both && mode === o[0] ? 'true' : 'false');
       b.disabled = !both;
-      b.addEventListener('click', function () { cfg.mode = o[0]; saveCfg(); applyColours(); buildNowOpts(); });
+      b.addEventListener('click', function () { cfg.mode = o[0]; lookTouched(); saveCfg(); applyColours(); buildNowOpts(); });
       m.appendChild(b);
     });
     var note = $('sxModeNote'), other = THEMES.filter(function (x) { return x[0] === sk; })[0];
@@ -2693,7 +2694,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     $('spReset').addEventListener('click', function () {
       if (!window.confirm('Reset photos, timing and colours to the originals? Photos you added will be removed.')) return;
       cfg.images.forEach(function (m) { if (m.idb) idbDel(m.id).catch(function () {}); });
-      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'off', remGone: '', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+      cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', pipTask: 'on', remPill: 'off', remGone: '', lookAt: '', bgPause: 'off', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
       saveCfg(); applyTiming(); applyColours(); buildLayers(); renderPhotos(); syncTimingUI();
       buildAllSwatches(); render();
     });
@@ -4826,12 +4827,37 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     });
   }
 
+  // The look (and light / dark / match) is shared through look.json in the same private repo, so a change on the
+  // Mac, the PC or the phone follows you to the others. Newest change wins. Everything else in Settings stays per device.
+  function lookTouched() { cfg.lookAt = String(Date.now()); scheduleSync(600); }
+  function lookSyncOnce(attempt) {
+    return ghFetch('GET', null, 'look.json').then(function (res) {
+      if (res.status === 404) return { sha: null, data: null };
+      if (!res.ok) throw fail('http');
+      return res.json().then(function (j) { var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {} return { sha: j.sha, data: d }; });
+    }).then(function (remote) {
+      var r = remote.data, mine = +cfg.lookAt || 0, theirs = r && +r.updated || 0;
+      if (theirs > mine) {
+        cfg.look = LOOKS.some(function (l) { return l[0] === r.look; }) ? r.look : '';
+        if (r.mode === 'light' || r.mode === 'dark' || r.mode === 'auto') cfg.mode = r.mode;
+        cfg.lookAt = String(theirs);
+        saveCfg(); applyColours(); updatePhotoMode(); render(); if (settingsOpen) buildNowOpts();
+        return;
+      }
+      if (!mine || mine === theirs) return;   // nothing chosen on this device yet, or already the same
+      var body = { message: 'Sync look', content: b64enc(JSON.stringify({ v: 1, look: curLook(), mode: lookMode(), updated: mine }, null, 1)) };
+      if (remote.sha) body.sha = remote.sha;
+      return ghFetch('PUT', JSON.stringify(body), 'look.json').then(function (res) {
+        if ((res.status === 409 || res.status === 422) && attempt < 3) return lookSyncOnce(attempt + 1);
+      });
+    }).catch(function () {});   // the look is a nicety: never let it mark the task sync as failed
+  }
   function doSync() {
     if (!syncOn()) return Promise.resolve();
     if (syncBusy) { syncAgain = true; return Promise.resolve(); }
     syncBusy = true;
     setSyncStatus('Syncing…');
-    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () { return bdSyncOnce(1); }).then(function () {
+    return syncOnce(1).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () { return bdSyncOnce(1); }).then(function () { return lookSyncOnce(1); }).then(function () {
       sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
     }).catch(function (e) {
       var c = e && e.code;
