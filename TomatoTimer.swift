@@ -243,13 +243,14 @@ final class MiniPanel: NSPanel {
     }
 
     func update(time: String, running: Bool, accent: String, tag: String, progress pct: Int = 0) {
-        let W = MiniPanel.W
         timeLabel.stringValue = time
         box.toolTip = tag
         let modeNames = ["focus", "short break", "long break"]
         let showTask = !tag.isEmpty && !modeNames.contains(tag.lowercased())
         tagLabel.stringValue = showTask ? tag : ""
         tagLabel.isHidden = !showTask
+        // With a task to show the card is wide; without one it shrinks to just the button and the time.
+        let W: CGFloat = showTask ? MiniPanel.W : 172
         var textH: CGFloat = 0
         if showTask {
             // The task sits under the time, up to two lines; the card grows to fit.
@@ -260,17 +261,24 @@ final class MiniPanel: NSPanel {
             textH = min(ceil(r.height) + 1, 30)
         }
         let wantH = showTask ? 9 + textH + 2 + 30 + 7 : MiniPanel.baseH
-        if abs(frame.size.height - wantH) > 1 {
-            setFrame(NSRect(x: frame.origin.x, y: frame.origin.y, width: W, height: wantH), display: true)
+        if abs(frame.size.height - wantH) > 1 || abs(frame.size.width - W) > 1 {
+            // Keep the right edge where it was, so the card shrinks or grows towards the left.
+            setFrame(NSRect(x: frame.maxX - W, y: frame.origin.y, width: W, height: wantH), display: true)
         }
         panelH = wantH
         box.frame = NSRect(x: 0, y: 0, width: W, height: wantH)
         timeLabel.frame = showTask ? NSRect(x: 56, y: wantH - 7 - 30, width: 120, height: 30)
-                                   : NSRect(x: 56, y: (wantH - 30) / 2 + 1, width: 120, height: 30)
+                                   : NSRect(x: 56, y: (wantH - 30) / 2 + 1, width: 90, height: 30)
         tagLabel.frame = NSRect(x: 57, y: 9, width: 166, height: textH > 0 ? textH : 16)
         button.frame = NSRect(x: 11, y: (wantH - 34) / 2 + 1, width: 34, height: 34)
-        closeButton.frame = NSRect(x: W - 26, y: wantH - 25, width: 16, height: 16)
-        mailButton.frame = NSRect(x: W - 52, y: wantH - 26, width: 20, height: 18)
+        if showTask {
+            closeButton.frame = NSRect(x: W - 26, y: wantH - 25, width: 16, height: 16)
+            mailButton.frame = NSRect(x: W - 52, y: wantH - 26, width: 20, height: 18)
+        } else {
+            // Narrow card: close at the top right, mail under it.
+            closeButton.frame = NSRect(x: W - 22, y: wantH - 22, width: 16, height: 16)
+            mailButton.frame = NSRect(x: W - 24, y: 6, width: 20, height: 18)
+        }
         if running != isRunning || button.image == nil { setPlayIcon(running: running) }
         let c = hexColor(accent, fallback: NSColor(calibratedRed: 1, green: 0.42, blue: 0.29, alpha: 1))
         button.layer?.backgroundColor = c.cgColor
@@ -562,7 +570,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 9
+    let nativeVersion = 10
 
     func askRestart() {
         if restartAsked { return }
