@@ -353,8 +353,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
         web.load(URLRequest(url: URL(string: "tomato://app/index.html")!))
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 4) { [weak self] in
+        updateQueue.asyncAfter(deadline: .now() + 4) { [weak self] in
             self?.checkForUpdate()
+        }
+        // Also look for updates every 30 minutes while the app stays open (one check at a time, on its own queue).
+        Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { [weak self] _ in
+            self?.updateQueue.async { self?.checkForUpdate() }
         }
     }
 
@@ -568,13 +572,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     // MARK: updates from GitHub (applies next time the app opens)
 
-    var restartAsked = false
+    let updateQueue = DispatchQueue(label: "ketchup.update")
+    var lastAsked = ""        // the update the restart question was last shown for (main thread only)
+    var builtNative = 0       // native version already rebuilt while this copy is running (update queue only)
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 10
+    let nativeVersion = 11
 
-    func askRestart() {
-        if restartAsked { return }
-        restartAsked = true
+    // Asks once per new update: saying "Later" is remembered until something newer arrives.
+    func askRestart(_ key: String) {
+        if key == lastAsked { return }
+        lastAsked = key
         let alert = NSAlert()
         alert.messageText = "Update ready"
         alert.informativeText = "A new version of Ketchup has been downloaded. Restart now to start using it? (A running timer will reset.)"
@@ -650,7 +657,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             try page.write(to: site.appendingPathComponent("index.html"), options: .atomic)
             try vstr.write(to: site.appendingPathComponent("version.txt"), atomically: true, encoding: .utf8)
             DispatchQueue.main.async { [weak self] in
-                self?.askRestart()
+                self?.askRestart("page \(vstr)")
             }
         } catch {}
     }
@@ -661,7 +668,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         guard let vd = fetch("native-version.txt"),
               let vs = String(data: vd, encoding: .utf8),
               let remote = Int(vs.trimmingCharacters(in: .whitespacesAndNewlines)),
-              remote > nativeVersion else { return }
+              remote > nativeVersion, remote > builtNative else { return }
         guard FileManager.default.isExecutableFile(atPath: "/usr/bin/swiftc"),
               let src = fetch("TomatoTimer.swift"), src.count > 5000,
               let text = String(data: src, encoding: .utf8), text.contains("NSApplication") else { return }
@@ -693,7 +700,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             try? cs.run()
             cs.waitUntilExit()
             try? fm.removeItem(at: work)
-            DispatchQueue.main.async { [weak self] in self?.askRestart() }
+            builtNative = remote
+            DispatchQueue.main.async { [weak self] in self?.askRestart("app \(remote)") }
         } catch { try? fm.removeItem(at: work) }
     }
 }
