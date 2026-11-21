@@ -16,7 +16,7 @@ var LOOKS = [['studio', 'Studio'], ['tomato', 'Tomato'], ['kitchen', 'Kitchen ti
 var LOOK_BG = { studio: ['#f2f3f5', '#17191c'], tomato: ['#d8432d', '#2b1410'], kitchen: ['#e4e8eb', '#13161a'], garden: ['#e7efe3', '#151c16'], mono: ['#ffffff', '#000000'] };
 function readLook() {
   var look = { look: '', accent: 'tomato', mode: 'dark', at: 0 };
-  try { var l = JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); if (l) { if (typeof l.look === 'string') look.look = l.look; if (l.accent) look.accent = l.accent; if (l.mode) look.mode = l.mode; look.at = +l.at || 0; } } catch (e) {}
+  try { var l = JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); if (l) { if (typeof l.look === 'string') look.look = l.look; if (l.accent) look.accent = l.accent; if (l.mode) look.mode = l.mode; look.at = +l.at || 0; look.rev = +l.rev || 0; look.dirty = l.dirty ? 1 : 0; } } catch (e) {}
   if (!LOOK_BG[look.look]) look.look = '';
   return look;
 }
@@ -452,7 +452,7 @@ applyLook();
     if (!syncOn()) return Promise.resolve();
     if (busy) { again = true; return Promise.resolve(); }
     busy = true; status('Syncing…');
-    return once(1).then(function () { return bdOnce(1); }).then(function () { return lookOnce(1); }).then(function () { sync.lastOk = Date.now(); saveSync(); idleStatus(); }).catch(function (e) {
+    return lookOnce(1).then(function () { return once(1); }).then(function () { return bdOnce(1); }).then(function () { sync.lastOk = Date.now(); saveSync(); idleStatus(); }).catch(function (e) {
       var c = e && e.code;
       status(c === 'auth' ? 'Token rejected. Disconnect and paste a new one.' : c === 'forbidden' ? 'GitHub refused access. The token needs Contents: Read and write.' : c === 'norepo' ? 'Repo not found. Check the name.' : c === 'conflict' ? 'Collision, retrying…' : 'Offline. Will retry.', 'bad');
     }).then(function () { busy = false; if (again) { again = false; schedule(800); } });
@@ -589,10 +589,11 @@ applyLook();
   // --- Look: accent colour and Light / Dark / Match iPhone, saved on this phone ---
   var LOOK_DOT = { studio: ['#e04e34', '#ff6a4d'], tomato: ['#ffffff', '#ff6a4d'], kitchen: ['#d3241c', '#ff4a3d'], garden: ['#3a7a49', '#86c490'], mono: ['#000000', '#ffffff'] };
   function writeLook(l) { try { localStorage.setItem(LOOK_KEY, JSON.stringify(l)); } catch (e) {} }
-  // A change to the look or light/dark is stamped with the time, so the newest choice wins across your devices.
+  // A change you make here is marked "to send" and goes out first in the next sync (see lookOnce).
+  var lookLocalAt = 0;
   function saveLook(k, v) {
     var l = readLook(); l[k] = v;
-    l.at = Date.now();
+    l.dirty = 1; lookLocalAt = Date.now();
     writeLook(l); renderLook();
     schedule(600);
   }
@@ -612,25 +613,30 @@ applyLook();
     Array.prototype.forEach.call($('modeSeg').children, function (b) { b.className = b.getAttribute('data-m') === look.mode ? 'on' : ''; });
     $('lookNote').textContent = syncOn() ? 'The look and light or dark follow you to your Mac and PC.' : 'Connect to Ketchup and the look follows you to your Mac and PC.';
   }
-  // look.json in the same repo carries the look between devices (newest wins). Classic's accent colour stays on this phone.
+  // look.json in the same repo carries the look between devices. No device clocks: a change made here goes out with a
+  // revision one higher than any seen; a change from elsewhere is only taken when none of ours is waiting, and never
+  // while the Look sheet is open or in the 15 seconds after choosing. Classic's colours stay on this phone.
   function lookOnce(n) {
     return ghf('GET', null, 'look.json').then(function (res) {
       if (res.status === 404) return { sha: null, data: null };
       if (!res.ok) throw fail('http');
       return res.json().then(function (j) { var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {} return { sha: j.sha, data: d }; });
     }).then(function (remote) {
-      var r = remote.data, l = readLook(), mine = l.at, theirs = r && +r.updated || 0;
-      if (theirs > mine) {
-        l.look = LOOK_BG[r.look] ? r.look : '';
-        if (r.mode === 'light' || r.mode === 'dark' || r.mode === 'auto') l.mode = r.mode;
-        l.at = theirs; writeLook(l);
-        if ($('sheet').className.indexOf('on') >= 0) renderLook(); else applyLook();
-        return;
+      var r = remote.data, l = readLook(), theirs = r && +r.rev || 0, seen = l.rev;
+      if (l.dirty) {
+        var rev = Math.max(theirs, seen) + 1;
+        var body = { message: 'Sync look', content: b64enc(JSON.stringify({ v: 2, look: l.look, mode: l.mode, rev: rev, updated: Date.now() }, null, 1)) };
+        if (remote.sha) body.sha = remote.sha;
+        return ghf('PUT', JSON.stringify(body), 'look.json').then(function (res) {
+          if (res.ok) { var now = readLook(); now.rev = rev; if (now.look === l.look && now.mode === l.mode) now.dirty = 0; writeLook(now); return; }
+          if ((res.status === 409 || res.status === 422) && n < 3) return lookOnce(n + 1);
+        });
       }
-      if (!mine || mine === theirs) return;
-      var body = { message: 'Sync look', content: b64enc(JSON.stringify({ v: 1, look: l.look, mode: l.mode, updated: mine }, null, 1)) };
-      if (remote.sha) body.sha = remote.sha;
-      return ghf('PUT', JSON.stringify(body), 'look.json').then(function (res) { if ((res.status === 409 || res.status === 422) && n < 3) return lookOnce(n + 1); });
+      var choosing = $('sheet').className.indexOf('on') >= 0 || Date.now() - lookLocalAt < 15000;
+      if (theirs <= seen || choosing) return;
+      l.look = LOOK_BG[r.look] ? r.look : '';
+      if (r.mode === 'light' || r.mode === 'dark' || r.mode === 'auto') l.mode = r.mode;
+      l.rev = theirs; writeLook(l); applyLook();
     }).catch(function () {});
   }
   function lookOpen(on) { $('sheet').className = 'sheet' + (on ? ' on' : ''); $('sheetBg').className = 'sheet-bg' + (on ? ' on' : ''); $('sheet').setAttribute('aria-hidden', on ? 'false' : 'true'); if (on) renderLook(); }
