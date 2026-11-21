@@ -326,7 +326,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 760),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-        window.title = "Tomato Timer"
+        window.title = "Ketchup"
         window.minSize = NSSize(width: 380, height: 560)
         window.backgroundColor = NSColor(calibratedRed: 0.086, green: 0.075, blue: 0.059, alpha: 1)
         window.contentView = web
@@ -355,9 +355,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        appMenu.addItem(withTitle: "Hide Tomato Timer", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Hide Ketchup", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(withTitle: "Quit Tomato Timer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Ketchup", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         let editItem = NSMenuItem(); main.addItem(editItem)
         let edit = NSMenu(title: "Edit"); editItem.submenu = edit
@@ -554,14 +554,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     var restartAsked = false
     // Bump native-version.txt on GitHub together with TomatoTimer.swift when the Mac app itself changes.
-    let nativeVersion = 7
+    let nativeVersion = 8
 
     func askRestart() {
         if restartAsked { return }
         restartAsked = true
         let alert = NSAlert()
         alert.messageText = "Update ready"
-        alert.informativeText = "A new version of Tomato Timer Lab has been downloaded. Restart now to start using it? (A running timer will reset.)"
+        alert.informativeText = "A new version of Ketchup has been downloaded. Restart now to start using it? (A running timer will reset.)"
         alert.addButton(withTitle: "Restart now")
         alert.addButton(withTitle: "Later")
         NSApp.activate(ignoringOtherApps: true)

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Today</title>
+<title>Ketchup</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Today">
+<meta name="apple-mobile-web-app-title" content="Ketchup">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#16130f" id="themeColor">
 <script>
@@ -296,8 +296,8 @@ applyLook();
 <header><h1>Today</h1><div class="hdr-r"><div class="date" id="date"></div><button class="cog" id="lookOpen" type="button" aria-label="Look: colour and light or dark"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button></div></header>
 
 <section class="setup" id="setup" hidden>
-  <h2>Connect to Tomato Timer</h2>
-  <p>Paste the same GitHub token you use in Tomato Timer, so tasks you add here show up there.</p>
+  <h2>Connect to Ketchup</h2>
+  <p>Paste the same GitHub token you use in Ketchup on your computer, so tasks you add here show up there.</p>
   <input type="text" id="repo" spellcheck="false" autocomplete="off" autocapitalize="off" value="jay1zzzo/tomato-data" aria-label="Repo">
   <input type="password" id="token" autocomplete="off" placeholder="GitHub token" aria-label="GitHub token">
   <button class="add" id="connect" type="button">Connect</button>
@@ -606,7 +606,7 @@ applyLook();
       lk.appendChild(b);
     });
     Array.prototype.forEach.call($('modeSeg').children, function (b) { b.className = b.getAttribute('data-m') === look.mode ? 'on' : ''; });
-    $('lookNote').textContent = syncOn() ? 'The look and light or dark follow you to your Mac and PC.' : 'Connect to Tomato Timer and the look follows you to your Mac and PC.';
+    $('lookNote').textContent = syncOn() ? 'The look and light or dark follow you to your Mac and PC.' : 'Connect to Ketchup and the look follows you to your Mac and PC.';
   }
   // look.json in the same repo carries the look between devices (newest wins). Classic's accent colour stays on this phone.
   function lookOnce(n) {
