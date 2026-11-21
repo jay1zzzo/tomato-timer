@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>Tomato Timer Lab</title>
-<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}}catch(e){}</script>
+<script>try{var __l=JSON.parse(localStorage.getItem('tomato-timer-lab-look')||'{}');if(__l&&__l.uiStyle==='sharp')document.documentElement.setAttribute('data-style','sharp');if(__l&&__l.skin&&__l.skin!=='tomato')document.documentElement.setAttribute('data-skin',__l.skin);if(__l&&__l.layout&&__l.layout!=='centred')document.documentElement.setAttribute('data-layout',__l.layout);if(__l){var __d=document.documentElement;if(__l.panels==='workspace')__d.setAttribute('data-panels','workspace');if(__l.density==='compact')__d.setAttribute('data-density','compact');if(__l.text==='large')__d.setAttribute('data-text','large');if(__l.font&&__l.font!=='plex')__d.setAttribute('data-font',__l.font);}var __D=document.documentElement;__D.setAttribute('data-showcal',__l&&__l.showCal==='on'?'on':'off');__D.setAttribute('data-showfiles',__l&&__l.showFiles==='on'?'on':'off');}catch(e){}</script>
 <meta name="theme-color" content="#c8432b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tomato Timer Lab">
@@ -179,6 +179,10 @@
   /* Focus mode (Settings > Focus mode = Clean): while a task is focused, everything except the timer and your task fades away. */
   html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.rem-pop,.lod,.pip-btn,.board-credit,details.settings,.drawer){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
   html[data-focusclean=on] body.focusing:not(.drawer-open) :is(.learn,.cal-handle,.fl-handle,.rem-pill,.lod,.pip-btn,.drawer){transition:opacity .35s ease}
+  /* Settings > Content calendar / Files: Hidden removes the button and panel only (data and sync untouched). */
+  html[data-showcal=off] :is(#calHandle,#cal,#calBackdrop,#calView){display:none!important}
+  html[data-showfiles=off] :is(#flHandle,#fl,#flBackdrop,#flView){display:none!important}
+  @media (min-width: 700px) { html[data-layout=rail][data-showcal=off] #flHandle{top:84px} }
   /* Panels: Workspace (Job Desk-style Content and Files panels): wider, serif heading, thin rules, flat rows */
   html[data-panels=workspace] :is(.cal,.fl){width:min(780px,100vw);border-top:0;border-right:1px solid var(--line);box-shadow:none}
   html[data-panels=workspace] :is(.cal,.fl) .cal-head{padding:26px 32px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
@@ -1043,6 +1047,27 @@
   .dtab-n { font-family: "IBM Plex Mono", monospace; font-weight: 600; opacity: .85; margin-left: 2px; }
   .task-later { appearance: none; font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 6px 9px; border-radius: var(--r8); border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
   .task-later:hover { color: var(--ink); border-color: var(--muted); }
+  /* Optional dates: chip on a task, the add/edit date row, and the Upcoming tab's groups. */
+  .task-add .add-date { display: flex; align-items: center; justify-content: center; }
+  .task-add .add-date.on { color: var(--accent, var(--focus)); border-color: var(--accent, var(--focus)); }
+  .task-when { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0 0; }
+  .task-when[hidden] { display: none; }
+  .task-when input { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r8); padding: 6px 8px; color-scheme: inherit; }
+  .task-when input[type=date] { flex: 1 1 130px; min-width: 0; }
+  .task-when input[type=time] { flex: 0 1 100px; min-width: 0; }
+  .when-clear, .when-save { appearance: none; font: inherit; font-size: 11.5px; font-weight: 600; padding: 6px 9px; border-radius: var(--r8); border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .when-save { border-color: var(--accent, var(--focus)); color: var(--accent, var(--focus)); }
+  .when-clear:hover { color: var(--ink); border-color: var(--muted); }
+  .task-due { align-self: flex-start; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 1px 7px; border-radius: var(--r999); border: 1px solid var(--line); color: var(--ink); line-height: 1.5; white-space: nowrap; }
+  .task-due.u-overdue { color: #fff; background: #c83a32; border-color: #c83a32; }
+  .task-due.u-soon { color: #fff; background: #e07a1f; border-color: #e07a1f; }
+  .task-due.u-far { color: var(--muted); border-style: dashed; }
+  .task.is-done .task-due { opacity: .6; background: transparent; color: var(--muted); border-color: var(--line); }
+  .task-dateb { padding: 5px 8px; display: inline-flex; align-items: center; }
+  .up-head { list-style: none; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 14px 2px 4px; border-bottom: 1px solid var(--line); }
+  .up-head:first-child { padding-top: 2px; }
+  .up-head.u-overdue { color: #c83a32; }
+  .up-head.u-soon { color: #e07a1f; }
   .task.is-done .task-later { display: none; }
   .sync-status.is-ok { color: var(--break); }
   .sync-status.is-bad { color: #ff7a7a; }
@@ -1377,13 +1402,20 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   <div class="drawer-tabs" role="tablist" aria-label="Task list">
     <button type="button" class="dtab is-on" role="tab" id="tabToday" aria-selected="true">Today <span class="dtab-n" id="tabTodayN"></span></button>
     <button type="button" class="dtab" role="tab" id="tabLater" aria-selected="false">Later <span class="dtab-n" id="tabLaterN"></span></button>
+    <button type="button" class="dtab" role="tab" id="tabUp" aria-selected="false">Upcoming <span class="dtab-n" id="tabUpN"></span></button>
   </div>
   <form class="task-add" id="taskForm" autocomplete="off">
     <label class="sr-only" for="taskInput">New task</label>
     <input type="text" id="taskInput" maxlength="600" placeholder="What needs doing today?">
+    <button type="button" class="add-star add-date" id="addDate" aria-pressed="false" aria-expanded="false" aria-controls="addWhen" title="Add a date (optional)" aria-label="Add a date (optional)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
     <button type="button" class="add-star" id="addStar" aria-pressed="false" title="Favourite this task" aria-label="Favourite this task">&#9734;</button>
     <button type="submit">Add</button>
   </form>
+  <div class="task-when" id="addWhen" hidden>
+    <input type="date" id="addDue" aria-label="Date">
+    <input type="time" id="addDueTime" aria-label="Time (optional)">
+    <button type="button" class="when-clear" id="addDueClear">No date</button>
+  </div>
   <ul class="task-list" id="taskList"></ul>
   <p class="task-empty" id="taskEmpty">Nothing on today&rsquo;s list yet. Add the few things that would make today a good one.</p>
   <p class="drawer-hint">Pick one with Focus. The rest stay out of sight until you switch. <span class="key-tip" tabindex="0" role="img" aria-label="Shortcuts: hover a task, then T top, B bottom, L later or today, S star" title="Hover a task, then press:&#10;T  send to top&#10;B  send to bottom&#10;L  move to Later / Today&#10;S  star">i</span></p>
@@ -1426,6 +1458,11 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     <div class="sp-row"><span>Focus mode</span></div>
     <div class="sp-opts" id="optFocusClean"></div>
     <p class="drawer-hint">Clean hides everything except the timer and your task while you focus.</p>
+    <div class="sp-row"><span>Content calendar</span></div>
+    <div class="sp-opts" id="optShowCal"></div>
+    <div class="sp-row"><span>Files</span></div>
+    <div class="sp-opts" id="optShowFiles"></div>
+    <p class="drawer-hint">Hidden keeps everything in them, still synced. Switch back on any time.</p>
     <div class="sp-row"><span>Content and Files panels</span></div>
     <div class="sp-opts" id="optPanels"></div>
     <div class="sp-row"><span>Corners</span></div>
@@ -1524,7 +1561,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       <ul class="sp-featlist">
         <li><b>Timer:</b> focus, short and long breaks, sessions per set, all adjustable</li>
         <li><b>Floating mini timer:</b> a small always-on-top window (Chrome or Edge)</li>
-        <li><b>Today and Later:</b> two task lists, with counts on the tabs</li>
+        <li><b>Today, Later and Upcoming:</b> task lists, with counts on the tabs</li>
+        <li><b>Dates:</b> give any task an optional date and time; the Upcoming tab lists them soonest first (red overdue, orange today or tomorrow), and a dated task in Later moves into Today on its day</li>
         <li><b>Star:</b> pins a task to the top of its list</li>
         <li><b>Reorder:</b> drag the dots, or use the up and down arrow keys</li>
         <li><b>Shortcuts:</b> hover a task, then T = top, B = bottom, L = later or today, S = star</li>
@@ -1839,7 +1877,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function defaultImages() {
     return VISION_IMAGES.map(function (src, i) { return { id: 'b' + (i + 1), src: src, idb: false, on: true, blur: 0 }; });
   }
-  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
+  var cfg = { interval: 9, fade: 1.8, dark: 100, focus: '', brk: '', cal: '', now: '', nowSize: 'm', nowFont: 'default', nowLines: '5', nowStyle: 'box', uiStyle: 'round', skin: 'tomato', layout: 'centred', backdrop: 'photos', focusClean: 'on', panels: 'drawer', showCal: 'off', showFiles: 'off', density: 'comfortable', text: 'standard', font: 'plex', pipTask: 'on', remPill: 'on', bgPause: 'off', autoFloat: 'on', startup: 'off', lineDay: 'on', learnDone: '', learnSteps: '', musicUrl: 'https://open.spotify.com/playlist/2sZYutAwhMODqCaS0mYj4Z', lenStyle: 'line', btnStyle: 'quiet', btnSize: 'm', timeFont: 'mono', timeSize: 'm', timeWeight: 'r', images: defaultImages() };
   var photoURLs = {};   // id -> object URL for photos you added
   var bgLayers = [];    // [{id, el}]
   var bgIndex = 0;
@@ -1859,7 +1897,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         if (typeof raw.brk === 'string') cfg.brk = raw.brk;
         if (typeof raw.cal === 'string') cfg.cal = raw.cal;
         if (typeof raw.now === 'string') cfg.now = raw.now;
-        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
+        ['nowSize', 'nowFont', 'nowLines', 'nowStyle', 'uiStyle', 'skin', 'layout', 'backdrop', 'focusClean', 'panels', 'showCal', 'showFiles', 'density', 'text', 'font', 'pipTask', 'remPill', 'bgPause', 'autoFloat', 'startup', 'lineDay', 'learnDone', 'learnSteps', 'musicUrl', 'lenStyle', 'btnStyle', 'btnSize', 'timeFont', 'timeSize', 'timeWeight'].forEach(function (k) { if (typeof raw[k] === 'string') cfg[k] = raw[k]; });
         if (Array.isArray(raw.images)) {
           cfg.images = raw.images.filter(function (m) { return m && m.id && (m.idb || m.src); }).map(function (m) {
             return { id: String(m.id), src: m.src || '', idb: !!m.idb, on: m.on !== false, blur: Math.max(0, Math.min(24, +m.blur || 0)) };
@@ -2009,6 +2047,11 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     document.documentElement.setAttribute('data-style', cfg.uiStyle === 'sharp' ? 'sharp' : 'round');
     var de = document.documentElement;
     if (cfg.panels === 'workspace') de.setAttribute('data-panels', 'workspace'); else de.removeAttribute('data-panels');
+    // Hiding Content or Files only hides the button and panel; their data and sync carry on as normal.
+    de.setAttribute('data-showcal', cfg.showCal === 'on' ? 'on' : 'off');
+    de.setAttribute('data-showfiles', cfg.showFiles === 'on' ? 'on' : 'off');
+    if (cfg.showCal !== 'on' && typeof closeCal === 'function') closeCal();
+    if (cfg.showFiles !== 'on' && typeof closeFl === 'function') closeFl();
     de.setAttribute('data-focusclean', cfg.focusClean === 'off' ? 'off' : 'on');
     if (cfg.density === 'compact') de.setAttribute('data-density', 'compact'); else de.removeAttribute('data-density');
     if (cfg.text === 'large') de.setAttribute('data-text', 'large'); else de.removeAttribute('data-text');
@@ -2045,6 +2088,8 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function buildNowOpts() {
     buildThemes();
     buildOpts('optPanels', 'panels', [['drawer', 'Drawer'], ['workspace', 'Workspace']]);
+    buildOpts('optShowCal', 'showCal', [['off', 'Hidden'], ['on', 'Shown']]);
+    buildOpts('optShowFiles', 'showFiles', [['off', 'Hidden'], ['on', 'Shown']]);
     buildOpts('optFocusClean', 'focusClean', [['on', 'Clean'], ['off', 'Normal']]);
     buildAccent();
     buildOpts('optDensity', 'density', [['comfortable', 'Comfortable'], ['compact', 'Compact']]);
@@ -4025,7 +4070,30 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function focusedTask() { return findTask(tasksState.focusId); }
 
   var drawerTab = 'today';
-  function isLater(t) { return t.later === true; }
+  // Optional date on a task: due 'YYYY-MM-DD' and dueTime 'HH:MM'. Tasks without them behave exactly as before.
+  function dueOf(t) { return t && typeof t.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.due) ? t.due : ''; }
+  function daysBetween(a, b) { var p = function (k) { var x = k.split('-'); return Date.UTC(+x[0], x[1] - 1, +x[2]); }; return Math.round((p(a) - p(b)) / 86400000); }
+  function dueDays(t) { return daysBetween(dueOf(t), dayKey()); }
+  // overdue (red), soon = today or tomorrow (orange), week = within 7 days (plain), far = further (muted)
+  function urgency(t) { var d = dueDays(t); return d < 0 ? 'overdue' : d <= 1 ? 'soon' : d <= 7 ? 'week' : 'far'; }
+  function dueLabel(t) {
+    var d = dueOf(t); if (!d) return '';
+    var n = dueDays(t), x = d.split('-'), dt = new Date(+x[0], x[1] - 1, +x[2]);
+    var txt = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday'
+      : dt.toLocaleDateString('en-GB', Math.abs(n) > 13 ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric' }).replace(',', '');
+    return txt + (t.dueTime ? ' \u00b7 ' + t.dueTime : '');
+  }
+  function setDue(t, due, time) {
+    if (due) t.due = due; else delete t.due;
+    if (due && time) t.dueTime = time; else delete t.dueTime;
+  }
+  // A dated task parked in Later shows in Today on its day (and stays there while overdue). Decided here, not saved.
+  function pinnedToday(t) { var d = dueOf(t); return !!d && d <= dayKey(); }
+  function isLater(t) { return t.later === true && !pinnedToday(t); }
+  function upcomingTasks() {
+    return tasksState.tasks.filter(function (t) { return dueOf(t) && !t.done; })
+      .sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : (a.dueTime || '') < (b.dueTime || '') ? -1 : (a.dueTime || '') > (b.dueTime || '') ? 1 : 0; });
+  }
   function isPast(t) { return t.done && t.doneDay && t.doneDay < dayKey(); }
   function todayTasks() { return tasksState.tasks.filter(function (t) { return !isLater(t) && !isPast(t); }); }
   function laterTasks() { return tasksState.tasks.filter(function (t) { return isLater(t) && !isPast(t); }); }
@@ -4096,8 +4164,16 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   var newStar = false;
   function setNewStar(v) { newStar = !!v; var b = document.getElementById('addStar'); if (b) { b.classList.toggle('on', newStar); b.setAttribute('aria-pressed', newStar ? 'true' : 'false'); b.innerHTML = newStar ? '&#9733;' : '&#9734;'; } }
   function addTask(title) {
-    tasksState.tasks.push({ id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: drawerTab === 'later', starred: newStar });
+    // Only use the date row when it is showing, so a leftover date never sneaks onto a plain task.
+    var showing = !document.getElementById('addWhen').hidden;
+    var due = showing ? document.getElementById('addDue').value : '', time = showing ? document.getElementById('addDueTime').value : '';
+    var t = { id: newId(), title: title, done: false, day: dayKey(), sessions: 0, updated: Date.now(), later: drawerTab !== 'today', starred: newStar };
+    // Upcoming adds a dated task to Later, so it moves into Today on its day.
+    if (drawerTab === 'upcoming' && !due) { due = tomorrowKey(); }
+    setDue(t, due, time);
+    tasksState.tasks.push(t);
     setNewStar(false);
+    resetAddWhen();
     saveTasks();
     renderTasks();
   }
@@ -4167,6 +4243,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   function moveTask(id, later) {
     var t = findTask(id);
     if (!t) return;
+    if (later && pinnedToday(t)) return; // dated for today or overdue: it stays in Today until the date changes
     t.later = later;
     t.updated = Date.now();
     if (later && tasksState.focusId === id) tasksState.focusId = null;
@@ -4220,6 +4297,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   });
 
   function setTab(tab) {
+    if (tab !== drawerTab && (tab === 'upcoming' || drawerTab === 'upcoming')) { addWhenOpen = false; var d = document.getElementById('addDue'); if (d) { d.value = ''; document.getElementById('addDueTime').value = ''; } }
     drawerTab = tab;
     renderTasks();
   }
@@ -4746,7 +4824,15 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       ttl.title = 'Click to edit';
       ttl.addEventListener('click', function () { editingId = t.id; renderList(); });
       main.appendChild(ttl);
+      if (dueOf(t)) {
+        var chip = el('span', 'task-due u-' + urgency(t), dueLabel(t));
+        chip.title = (urgency(t) === 'overdue' ? 'Overdue. ' : '') + 'Click to change the date';
+        chip.style.cursor = 'pointer';
+        chip.addEventListener('click', function () { dateEditingId = t.id; renderList(); });
+        main.appendChild(chip);
+      }
       if (t.sessions) main.appendChild(el('span', 'task-meta', t.sessions + (t.sessions === 1 ? ' session' : ' sessions')));
+      if (dateEditingId === t.id) main.appendChild(buildDateEditor(t));
     }
 
     var editBtn = el('button', 'task-edit');
@@ -4769,8 +4855,15 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     focusBtn.setAttribute('aria-label', (isLater(t) ? 'Move to today: ' : 'Focus on: ') + t.title);
     focusBtn.addEventListener('click', function () { if (isLater(t)) moveTask(t.id, false); else focusOn(t.id); });
 
+    var dateBtn = el('button', 'task-later task-dateb');
+    dateBtn.type = 'button';
+    dateBtn.title = dueOf(t) ? 'Change date' : 'Add a date';
+    dateBtn.setAttribute('aria-label', (dueOf(t) ? 'Change date: ' : 'Add a date: ') + t.title);
+    dateBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
+    dateBtn.addEventListener('click', function () { dateEditingId = dateEditingId === t.id ? null : t.id; renderList(); });
+
     var laterBtn = null;
-    if (!isLater(t)) {
+    if (!isLater(t) && !pinnedToday(t)) {
       laterBtn = el('button', 'task-later', 'Later');
       laterBtn.type = 'button';
       laterBtn.setAttribute('aria-label', 'Move to later: ' + t.title);
@@ -4783,13 +4876,14 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     del.innerHTML = TRASH_SVG;
     del.addEventListener('click', function () { deleteTask(t.id); });
 
-    if (!t.done && !editing) li.appendChild(buildGrip(li, t));
+    if (!t.done && !editing && drawerTab !== 'upcoming') li.appendChild(buildGrip(li, t));
     li.appendChild(check);
     li.appendChild(main);
     if (!editing) {
       var acts = el('div', 'task-actions');
       acts.appendChild(focusBtn);
       if (laterBtn) acts.appendChild(laterBtn);
+      if (!t.done) acts.appendChild(dateBtn);
       main.appendChild(acts);
       if (!t.done) li.appendChild(starBtn);
       li.appendChild(del);
@@ -4797,9 +4891,71 @@ body.timer-running .lod{opacity:0;pointer-events:none}
     return li;
   }
 
+  var dateEditingId = null;
+  function tomorrowKey() { var d = new Date(); d.setDate(d.getDate() + 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  // The small date row under a task: pick a date and optional time, Save, or No date to remove it.
+  function buildDateEditor(t) {
+    var row = el('div', 'task-when');
+    var d = document.createElement('input'); d.type = 'date'; d.value = dueOf(t) || tomorrowKey(); d.setAttribute('aria-label', 'Date for: ' + t.title);
+    var tm = document.createElement('input'); tm.type = 'time'; tm.value = t.dueTime || ''; tm.setAttribute('aria-label', 'Time (optional)');
+    var save = el('button', 'when-save', 'Save'); save.type = 'button';
+    var clear = el('button', 'when-clear', dueOf(t) ? 'No date' : 'Cancel'); clear.type = 'button';
+    var done = function (due, time) {
+      dateEditingId = null;
+      if ((due || '') !== dueOf(t) || (due && (time || '') !== (t.dueTime || ''))) { setDue(t, due, time); t.updated = Date.now(); saveTasks(); }
+      renderTasks();
+    };
+    save.addEventListener('click', function () { done(d.value, tm.value); });
+    clear.addEventListener('click', function () { if (dueOf(t)) done('', ''); else { dateEditingId = null; renderList(); } });
+    [d, tm].forEach(function (x) { x.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); save.click(); } if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dateEditingId = null; renderList(); } }); });
+    row.appendChild(d); row.appendChild(tm); row.appendChild(save); row.appendChild(clear);
+    requestAnimationFrame(function () { d.focus(); });
+    return row;
+  }
+  var addWhenOpen = false;
+  function syncAddWhen() {
+    var w = document.getElementById('addWhen'), b = document.getElementById('addDate'), d = document.getElementById('addDue');
+    if (!w) return;
+    var open = addWhenOpen || drawerTab === 'upcoming';
+    if (drawerTab === 'upcoming' && !d.value) d.value = tomorrowKey();
+    w.hidden = !open;
+    b.classList.toggle('on', open || !!d.value);
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    b.setAttribute('aria-pressed', d.value ? 'true' : 'false');
+    document.getElementById('addDueClear').hidden = drawerTab === 'upcoming';
+  }
+  function resetAddWhen() {
+    addWhenOpen = false;
+    document.getElementById('addDue').value = ''; document.getElementById('addDueTime').value = '';
+    syncAddWhen();
+  }
+  // Upcoming: every dated task that isn't done, soonest first, grouped with an urgency cue.
+  function renderUpcoming() {
+    var rows = upcomingTasks(), last = '';
+    var groupOf = function (t) { var n = dueDays(t); return n < 0 ? ['Overdue', 'overdue'] : n === 0 ? ['Today', 'soon'] : n === 1 ? ['Tomorrow', 'soon'] : n <= 7 ? ['Next 7 days', 'week'] : ['Later on', 'far']; };
+    rows.forEach(function (t) {
+      var g = groupOf(t);
+      if (g[0] !== last) { last = g[0]; els.taskList.appendChild(el('li', 'up-head u-' + g[1], g[0])); }
+      els.taskList.appendChild(buildTaskRow(t));
+    });
+    els.taskEmpty.hidden = rows.length > 0;
+    els.taskEmpty.textContent = 'Nothing dated yet. Give a task a date (the calendar button) and it shows here, then in Today on the day.';
+    els.taskInput.placeholder = 'A call or deadline, with its date';
+    ['tabToday', 'tabLater'].forEach(function (id) { var b = document.getElementById(id); b.className = 'dtab'; b.setAttribute('aria-selected', 'false'); });
+    var tn = openCount(), ln = laterTasks().filter(function (t) { return !t.done; }).length;
+    document.getElementById('tabTodayN').textContent = tn ? tn : '';
+    document.getElementById('tabLaterN').textContent = ln ? ln : '';
+  }
+
   function renderList() {
     if (taskDragging) return;
     els.taskList.innerHTML = '';
+    syncAddWhen();
+    var upN = upcomingTasks().length;
+    document.getElementById('tabUp').className = 'dtab' + (drawerTab === 'upcoming' ? ' is-on' : '');
+    document.getElementById('tabUp').setAttribute('aria-selected', drawerTab === 'upcoming' ? 'true' : 'false');
+    document.getElementById('tabUpN').textContent = upN ? upN : '';
+    if (drawerTab === 'upcoming') return renderUpcoming();
     var pool = drawerTab === 'later' ? laterTasks() : todayTasks();
     var open = pool.filter(function (t) { return !t.done; });
     var byOrd = function (a, b) { return (a.ord === undefined ? 1e12 : a.ord) - (b.ord === undefined ? 1e12 : b.ord); };
@@ -4927,6 +5083,13 @@ body.timer-running .lod{opacity:0;pointer-events:none}
   });
   document.getElementById('tabToday').addEventListener('click', function () { setTab('today'); });
   document.getElementById('tabLater').addEventListener('click', function () { setTab('later'); });
+  document.getElementById('tabUp').addEventListener('click', function () { setTab('upcoming'); });
+  document.getElementById('addDate').addEventListener('click', function () {
+    addWhenOpen = !addWhenOpen; syncAddWhen();
+    if (addWhenOpen) { var d = document.getElementById('addDue'); if (!d.value) d.value = drawerTab === 'today' ? dayKey() : tomorrowKey(); d.focus(); } else els.taskInput.focus();
+  });
+  document.getElementById('addDueClear').addEventListener('click', function () { resetAddWhen(); els.taskInput.focus(); });
+  document.getElementById('addDue').addEventListener('change', syncAddWhen);
   els.drawerHandle.addEventListener('click', openDrawer);
   els.drawerClose.addEventListener('click', closeDrawer);
   els.drawerBackdrop.addEventListener('click', closeDrawer);
