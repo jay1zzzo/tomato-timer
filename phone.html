@@ -158,6 +158,19 @@ applyLook();
   .uphead { list-style: none; background: none; border: 0; padding: 12px 2px 0; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .uphead:first-child { padding-top: 0; }
   .uphead.u-overdue { color: var(--overdue); } .uphead.u-soon { color: var(--soon); }
+  /* Deadlines: read-only list from deadlines.json, collapsed by default, red ! when one is close. */
+  .dlbox { margin-bottom: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .dlbox[hidden] { display: none; }
+  .dlbox summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 12px 14px; min-height: 44px; box-sizing: border-box; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .dlbox summary::-webkit-details-marker { display: none; }
+  .dlbox summary::after { content: ''; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+  .dlbox[open] summary::after { transform: rotate(45deg); }
+  .dlbang { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--overdue); color: #fff; font-size: 13px; font-weight: 900; letter-spacing: 0; }
+  .dlbang[hidden] { display: none; }
+  .dllist { list-style: none; margin: 0; padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .dllist li { display: flex; align-items: baseline; gap: 10px; background: none; border: 0; border-radius: 0; padding: 0; font-size: 15px; line-height: 1.4; }
+  .dllist .chip { flex: none; }
+  .dllist .dlt { min-width: 0; overflow-wrap: anywhere; }
 
   /* The five looks from the desktop app (Look sheet, and synced from your computers). Light first, then dark. */
   html[data-look=studio] { --bg:#f2f3f5; --surface:#ffffff; --ink:#1d2025; --muted:#656b75; --line:#dde0e5; --accent:#e04e34; --on-accent:#fff; --accent-ink:#c23f27; --ok:#23805c; --bad:#c8372d; --overdue:#c8372d; --soon:#c9660f; }
@@ -323,6 +336,7 @@ applyLook();
   <button class="add" id="connect" type="button">Connect</button>
 </section>
 
+<details class="dlbox" id="dlBox" hidden><summary id="dlSum"><span>Deadlines</span><span id="dlN"></span><span class="dlbang" id="dlBang" hidden>!</span></summary><ul class="dllist" id="dlList"></ul></details>
 <div class="tabs" role="tablist"><button class="tab on" id="tabToday" type="button" role="tab">Today<span class="n" id="nToday"></span></button><button class="tab" id="tabLater" type="button" role="tab">Later<span class="n" id="nLater"></span></button><button class="tab" id="tabUp" type="button" role="tab">Upcoming<span class="n" id="nUp"></span></button></div>
 <button class="addbar" id="addOpen" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLabel">Add</span></button>
 <ul id="list"></ul>
@@ -473,7 +487,7 @@ applyLook();
     if (!syncOn()) return Promise.resolve();
     if (busy) { again = true; return Promise.resolve(); }
     busy = true; status('Syncing…');
-    return lookOnce(1).then(function () { return once(1); }).then(function () { return bdOnce(1); }).then(function () { sync.lastOk = Date.now(); saveSync(); idleStatus(); }).catch(function (e) {
+    return lookOnce(1).then(function () { return once(1); }).then(function () { return bdOnce(1); }).then(function () { return dlOnce(); }).then(function () { sync.lastOk = Date.now(); saveSync(); idleStatus(); }).catch(function (e) {
       var c = e && e.code;
       status(c === 'auth' ? 'Token rejected. Disconnect and paste a new one.' : c === 'forbidden' ? 'GitHub refused access. The token needs Contents: Read and write.' : c === 'norepo' ? 'Repo not found. Check the name.' : c === 'conflict' ? 'Collision, retrying…' : 'Offline. Will retry.', 'bad');
     }).then(function () { busy = false; if (again) { again = false; schedule(800); } });
@@ -574,7 +588,46 @@ applyLook();
   $('tsDelete').addEventListener('click', function () { var t = ts.task; if (t && window.confirm('Delete "' + t.title + '"?')) { tsClose(); remove(t); } });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('ts').className.indexOf('on') >= 0) tsClose(); });
 
+  // Deadlines: read-only, from deadlines.json in the sync repo (written by the workspace, never by the app).
+  // The red ! shows when one is flagged urgent, overdue, or due within 2 days. Open/closed is remembered on this phone.
+  var DL_KEY = 'ketchup-phone-deadlines', DL_OPEN_KEY = 'ketchup-phone-deadlines-open', dlItems = null;
+  try { var dl0 = JSON.parse(localStorage.getItem(DL_KEY) || 'null'); if (dl0 && Array.isArray(dl0.items)) dlItems = dl0.items; } catch (e) {}
+  function renderDeadlines() {
+    var items = (dlItems || []).filter(function (d) { return d && typeof d.title === 'string' && d.title; });
+    $('dlBox').hidden = !items.length; if (!items.length) return;
+    var list = $('dlList'), urgentN = 0; list.innerHTML = '';
+    items.forEach(function (d) {
+      var due = typeof d.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date : '';
+      var t = { due: due, dueTime: due && typeof d.time === 'string' ? d.time : '' };
+      var n = due ? dueDays(t) : null, urgent = !!d.urgent || (n !== null && n <= 2);
+      if (urgent) urgentN++;
+      var li = document.createElement('li');
+      var c = document.createElement('span'); c.className = 'chip u-' + (n === null ? 'far' : n < 0 ? 'overdue' : urgent ? 'soon' : urgency(t));
+      c.textContent = due ? dueLabel(t) : 'Date to confirm';
+      var s = document.createElement('span'); s.className = 'dlt'; s.textContent = d.title;
+      li.appendChild(c); li.appendChild(s); list.appendChild(li);
+    });
+    $('dlN').textContent = items.length;
+    $('dlBang').hidden = !urgentN;
+    $('dlSum').setAttribute('aria-label', 'Deadlines, ' + items.length + (urgentN ? ', ' + urgentN + ' urgent' : ''));
+  }
+  function dlOnce() {
+    return ghf('GET', null, 'deadlines.json').then(function (res) {
+      if (res.status === 404) { dlItems = null; try { localStorage.removeItem(DL_KEY); } catch (e) {} renderDeadlines(); return; }
+      if (!res.ok) return;
+      return res.json().then(function (j) {
+        var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {}
+        if (!d || !Array.isArray(d.items)) return;
+        dlItems = d.items; try { localStorage.setItem(DL_KEY, JSON.stringify(d)); } catch (e) {}
+        renderDeadlines();
+      });
+    }).catch(function () {});   // a nicety: never let it mark the task sync as failed
+  }
+  try { $('dlBox').open = localStorage.getItem(DL_OPEN_KEY) === '1'; } catch (e) {}
+  $('dlBox').addEventListener('toggle', function () { try { localStorage.setItem(DL_OPEN_KEY, $('dlBox').open ? '1' : '0'); } catch (e) {} });
+
   function render() {
+    renderDeadlines();
     var list = $('list'); list.innerHTML = '';
     var today = dayKey();
     var all = state.tasks.filter(function (t) { return !(t.done && t.doneDay && t.doneDay < today); });
@@ -890,7 +943,7 @@ applyLook();
       var it = { id: 'b' + newId(), type: 'i', fid: fid, x: 0.25, y: bdNextY(), rot: 0, size: 240 }; bd.items.push(it); bdChanged(it); }); });
   });
 
-  var PHONE_VERSION = 94;
+  var PHONE_VERSION = 95;
   $('ver').textContent = 'v' + PHONE_VERSION;
   // Self-update: an iPhone home-screen app can keep an old copy of this page for a while. On opening (and when you
   // come back to it) ask GitHub for the newest page, bypassing the saved copy; if it is a newer version, reload into it.

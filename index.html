@@ -1236,6 +1236,22 @@
   .sw-custom { width: 34px; height: 28px; border: 1px solid var(--line); border-radius: var(--r8); background: transparent; padding: 1px; cursor: pointer; }
   .sp-input { width: 100%; font-family: inherit; font-size: 13.5px; padding: 10px 12px; border-radius: var(--r10); border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
   .sp-input:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 1px; }
+  /* Deadlines: a read-only list from deadlines.json (calls, interviews, closing dates), collapsed by default. */
+  .dl-box { margin: 0 0 10px; border: 1px solid var(--line); border-radius: var(--r12); background: var(--surface); }
+  .dl-box[hidden] { display: none; }
+  .dl-box summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 9px 12px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-radius: var(--r12); }
+  .dl-box summary::-webkit-details-marker { display: none; }
+  .dl-box summary::after { content: ''; margin-left: auto; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+  .dl-box[open] summary::after { transform: rotate(45deg); }
+  .dl-box summary:hover { color: var(--ink); }
+  .dl-box summary:focus-visible { outline: 2px solid var(--accent, var(--focus)); outline-offset: 1px; }
+  .dl-n { font-family: "IBM Plex Mono", monospace; letter-spacing: 0; }
+  .dl-bang { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: #c83a32; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0; }
+  .dl-bang[hidden] { display: none; }
+  .dl-list { list-style: none; margin: 0; padding: 2px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .dl-list li { display: flex; gap: 8px; align-items: baseline; font-size: 13px; line-height: 1.4; color: var(--ink); }
+  .dl-list .task-due { flex: 0 0 auto; }
+  .dl-title { min-width: 0; overflow-wrap: anywhere; }
   .drawer-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding: 4px; border: 1px solid var(--line); border-radius: var(--r12); background: var(--surface); }
   .dtab { flex: 1; appearance: none; font-family: inherit; font-size: 13.5px; font-weight: 700; padding: 9px 10px; border-radius: var(--r9); border: none; background: transparent; color: var(--muted); cursor: pointer; }
   .dtab.is-on { background: var(--accent, var(--focus)); color: var(--on-accent, #fff9f5); }
@@ -1594,6 +1610,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
   </div>
+  <details class="dl-box" id="dlBox" hidden><summary><span>Deadlines</span><span class="dl-n" id="dlN"></span><span class="dl-bang" id="dlBang" hidden>!</span></summary><ul class="dl-list" id="dlList"></ul></details>
   <div class="drawer-tabs" role="tablist" aria-label="Task list">
     <button type="button" class="dtab is-on" role="tab" id="tabToday" aria-selected="true">Today <span class="dtab-n" id="tabTodayN"></span></button>
     <button type="button" class="dtab" role="tab" id="tabLater" aria-selected="false">Later <span class="dtab-n" id="tabLaterN"></span></button>
@@ -1814,6 +1831,7 @@ body.timer-running .lod{opacity:0;pointer-events:none}
         <li><b>Floating mini timer:</b> a small always-on-top window (Chrome or Edge)</li>
         <li><b>Today, Later and Upcoming:</b> task lists, with counts on the tabs</li>
         <li><b>Dates:</b> give any task an optional date and time; the Upcoming tab lists them soonest first (red overdue, orange today or tomorrow), and a dated task in Later moves into Today on its day</li>
+        <li><b>Deadlines:</b> a read-only list above the tabs (calls, interviews, closing dates) kept by my workspace, collapsed until you open it; a red ! means one is overdue or within 2 days</li>
         <li><b>Star:</b> pins a task to the top of its list</li>
         <li><b>Reorder:</b> drag the dots, or use the up and down arrow keys</li>
         <li><b>Shortcuts:</b> hover a task, then T = top, B = bottom, L = later or today, S = star</li>
@@ -2044,7 +2062,7 @@ html[data-showlearn=off] .learn{display:none!important}
 
 <script>
 (function () {
-  var APP_VERSION = 94;
+  var APP_VERSION = 95;
   var UPDATE_BASE = 'https://raw.githubusercontent.com/jay1zzzo/tomato-timer/main';
   var DEFAULTS = { focus: 25, short: 5, long: 15, rounds: 4 };
 
@@ -4921,7 +4939,7 @@ html[data-showlearn=off] .learn{display:none!important}
     if (syncBusy) { syncAgain = true; return Promise.resolve(); }
     syncBusy = true;
     setSyncStatus('Syncing…');
-    return lookSyncOnce(1).then(function () { return syncOnce(1); }).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () { return bdSyncOnce(1); }).then(function () {
+    return lookSyncOnce(1).then(function () { return syncOnce(1); }).then(function () { return calSyncOnce(1); }).then(function () { return flSyncOnce(1); }).then(function () { return bdSyncOnce(1); }).then(function () { return dlSyncOnce(); }).then(function () {
       sync.lastOk = Date.now(); saveSync(); syncIdleStatus();
     }).catch(function (e) {
       var c = e && e.code;
@@ -5401,8 +5419,52 @@ html[data-showlearn=off] .learn{display:none!important}
     document.getElementById('tabLaterN').textContent = ln ? ln : '';
   }
 
+  // Deadlines: read-only, from deadlines.json in the sync repo (written by the workspace, never by the app).
+  // The red ! shows when one is flagged urgent, overdue, or due within 2 days. Open/closed is remembered per device.
+  var DL_KEY = 'ketchup-deadlines', DL_OPEN_KEY = 'ketchup-deadlines-open', dlItems = null;
+  try { var dl0 = JSON.parse(localStorage.getItem(DL_KEY) || 'null'); if (dl0 && Array.isArray(dl0.items)) dlItems = dl0.items; } catch (e) {}
+  function renderDeadlines() {
+    var box = document.getElementById('dlBox'); if (!box) return;
+    var items = (dlItems || []).filter(function (d) { return d && typeof d.title === 'string' && d.title; });
+    box.hidden = !items.length; if (!items.length) return;
+    var list = document.getElementById('dlList'), urgentN = 0; list.innerHTML = '';
+    items.forEach(function (d) {
+      var due = typeof d.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date : '';
+      var t = { due: due, dueTime: due && typeof d.time === 'string' ? d.time : '' };
+      var n = due ? daysBetween(due, dayKey()) : null, urgent = !!d.urgent || (n !== null && n <= 2);
+      if (urgent) urgentN++;
+      var cls = n === null ? 'far' : n < 0 ? 'overdue' : urgent ? 'soon' : urgency(t);
+      var li = el('li');
+      li.appendChild(el('span', 'task-due u-' + cls, due ? dueLabel(t) : 'Date to confirm'));
+      li.appendChild(el('span', 'dl-title', d.title));
+      list.appendChild(li);
+    });
+    document.getElementById('dlN').textContent = items.length;
+    var bang = document.getElementById('dlBang');
+    bang.hidden = !urgentN; bang.title = urgentN + (urgentN === 1 ? ' deadline' : ' deadlines') + ' overdue or within 2 days';
+    box.querySelector('summary').setAttribute('aria-label', 'Deadlines, ' + items.length + (urgentN ? ', ' + urgentN + ' urgent' : ''));
+  }
+  function dlSyncOnce() {
+    return ghFetch('GET', null, 'deadlines.json').then(function (res) {
+      if (res.status === 404) { dlItems = null; try { localStorage.removeItem(DL_KEY); } catch (e) {} renderDeadlines(); return; }
+      if (!res.ok) return;
+      return res.json().then(function (j) {
+        var d = null; try { d = JSON.parse(b64dec(j.content)); } catch (e) {}
+        if (!d || !Array.isArray(d.items)) return;
+        dlItems = d.items; try { localStorage.setItem(DL_KEY, JSON.stringify(d)); } catch (e) {}
+        renderDeadlines();
+      });
+    }).catch(function () {});   // a nicety: never let it mark the task sync as failed
+  }
+  (function () {
+    var box = document.getElementById('dlBox'); if (!box) return;
+    try { box.open = localStorage.getItem(DL_OPEN_KEY) === '1'; } catch (e) {}
+    box.addEventListener('toggle', function () { try { localStorage.setItem(DL_OPEN_KEY, box.open ? '1' : '0'); } catch (e) {} });
+  })();
+
   function renderList() {
     if (taskDragging) return;
+    renderDeadlines();
     els.taskList.innerHTML = '';
     syncAddWhen();
     var upN = upcomingTasks().length;
